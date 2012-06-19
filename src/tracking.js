@@ -152,6 +152,19 @@ Attribute.prototype = {
         var instance = this;
 
         return instance.attrs_;
+    },
+
+    linkAttr: function(attrName, attrTarget) {
+        var instance = this,
+            changeFnName = attrName + 'Change_',
+            changeFn = instance[changeFnName];
+
+            instance[changeFnName] = function(val) {
+                if (changeFn) {
+                    changeFn.apply(this, arguments);
+                }
+                attrTarget.set(attrName, val);
+            };
     }
 };
 
@@ -182,7 +195,6 @@ Video.prototype = {
 
         instance.createVideo_();
         instance.createCanvas_();
-        instance.videoLoop_();
     },
 
     createCanvas_: function() {
@@ -192,6 +204,7 @@ Video.prototype = {
         canvasNode.height = instance.get('height');
         canvasNode.width = instance.get('width');
         instance.canvasContext = canvasNode.getContext('2d');
+
         instance.set('canvasNode', canvasNode);
 
         return canvasNode;
@@ -205,6 +218,7 @@ Video.prototype = {
         videoNode.controls = instance.get('controls');
         videoNode.height = instance.get('height');
         videoNode.width = instance.get('width');
+
         instance.set('videoNode', videoNode);
 
         return videoNode;
@@ -214,6 +228,8 @@ Video.prototype = {
         var instance = this,
             width = instance.get('width'),
             height = instance.get('height');
+
+        instance.syncData();
 
         return instance.canvasContext.getImageData(0, 0, width, height);
     },
@@ -270,22 +286,22 @@ Video.prototype = {
         videoNode.src = stream;
     },
 
-    toDataURL: function(opt_format) {
-        var instance = this,
-            canvasNode = instance.get('canvasNode');
-
-        return canvasNode.toDataURL(opt_format || 'image/png');
-    },
-
-    videoLoop_: function() {
+    syncData: function() {
         var instance = this,
             width = instance.get('width'),
             height = instance.get('height'),
             videoNode = instance.get('videoNode');
 
         instance.canvasContext.drawImage(videoNode, 0, 0, width, height);
+    },
 
-        requestAnimationFrame(tracking.bind(instance.videoLoop_, instance));
+    toDataURL: function(opt_format) {
+        var instance = this,
+            canvasNode = instance.get('canvasNode');
+
+        instance.syncData();
+
+        return canvasNode.toDataURL(opt_format || 'image/png');
     },
 
     widthChange_: function(val) {
@@ -318,12 +334,15 @@ Camera.prototype = {
     init_: function() {
         var instance = this;
 
-        instance.initVideo_();
+        var video = instance.initVideo_();
 
         navigator.getUserMedia(
             { audio: instance.get('audio'), video: true },
             tracking.bind(instance.defSuccessHandler_, instance),
             tracking.bind(instance.defErrorHandler_, instance));
+
+        instance.linkAttr('width', video);
+        instance.linkAttr('height', video);
     },
 
     initVideo_: function() {
@@ -346,13 +365,6 @@ Camera.prototype = {
         throw Error(err);
     },
 
-    heightChange_: function(val) {
-        var instance = this,
-            video = instance.get('video');
-
-        video.set('height', val);
-    },
-
     render: function(opt_selector) {
         var instance = this,
             video = instance.get('video');
@@ -360,18 +372,10 @@ Camera.prototype = {
        video.render(opt_selector);
 
         return instance;
-    },
-
-    widthChange_: function(val) {
-        var instance = this,
-            video = instance.get('video');
-
-        video.set('width', val);
     }
 };
 
 tracking.Camera = tracking.augment(Camera, tracking.Attribute);
-
 
 // self.Int32Array polyfill
 if (!self.Int32Array) {
