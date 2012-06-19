@@ -1,4 +1,4 @@
-;(function (window, undefined) {
+(function (window, undefined) {
 
 var document = window.document,
     navigator = window.navigator,
@@ -397,14 +397,14 @@ if (!navigator.getUserMedia) {
 // requestAnimationFrame polyfill by Erik Möller
 (function() {
     var lastTime = 0;
-    var vendors = ['ms', 'moz', 'webkit', 'o'];
-    for(var x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
+    var vendors = ['ms', 'moz', 'webkit', 'o'], x;
+    for(x = 0; x < vendors.length && !window.requestAnimationFrame; ++x) {
         window.requestAnimationFrame = window[vendors[x]+'RequestAnimationFrame'];
         window.cancelAnimationFrame = window[vendors[x]+'CancelAnimationFrame'] ||
             window[vendors[x]+'CancelRequestAnimationFrame'];
     }
 
-    if (!window.requestAnimationFrame)
+    if (!window.requestAnimationFrame) {
         window.requestAnimationFrame = function(callback, element) {
             var currTime = new Date().getTime();
             var timeToCall = Math.max(0, 16 - (currTime - lastTime));
@@ -413,11 +413,13 @@ if (!navigator.getUserMedia) {
             lastTime = currTime + timeToCall;
             return id;
         };
+    }
 
-    if (!window.cancelAnimationFrame)
+    if (!window.cancelAnimationFrame) {
         window.cancelAnimationFrame = function(id) {
             clearTimeout(id);
         };
+    }
 }());
 
 window.tracking = tracking;
