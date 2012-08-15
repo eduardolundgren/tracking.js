@@ -8,6 +8,8 @@ var document = window.document,
 
 var tracking = {
 
+    type: {},
+
     all: function(selector, opt_element) {
         return Array.prototype.slice.call(
                 (opt_element || document).querySelectorAll(selector));
@@ -77,6 +79,10 @@ var tracking = {
         return o.nodeType || this.isWindow(o);
     },
 
+    isString: function(o) {
+        return typeof o === 'string';
+    },
+
     isWindow: function(o) {
         return !!(o && o.alert && o.document);
     },
@@ -103,6 +109,18 @@ var tracking = {
         return (opt_element || document).querySelector(selector);
     }
 
+};
+
+tracking.math = {
+    /*
+     * Euclidean distance between two points P(x0, y0) and P(x1, y1).
+     */
+    distance: function(x0, y0, x1, y1) {
+        var dx = x1-x0,
+            dy = y1-y0;
+
+        return Math.sqrt(dx*dx + dy*dy);
+    }
 };
 
 // tracking.Attribute
@@ -189,11 +207,13 @@ var Canvas = function(opt_config) {
 };
 
 Canvas.prototype = {
+    context: null,
+
     createCanvas_: function() {
         var instance = this,
             canvasNode = document.createElement('canvas');
 
-        instance.canvasContext = canvasNode.getContext('2d');
+        instance.context = canvasNode.getContext('2d');
         canvasNode.height = instance.get('height');
         canvasNode.width = instance.get('width');
 
@@ -202,12 +222,50 @@ Canvas.prototype = {
         return canvasNode;
     },
 
-    data: function() {
+    getImageData: function(opt_x, opt_y, opt_width, opt_height) {
         var instance = this,
-            width = instance.get('width'),
-            height = instance.get('height');
+            x = opt_x || 0,
+            y = opt_y || 0,
+            width = opt_width || instance.get('width'),
+            height = opt_height || instance.get('height');
 
-        return instance.canvasContext.getImageData(0, 0, width, height);
+        return instance.context.getImageData(x, y, width, height);
+    },
+
+    setImageData: function(data, opt_x, opt_y) {
+        var instance = this,
+            x = opt_x || 0,
+            y = opt_y || 0;
+
+        instance.context.putImageData(data, x, y);
+
+        return instance;
+    },
+
+    forEach: function(imageData, fn, opt_jump) {
+        var instance = this,
+            width = imageData.width,
+            height = imageData.height,
+            data = imageData.data,
+            i = 0,
+            j = 0,
+            w;
+
+        for (i = 0; i < height; i++) {
+            for (j = 0; j < width; j++) {
+                w = i*width*4 + j*4;
+                fn.call(instance, data[w], data[w+1], data[w+2], data[w+3], w, i, j);
+            }
+        }
+    },
+
+    render: function(opt_selector) {
+        var instance = this,
+            canvasNode = instance.get('canvasNode');
+
+        tracking.one(opt_selector || document.body).appendChild(canvasNode);
+
+        return instance;
     },
 
     toDataURL: function(opt_format) {
@@ -215,6 +273,26 @@ Canvas.prototype = {
             canvasNode = instance.get('canvasNode');
 
         return canvasNode.toDataURL(opt_format || 'image/png');
+    },
+
+    transform: function(fn) {
+        var instance = this,
+            imageData = instance.getImageData(),
+            newImageData = instance.context.createImageData(imageData),
+            newData = newImageData.data;
+
+        instance.forEach(imageData, function(r, g, b, a, w, i, j) {
+            var value = (r + g + b)/3;
+
+            newData[w] = value;
+            newData[w+1] = value;
+            newData[w+2] = value;
+            newData[w+3] = 255;
+        });
+
+        instance.setImageData(newImageData);
+
+        return instance;
     }
 };
 
@@ -234,12 +312,14 @@ var Video = function(opt_config) {
         videoNode: null
     }, opt_config), true);
 
+    instance.trackers_ = [];
+
     instance.createVideo_();
     instance.createCanvas_();
 };
 
 Video.prototype = {
-    canvasContext: null,
+    trackers_: null,
 
     createCanvas_: function() {
         var instance = this,
@@ -265,13 +345,13 @@ Video.prototype = {
         return videoNode;
     },
 
-    data: function() {
+    getVideoCanvasImageData: function() {
         var instance = this,
             canvas = instance.get('canvas');
 
-        instance.syncVideo();
+        instance.syncVideoCanvas();
 
-        return canvas.data();
+        return canvas.getImageData();
     },
 
     heightChange_: function(val) {
@@ -291,6 +371,23 @@ Video.prototype = {
         videoNode.load.apply(videoNode, arguments);
 
         return instance;
+    },
+
+    loop_: function() {
+        var instance = this,
+            i = 0,
+            tracker,
+            trackers = instance.trackers_;
+
+        for (; (tracker = trackers[i++]); ) {
+            tracker.type.call(instance, tracker, instance);
+        }
+
+        if (trackers.length) {
+            requestAnimationFrame(function loop() {
+                instance.loop_();
+            });
+        }
     },
 
     pause: function() {
@@ -320,6 +417,17 @@ Video.prototype = {
         return instance;
     },
 
+    renderVideoCanvas: function(opt_selector) {
+        var instance = this,
+            canvas = instance.get('canvas').get('canvasNode');
+
+        instance.syncVideoCanvas();
+
+        tracking.one(opt_selector || document.body).appendChild(canvas);
+
+        return instance;
+    },
+
     srcChange_: function(stream) {
         var instance = this,
             videoNode = instance.get('videoNode');
@@ -327,23 +435,53 @@ Video.prototype = {
         videoNode.src = stream;
     },
 
-    syncVideo: function() {
+    stopTracking: function() {
+        var instance = this;
+
+        instance.trackers_ = [];
+    },
+
+    syncVideoCanvas: function() {
         var instance = this,
             canvas = instance.get('canvas'),
             width = instance.get('width'),
             height = instance.get('height'),
             videoNode = instance.get('videoNode');
 
-        canvas.canvasContext.drawImage(videoNode, 0, 0, width, height);
+        canvas.context.drawImage(videoNode, 0, 0, width, height);
+
+        return instance;
     },
 
     toDataURL: function(opt_format) {
         var instance = this,
             canvas = instance.get('canvas');
 
-        instance.syncVideo();
+        instance.syncVideoCanvas();
 
         return canvas.toDataURL(opt_format);
+    },
+
+    track: function(config) {
+        var instance = this,
+            trackers = instance.trackers_;
+
+        if (!config.type) {
+            throw Error('A tracker type should be specified.');
+        }
+
+        var trackerId = trackers.push(config) - 1;
+
+        if (trackers.length === 1) {
+            instance.loop_();
+        }
+
+        return {
+            id: trackerId,
+            cancel: function() {
+                trackers.splice(trackerId, 1);
+            }
+        };
     },
 
     widthChange_: function(val) {
@@ -359,9 +497,9 @@ Video.prototype = {
 
 tracking.Video = tracking.augment(Video, tracking.Attribute);
 
-// tracking.Camera
+// tracking.VideoCamera
 
-var Camera = function(opt_config) {
+var VideoCamera = function(opt_config) {
     var instance = this;
 
     instance.setAttrs(tracking.merge({
@@ -373,7 +511,7 @@ var Camera = function(opt_config) {
     instance.initUserMedia_();
 };
 
-Camera.prototype = {
+VideoCamera.prototype = {
     initUserMedia_: function() {
         var instance = this;
 
@@ -394,7 +532,7 @@ Camera.prototype = {
     }
 };
 
-tracking.Camera = tracking.augment(Camera, tracking.Video);
+tracking.VideoCamera = tracking.augment(VideoCamera, tracking.Video);
 
 // self.Int32Array polyfill
 if (!self.Int32Array) {
