@@ -59,8 +59,6 @@
 
             x, y,
 
-            canvas = video.get('canvas'),
-
             imageData = video.getVideoCanvasImageData(),
 
             colorThreshold = config.color || defaults.color;
@@ -69,7 +67,7 @@
             colorThreshold = colors[colorThreshold];
         }
 
-        canvas.forEach(imageData, function pixelMatrixLoop(r, g, b, a, w, i, j) {
+        video.canvas.forEach(imageData, function pixelMatrixLoop(r, g, b, a, w, i, j) {
             if (colorThreshold(r, g, b, a, w, i, j)) {
                 total += 2;
                 pixels.push(j, i);

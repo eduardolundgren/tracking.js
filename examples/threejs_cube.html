@@ -108,18 +108,17 @@
 	//
 	// Tracking JS
 	//
-	var vc1 = new tracking.VideoCamera({
+	var videoCamera = new tracking.VideoCamera({
 			audio: true
 		}),
 
-		canvas1 = vc1.get('canvas'),
-		canvasNode1 = canvas1.get('canvasNode'),
-		context1 = canvas1.context;
+		canvas = videoCamera.canvas,
+		canvasContext = canvas.context;
 
-	canvasNode1.classList.add('flip-horizontally');
+	canvas.domElement.classList.add('flip-horizontally');
 
-	vc1.render('#videoContainer');
-	// vc1.renderVideoCanvas('#canvasContainer');
+	videoCamera.render('#videoContainer');
+	// videoCamera.renderVideoCanvas('#canvasContainer');
 
 	var euclideanDistance = function(x0, y0, x1, y1) {
 		var dx = x1-x0,
@@ -131,7 +130,7 @@
 	var threshold = 50;
 
 	function render() {
-		var imageData = vc1.getVideoCanvasImageData(),
+		var imageData = videoCamera.getVideoCanvasImageData(),
 			cpx,
 			cpy,
 			cpz,
@@ -152,7 +151,7 @@
 			diff1,
 			diff2;
 
-		canvas1.forEach(imageData, function(r, g, b, a, w, i, j) {
+		canvas.forEach(imageData, function(r, g, b, a, w, i, j) {
 			diff1 = r - g;
 			diff2 = b - g;
 
@@ -206,8 +205,8 @@
 					maxy = y;
 				}
 
-				context1.fillStyle = "rgb(255,0,0)";
-				context1.fillRect (x, y, 3, 3);
+				canvasContext.fillStyle = "rgb(255,0,0)";
+				canvasContext.fillRect (x, y, 3, 3);
 			}
 		}
 
@@ -216,8 +215,8 @@
 		cpz = 60 - ((maxx - minx) + (maxy - miny))/2;
 
 		// Plot central pixel
-		context1.fillStyle = "rgb(0, 0,0)";
-		context1.fillRect (cpx, cpy, 3, 3);
+		canvasContext.fillStyle = "rgb(0, 0,0)";
+		canvasContext.fillRect (cpx, cpy, 3, 3);
 
 		// Move sphere
 		sphere.position.x = (cpx/320)*window.innerWidth - window.innerWidth/2;

@@ -198,7 +198,6 @@ var Canvas = function(opt_config) {
     var instance = this;
 
     instance.setAttrs(tracking.merge({
-        canvasNode: null,
         height: 240,
         width: 320
     }, opt_config), true);
@@ -208,18 +207,19 @@ var Canvas = function(opt_config) {
 
 Canvas.prototype = {
     context: null,
+    domElement: null,
 
     createCanvas_: function() {
         var instance = this,
-            canvasNode = document.createElement('canvas');
+            domElement = document.createElement('canvas');
 
-        instance.context = canvasNode.getContext('2d');
-        canvasNode.height = instance.get('height');
-        canvasNode.width = instance.get('width');
+        domElement.height = instance.get('height');
+        domElement.width = instance.get('width');
 
-        instance.set('canvasNode', canvasNode);
+        instance.domElement = domElement;
+        instance.context = domElement.getContext('2d');
 
-        return canvasNode;
+        return domElement;
     },
 
     getImageData: function(opt_x, opt_y, opt_width, opt_height) {
@@ -260,19 +260,17 @@ Canvas.prototype = {
     },
 
     render: function(opt_selector) {
-        var instance = this,
-            canvasNode = instance.get('canvasNode');
+        var instance = this;
 
-        tracking.one(opt_selector || document.body).appendChild(canvasNode);
+        tracking.one(opt_selector || document.body).appendChild(instance.domElement);
 
         return instance;
     },
 
     toDataURL: function(opt_format) {
-        var instance = this,
-            canvasNode = instance.get('canvasNode');
+        var instance = this;
 
-        return canvasNode.toDataURL(opt_format || 'image/png');
+        return instance.domElement.toDataURL(opt_format || 'image/png');
     },
 
     transform: function(fn) {
@@ -305,11 +303,9 @@ var Video = function(opt_config) {
 
     instance.setAttrs(tracking.merge({
         autoplay: true,
-        canvas: null,
         height: 240,
         controls: true,
-        width: 320,
-        videoNode: null
+        width: 320
     }, opt_config), true);
 
     instance.trackers_ = [];
@@ -319,56 +315,57 @@ var Video = function(opt_config) {
 };
 
 Video.prototype = {
+    canvas: null,
+    domElement: null,
+
     trackers_: null,
 
     createCanvas_: function() {
         var instance = this,
-            canvas = instance.set('canvas', new tracking.Canvas());
+            canvas = new tracking.Canvas();
 
         instance.linkAttr('height', canvas, true);
         instance.linkAttr('width', canvas, true);
+
+        instance.canvas = canvas;
 
         return canvas;
     },
 
     createVideo_: function() {
         var instance = this,
-            videoNode = document.createElement('video');
+            domElement = document.createElement('video');
 
-        videoNode.autoplay = instance.get('autoplay');
-        videoNode.controls = instance.get('controls');
-        videoNode.height = instance.get('height');
-        videoNode.width = instance.get('width');
+        domElement.autoplay = instance.get('autoplay');
+        domElement.controls = instance.get('controls');
+        domElement.height = instance.get('height');
+        domElement.width = instance.get('width');
 
-        instance.set('videoNode', videoNode);
+        instance.domElement = domElement;
 
-        return videoNode;
+        return domElement;
     },
 
     getVideoCanvasImageData: function() {
-        var instance = this,
-            canvas = instance.get('canvas');
+        var instance = this;
 
         instance.syncVideoCanvas();
 
-        return canvas.getImageData();
+        return instance.canvas.getImageData();
     },
 
     heightChange_: function(val) {
-        var instance = this,
-            videoNode = instance.get('videoNode'),
-            canvas = instance.get('canvas'),
-            canvasNode = canvas.get('canvasNode');
+        var instance = this;
 
-        canvasNode.height = val;
-        videoNode.height = val;
+        instance.domElement.height = val;
+        instance.canvas.domElement.height = val;
     },
 
     load: function() {
         var instance = this,
-            videoNode = instance.get('videoNode');
+            domElement = instance.domElement;
 
-        videoNode.load.apply(videoNode, arguments);
+        domElement.load.apply(domElement, arguments);
 
         return instance;
     },
@@ -392,47 +389,44 @@ Video.prototype = {
 
     pause: function() {
         var instance = this,
-            videoNode = instance.get('videoNode');
+            domElement = instance.domElement;
 
-        videoNode.pause.apply(videoNode, arguments);
+        domElement.pause.apply(domElement, arguments);
 
         return instance;
     },
 
     play: function() {
         var instance = this,
-            videoNode = instance.get('videoNode');
+            domElement = instance.domElement;
 
-        videoNode.play.apply(videoNode, arguments);
+        domElement.play.apply(domElement, arguments);
 
         return instance;
     },
 
     render: function(opt_selector) {
-        var instance = this,
-            videoNode = instance.get('videoNode');
+        var instance = this;
 
-        tracking.one(opt_selector || document.body).appendChild(videoNode);
+        tracking.one(opt_selector || document.body).appendChild(instance.domElement);
 
         return instance;
     },
 
     renderVideoCanvas: function(opt_selector) {
-        var instance = this,
-            canvas = instance.get('canvas').get('canvasNode');
+        var instance = this;
 
         instance.syncVideoCanvas();
 
-        tracking.one(opt_selector || document.body).appendChild(canvas);
+        tracking.one(opt_selector || document.body).appendChild(instance.canvas.domElement);
 
         return instance;
     },
 
     srcChange_: function(stream) {
-        var instance = this,
-            videoNode = instance.get('videoNode');
+        var instance = this;
 
-        videoNode.src = stream;
+        instance.domElement.src = stream;
     },
 
     stopTracking: function() {
@@ -443,23 +437,20 @@ Video.prototype = {
 
     syncVideoCanvas: function() {
         var instance = this,
-            canvas = instance.get('canvas'),
             width = instance.get('width'),
-            height = instance.get('height'),
-            videoNode = instance.get('videoNode');
+            height = instance.get('height');
 
-        canvas.context.drawImage(videoNode, 0, 0, width, height);
+        instance.canvas.context.drawImage(instance.domElement, 0, 0, width, height);
 
         return instance;
     },
 
     toDataURL: function(opt_format) {
-        var instance = this,
-            canvas = instance.get('canvas');
+        var instance = this;
 
         instance.syncVideoCanvas();
 
-        return canvas.toDataURL(opt_format);
+        return instance.canvas.toDataURL(opt_format);
     },
 
     track: function(config) {
@@ -485,13 +476,10 @@ Video.prototype = {
     },
 
     widthChange_: function(val) {
-        var instance = this,
-            videoNode = instance.get('videoNode'),
-            canvas = instance.get('canvas'),
-            canvasNode = canvas.get('canvasNode');
+        var instance = this;
 
-        canvasNode.width = val;
-        videoNode.width = val;
+        instance.domElement.width = val;
+        instance.canvas.domElement.width = val;
     }
 };
 

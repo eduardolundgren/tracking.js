@@ -29,20 +29,19 @@
 <br/>
 
 <script>
-	var vc1 = new tracking.VideoCamera({
+	var videoCamera = new tracking.VideoCamera({
 			audio: true
 		}),
 
-		canvas1 = vc1.get('canvas'),
-		canvasNode1 = canvas1.get('canvasNode'),
-		context1 = canvas1.context;
+		canvas = videoCamera.canvas,
+		canvasContext = canvas.context;
 
-	canvasNode1.classList.add('flip-horizontally');
+	canvas.domElement.classList.add('flip-horizontally');
 
-	vc1.render('#videoContainer');
-	vc1.renderVideoCanvas('#canvasContainer');
+	videoCamera.render('#videoContainer');
+	videoCamera.renderVideoCanvas('#canvasContainer');
 
-	// var t1 = vc1.track({
+	// var t1 = videoCamera.track({
 	// 	type: tracking.type.COLOR,
 	// 	color: 'pink',
 	// 	callback: function(tracking) {
@@ -50,12 +49,12 @@
 
 	// 		var size = 60 - tracking.z;
 
-	// 		context1.fillStyle = "rgb(255,0,255)";
-	// 		context1.fillRect (tracking.x - size*0.5, tracking.y - size*0.5, size, size);
+	// 		canvasContext.fillStyle = "rgb(255,0,255)";
+	// 		canvasContext.fillRect (tracking.x - size*0.5, tracking.y - size*0.5, size, size);
 	// 	}
 	// });
 
-	// var t2 = vc1.track({
+	// var t2 = videoCamera.track({
 	// 	type: tracking.type.COLOR,
 	// 	color: 'green',
 	// 	callback: function(tracking) {
@@ -63,12 +62,12 @@
 
 	// 		var size = 60 - tracking.z;
 
-	// 		context1.fillStyle = "rgb(0,255,0)";
-	// 		context1.fillRect (tracking.x - size*0.5, tracking.y - size*0.5, size, size);
+	// 		canvasContext.fillStyle = "rgb(0,255,0)";
+	// 		canvasContext.fillRect (tracking.x - size*0.5, tracking.y - size*0.5, size, size);
 	// 	}
 	// });
 
-	var t3 = vc1.track({
+	var t3 = videoCamera.track({
 		type: tracking.type.COLOR,
 		color: 'blue',
 		callback: function(tracking) {
@@ -76,8 +75,8 @@
 
 			var size = 60 - tracking.z;
 
-			context1.fillStyle = "rgb(0,0,255)";
-			context1.fillRect (tracking.x - size*0.5, tracking.y - size*0.5, size, size);
+			canvasContext.fillStyle = "rgb(0,0,255)";
+			canvasContext.fillRect (tracking.x - size*0.5, tracking.y - size*0.5, size, size);
 		}
 	});
 </script>
