@@ -67,12 +67,15 @@
             colorThreshold = colors[colorThreshold];
         }
 
-        video.canvas.forEach(imageData, function pixelMatrixLoop(r, g, b, a, w, i, j) {
-            if (colorThreshold(r, g, b, a, w, i, j)) {
-                total += 2;
-                pixels.push(j, i);
+        video.canvas.forEach(
+            imageData,
+            function pixelMatrixLoop(r, g, b, a, w, i, j) {
+                if (colorThreshold(r, g, b, a, w, i, j)) {
+                    total += 2;
+                    pixels.push(j, i);
+                }
             }
-        });
+        );
 
         if (total < 30) {
             return;
@@ -83,7 +86,8 @@
             dist = 0;
 
             for (n = 2; n < total; n+=2) {
-                dist += distance(pixels[m1], pixels[m1+1], pixels[n], pixels[n+1]);
+                dist += distance(
+                    pixels[m1], pixels[m1+1], pixels[n], pixels[n+1]);
             }
 
             if (dist/total > 20) {
