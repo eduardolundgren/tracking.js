@@ -8,7 +8,7 @@
 
         colors = {
 
-            blue: function(r, g, b, a, w, i, j) {
+            blue: function(r, g, b) {
                 var threshold = 50;
 
                 if ((b - r) >= threshold && (b - g) >= threshold) {
@@ -16,7 +16,7 @@
                 }
             },
 
-            green: function(r, g, b, a, w, i, j) {
+            green: function(r, g, b) {
                 var thresholdRed = 30,
                     thresholdBlue = 10;
 
@@ -25,7 +25,7 @@
                 }
             },
 
-            pink: function(r, g, b, a, w, i, j) {
+            pink: function(r, g, b) {
                 var threshold = 50;
 
                 if ((r - g) >= threshold && (b - g) >= threshold) {
