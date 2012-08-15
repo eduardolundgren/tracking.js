@@ -218,8 +218,6 @@ Canvas.prototype = {
 
         instance.domElement = domElement;
         instance.context = domElement.getContext('2d');
-
-        return domElement;
     },
 
     getImageData: function(opt_x, opt_y, opt_width, opt_height) {
@@ -328,8 +326,6 @@ Video.prototype = {
         instance.linkAttr('width', canvas, true);
 
         instance.canvas = canvas;
-
-        return canvas;
     },
 
     createVideo_: function() {
@@ -342,8 +338,6 @@ Video.prototype = {
         domElement.width = instance.get('width');
 
         instance.domElement = domElement;
-
-        return domElement;
     },
 
     getVideoCanvasImageData: function() {
