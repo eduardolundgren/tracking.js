@@ -260,7 +260,8 @@ Canvas.prototype = {
     render: function(opt_selector) {
         var instance = this;
 
-        tracking.one(opt_selector || document.body).appendChild(instance.domElement);
+        tracking.one(opt_selector || document.body).appendChild(
+            instance.domElement);
 
         return instance;
     },
@@ -319,13 +320,12 @@ Video.prototype = {
     trackers_: null,
 
     createCanvas_: function() {
-        var instance = this,
-            canvas = new tracking.Canvas();
+        var instance = this;
 
-        instance.linkAttr('height', canvas, true);
-        instance.linkAttr('width', canvas, true);
+        instance.canvas = new tracking.Canvas();
 
-        instance.canvas = canvas;
+        instance.linkAttr('height', instance.canvas, true);
+        instance.linkAttr('width', instance.canvas, true);
     },
 
     createVideo_: function() {
@@ -402,7 +402,8 @@ Video.prototype = {
     render: function(opt_selector) {
         var instance = this;
 
-        tracking.one(opt_selector || document.body).appendChild(instance.domElement);
+        tracking.one(opt_selector || document.body).appendChild(
+            instance.domElement);
 
         return instance;
     },
@@ -412,7 +413,8 @@ Video.prototype = {
 
         instance.syncVideoCanvas();
 
-        tracking.one(opt_selector || document.body).appendChild(instance.canvas.domElement);
+        tracking.one(opt_selector || document.body).appendChild(
+            instance.canvas.domElement);
 
         return instance;
     },
@@ -434,7 +436,8 @@ Video.prototype = {
             width = instance.get('width'),
             height = instance.get('height');
 
-        instance.canvas.context.drawImage(instance.domElement, 0, 0, width, height);
+        instance.canvas.context.drawImage(
+            instance.domElement, 0, 0, width, height);
 
         return instance;
     },
