@@ -41,44 +41,33 @@
 	videoCamera.render('#videoContainer');
 	videoCamera.renderVideoCanvas('#canvasContainer');
 
-	// var t1 = videoCamera.track({
-	// 	type: tracking.type.COLOR,
-	// 	color: 'pink',
-	// 	callback: function(tracking) {
-	// 		console.log('pink', tracking.x, tracking.y, tracking.z);
-
-	// 		var size = 60 - tracking.z;
-
-	// 		canvasContext.fillStyle = "rgb(255,0,255)";
-	// 		canvasContext.fillRect (tracking.x - size*0.5, tracking.y - size*0.5, size, size);
-	// 	}
-	// });
-
-	// var t2 = videoCamera.track({
-	// 	type: tracking.type.COLOR,
-	// 	color: 'green',
-	// 	callback: function(tracking) {
-	// 		console.log('green', tracking.x, tracking.y, tracking.z);
-
-	// 		var size = 60 - tracking.z;
-
-	// 		canvasContext.fillStyle = "rgb(0,255,0)";
-	// 		canvasContext.fillRect (tracking.x - size*0.5, tracking.y - size*0.5, size, size);
-	// 	}
-	// });
-
-	var t3 = videoCamera.track({
+	var t1 = videoCamera.track({
 		type: tracking.type.COLOR,
-		color: 'blue',
+		color: 'magenta',
 		callback: function(tracking) {
-			console.log('blue', tracking.x, tracking.y, tracking.z);
+			console.log('magenta', tracking.x, tracking.y, tracking.z);
 
 			var size = 60 - tracking.z;
 
-			canvasContext.fillStyle = "rgb(0,0,255)";
-			canvasContext.fillRect (tracking.x - size*0.5, tracking.y - size*0.5, size, size);
+			canvasContext.strokeStyle = "rgb(255,0,255)";
+			canvasContext.lineWidth = 3;
+			canvasContext.strokeRect(tracking.x - size*0.5, tracking.y - size*0.5, size, size);
 		}
 	});
+
+	// var t2 = videoCamera.track({
+	// 	type: tracking.type.COLOR,
+	// 	color: 'cyan',
+	// 	callback: function(tracking) {
+	// 		console.log('cyan', tracking.x, tracking.y, tracking.z);
+
+	// 		var size = 60 - tracking.z;
+
+	// 		canvasContext.strokeStyle = "rgb(0,255,255)";
+	// 		canvasContext.lineWidth = 3;
+	// 		canvasContext.strokeRect(tracking.x - size*0.5, tracking.y - size*0.5, size, size);
+	// 	}
+	// });
 </script>
 
 </body>

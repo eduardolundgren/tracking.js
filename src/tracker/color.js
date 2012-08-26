@@ -2,7 +2,7 @@
 
     var defaults = {
 
-            color: 'pink'
+            color: 'magenta'
 
         },
 
@@ -16,16 +16,16 @@
                 }
             },
 
-            green: function(r, g, b) {
-                var thresholdRed = 30,
-                    thresholdBlue = 10;
+            cyan: function(r, g, b) {
+                var thresholdGreen = 30,
+                    thresholdBlue = 30;
 
-                if ((g - r) >= thresholdRed && (g - b) >= thresholdBlue) {
+                if ((g - r) >= thresholdGreen && (b - r) >= thresholdBlue) {
                     return true;
                 }
             },
 
-            pink: function(r, g, b) {
+            magenta: function(r, g, b) {
                 var threshold = 50;
 
                 if ((r - g) >= threshold && (b - g) >= threshold) {
@@ -123,8 +123,8 @@
             }
         }
 
-        cpy = dy/totalInliers;
         cpx = dx/totalInliers;
+        cpy = dy/totalInliers;
         cpz = 60 - ((maxx - minx) + (maxy - miny))/2;
 
         if (config.callback) {
