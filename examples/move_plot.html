@@ -5,6 +5,7 @@
 	<title></title>
 
 	<script type="text/javascript" src="../src/tracking.js"></script>
+	<script type="text/javascript" src="../src/tracker/color.js"></script>
 	<script type="text/javascript" src="js/splines.js"></script>
 
 	<style type="text/css">
@@ -12,7 +13,7 @@
 			display: none;
 		}
 
-		.flip-horizontally {
+		canvas {
 			-moz-transform: scale(-1, 1);
 			-o-transform: scale(-1, 1);
 			-webkit-transform: scale(-1, 1);
@@ -29,125 +30,23 @@
 <br/>
 
 <script>
-	var videoCamera = new tracking.VideoCamera({
-			audio: true
-		}),
+var videoCamera = new tracking.VideoCamera().render('#videoContainer');
 
-		canvas = videoCamera.canvas,
-		canvasContext = canvas.context;
+videoCamera.renderVideoCanvas('#canvasContainer');
 
-	canvas.domElement.classList.add('flip-horizontally');
+var plotCanvas = new tracking.Canvas().render(),
+	drawPoints = [];
 
-	videoCamera.render('#videoContainer');
-	videoCamera.renderVideoCanvas('#canvasContainer');
-
-	var plotCanvas = new tracking.Canvas(),
-		drawPoints = [];
-
-	plotCanvas.domElement.classList.add('flip-horizontally');
-	plotCanvas.render();
-
-	var threshold = 50;
-
-	function render() {
-		var imageData = videoCamera.getVideoCanvasImageData(),
-			cpx,
-			cpy,
-			cpz,
-			distance,
-			dx = 0,
-			dy = 0,
-			m,
-			maxx = -1,
-			maxy = -1,
-			minx = Infinity,
-			miny = Infinity,
-			n,
-			pixels = [],
-			total,
-			totalInliers = 0,
-			x,
-			y,
-			diff1,
-			diff2;
-
-		canvas.forEach(imageData, function(r, g, b, a, w, i, j) {
-			diff1 = r - g;
-			diff2 = b - g;
-
-			if (diff1 >= threshold && diff2 >= threshold) {
-				pixels.push(j, i);
-			}
-		});
-
-		total = pixels.length;
-
-		if (total < 30) {
-			drawPoints = [];
-			return;
+videoCamera.track(
+	{
+		type: 'color',
+		color: 'cyan',
+		callback: function(tracking) {
+			drawPoints.push(tracking.x, tracking.y);
+			drawSpline(videoCamera.canvas.context, drawPoints, 0.5, false);
 		}
-
-		// Flag outliers
-		for (m = 0; m < total; m+=2) {
-			distance = 0;
-
-			for (n = 2; n < total; n+=2) {
-				distance += tracking.math.distance(pixels[m], pixels[m+1], pixels[n], pixels[n+1]);
-			}
-
-			if (distance/total > 20) {
-				pixels[m] = -1;
-				pixels[m+1] = -1;
-			}
-		}
-
-		for (m = 0; m < total; m+=2) {
-			x = pixels[m];
-			y = pixels[m+1];
-
-			if (x > -1 && y > -1) {
-				dx += x;
-				dy += y;
-				totalInliers++;
-
-				if (x < minx) {
-					minx = x;
-				}
-
-				if (x > maxx) {
-					maxx = x;
-				}
-
-				if (y < miny) {
-					miny = y;
-				}
-
-				if (y > maxy) {
-					maxy = y;
-				}
-
-				canvasContext.fillStyle = "rgb(255,0,0)";
-				canvasContext.fillRect (x, y, 3, 3);
-			}
-		}
-
-		cpy = dy/totalInliers;
-		cpx = dx/totalInliers;
-		cpz = 60 - ((maxx - minx) + (maxy - miny))/2;
-
-		// plotCanvas.context.fillStyle = "rgb(0, 0,0)";
-		// plotCanvas.context.fillRect (cpx, cpy, 3, 3);
-		drawPoints.push(cpx, cpy);
-		// plotCanvas.context.clearRect(0,0,320,240);
-		drawSpline(canvasContext,drawPoints,0.5,false);
 	}
-
-
-
-	(function loop() {
-		requestAnimationFrame(loop);
-		render();
-	}());
+);
 </script>
 
 </body>

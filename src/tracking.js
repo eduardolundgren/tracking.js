@@ -307,7 +307,7 @@ var Video = function(opt_config) {
         width: 320
     }, opt_config), true);
 
-    instance.trackers_ = [];
+    instance.trackers_ = {};
 
     instance.createVideo_();
     instance.createCanvas_();
@@ -367,14 +367,18 @@ Video.prototype = {
     loop_: function() {
         var instance = this,
             i = 0,
-            tracker,
-            trackers = instance.trackers_;
+            trackers = instance.trackers_,
+            type;
 
-        for (; (tracker = trackers[i++]); ) {
-            tracker.type.call(instance, tracker, instance);
-        }
+        tracking.forEach(trackers, function(trackerGroup, trackerName) {
+            type = tracking.type[trackerName];
 
-        if (trackers.length) {
+            if (type.track) {
+                type.track(trackerGroup, instance);
+            }
+        });
+
+        if (Object.keys(trackers).length) {
             requestAnimationFrame(function loop() {
                 instance.loop_();
             });
@@ -428,7 +432,7 @@ Video.prototype = {
     stopTracking: function() {
         var instance = this;
 
-        instance.trackers_ = [];
+        instance.trackers_ = {};
     },
 
     syncVideoCanvas: function() {
@@ -452,24 +456,22 @@ Video.prototype = {
 
     track: function(config) {
         var instance = this,
+            type = tracking.type[config.type.toUpperCase()],
             trackers = instance.trackers_;
 
-        if (!config.type) {
+        if (!type) {
             throw Error('A tracker type should be specified.');
         }
 
-        var trackerId = trackers.push(config) - 1;
-
-        if (trackers.length === 1) {
-            instance.loop_();
+        if (!trackers[type.NAME]) {
+            trackers[type.NAME] = [];
         }
 
-        return {
-            id: trackerId,
-            cancel: function() {
-                trackers.splice(trackerId, 1);
-            }
-        };
+        trackers[type.NAME].push(config);
+
+        if (Object.keys(trackers).length === 1) {
+            instance.loop_();
+        }
     },
 
     widthChange_: function(val) {

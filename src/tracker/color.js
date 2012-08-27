@@ -1,144 +1,162 @@
 (function (window, undefined) {
 
-    var defaults = {
+    var isString = tracking.isString,
+
+        distance = tracking.math.distance;
+
+    tracking.type.COLOR = {
+        NAME: 'COLOR',
+
+        defaults_: {
 
             color: 'magenta'
 
         },
 
-        colors = {
+        blue: function(r, g, b) {
+            var threshold = 50;
 
-            blue: function(r, g, b) {
-                var threshold = 50;
-
-                if ((b - r) >= threshold && (b - g) >= threshold) {
-                    return true;
-                }
-            },
-
-            cyan: function(r, g, b) {
-                var thresholdGreen = 30,
-                    thresholdBlue = 30;
-
-                if ((g - r) >= thresholdGreen && (b - r) >= thresholdBlue) {
-                    return true;
-                }
-            },
-
-            magenta: function(r, g, b) {
-                var threshold = 50;
-
-                if ((r - g) >= threshold && (b - g) >= threshold) {
-                    return true;
-                }
+            if ((b - r) >= threshold && (b - g) >= threshold) {
+                return true;
             }
-
         },
 
-        isString = tracking.isString,
+        cyan: function(r, g, b) {
+            var thresholdGreen = 30,
+                thresholdBlue = 30;
 
-        distance = tracking.math.distance;
+            if ((g - r) >= thresholdGreen && (b - r) >= thresholdBlue) {
+                return true;
+            }
+        },
 
-    tracking.type.COLOR = function(config, video) {
+        magenta: function(r, g, b) {
+            var threshold = 50;
 
-        var cpx, cpy, cpz,
+            if ((r - g) >= threshold && (b - g) >= threshold) {
+                return true;
+            }
+        },
 
-            dist,
+        findCoordinates_: function(pixels, total) {
+            var instance = this,
+                dx = 0,
+                dy = 0,
+                totalInliers = 0,
+                minx = Infinity,
+                miny = Infinity,
+                maxx = -1,
+                maxy = -1,
+                x,
+                y,
+                c;
 
-            dx = 0, dy = 0,
+            for (c = 0; c < total; c+=2) {
+                x = pixels[c];
+                y = pixels[c+1];
 
-            m1 = 0, m2 = 0, n,
+                if (x > -1 && y > -1) {
+                    dx += x;
+                    dy += y;
+                    totalInliers++;
 
-            minx = Infinity, maxx = -1,
+                    if (x < minx) {
+                        minx = x;
+                    }
 
-            miny = Infinity, maxy = -1,
+                    if (x > maxx) {
+                        maxx = x;
+                    }
 
-            pixels = [],
+                    if (y < miny) {
+                        miny = y;
+                    }
 
-            total = 0, totalInliers = 0,
-
-            x, y,
-
-            imageData = video.getVideoCanvasImageData(),
-
-            colorThreshold = config.color || defaults.color;
-
-        if (isString(colorThreshold) && colors.hasOwnProperty(colorThreshold)) {
-            colorThreshold = colors[colorThreshold];
-        }
-
-        video.canvas.forEach(
-            imageData,
-            function pixelMatrixLoop(r, g, b, a, w, i, j) {
-                if (colorThreshold(r, g, b, a, w, i, j)) {
-                    total += 2;
-                    pixels.push(j, i);
+                    if (y > maxy) {
+                        maxy = y;
+                    }
                 }
             }
-        );
 
-        if (total < 30) {
-            return;
-        }
+            return {
+                x: dx/totalInliers,
+                y: dy/totalInliers,
+                z: 60 - ((maxx - minx) + (maxy - miny))/2
+            };
+        },
 
-        // Flag outliers
-        for (; m1 < total; m1+=2) {
-            dist = 0;
+        flagOutliers_: function(pixels, total) {
+            var instance = this,
+                dist,
+                m,
+                n;
 
-            for (n = 2; n < total; n+=2) {
-                dist += distance(
-                    pixels[m1], pixels[m1+1], pixels[n], pixels[n+1]);
-            }
+            for (m = 0; m < total; m+=2) {
+                dist = 0;
 
-            if (dist/total > 20) {
-                pixels[m1] = -1;
-                pixels[m1+1] = -1;
-            }
-        }
-
-        for (; m2 < total; m2+=2) {
-            x = pixels[m2];
-            y = pixels[m2+1];
-
-            if (x > -1 && y > -1) {
-                dx += x;
-                dy += y;
-                totalInliers++;
-
-                if (x < minx) {
-                    minx = x;
+                for (n = 2; n < total; n+=2) {
+                    dist += distance(
+                        pixels[m], pixels[m+1], pixels[n], pixels[n+1]);
                 }
 
-                if (x > maxx) {
-                    maxx = x;
-                }
-
-                if (y < miny) {
-                    miny = y;
-                }
-
-                if (y > maxy) {
-                    maxy = y;
+                if (dist/total > 20) {
+                    pixels[m] = -1;
+                    pixels[m+1] = -1;
                 }
             }
-        }
+        },
 
-        cpx = dx/totalInliers;
-        cpy = dy/totalInliers;
-        cpz = 60 - ((maxx - minx) + (maxy - miny))/2;
+        track: function(trackerGroup, video) {
+            var instance = this,
+                defaults = instance.defaults_,
+                config,
+                c,
+                total = [],
+                pixels = [],
+                payload,
+                colorThreshold;
 
-        if (config.callback) {
-            config.callback.call(video, {
-                x: cpx,
-                y: cpy,
-                z: cpz,
-                pixels: pixels
-            });
+            video.canvas.forEach(
+                video.getVideoCanvasImageData(),
+                function pixelMatrixLoop(r, g, b, a, w, i, j) {
+
+                    for (c = -1; (config = trackerGroup[++c]); ) {
+                        if (!pixels[c]) {
+                            total[c] = 0;
+                            pixels[c] = [];
+                        }
+
+                        colorThreshold = config.color || defaults.color;
+
+                        if (isString(colorThreshold) && instance.hasOwnProperty(colorThreshold)) {
+                            colorThreshold = instance[colorThreshold];
+                        }
+
+                        if (colorThreshold(r, g, b, a, w, i, j)) {
+                            total[c] += 2;
+                            pixels[c].push(j, i);
+                        }
+                    }
+
+                }
+            );
+
+            for (c = -1; (config = trackerGroup[++c]); ) {
+                if (total[c] < 30) {
+                    continue;
+                }
+
+                instance.flagOutliers_(pixels[c], total[c]);
+
+                payload = instance.findCoordinates_(pixels[c], total[c]);
+
+                payload.pixels = pixels[c];
+
+                if (config.callback) {
+                    config.callback.call(video, payload);
+                }
+            }
         }
     };
-
-    tracking.type.COLOR.colors = colors;
-
-    tracking.type.COLOR.defaults = defaults;
 
 }( window ));
