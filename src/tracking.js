@@ -192,29 +192,85 @@ Attribute.prototype = {
 
 tracking.Attribute = Attribute;
 
-// tracking.Canvas
+// tracking.DomElement
 
-var Canvas = function(opt_config) {
+var DomElement = function(opt_config) {
     var instance = this;
 
     instance.setAttrs(tracking.merge({
         height: 240,
+        visible: true,
         width: 320
     }, opt_config), true);
+};
+
+DomElement.prototype = {
+    domElement: null,
+
+    heightChange_: function(val) {
+        var instance = this;
+
+        instance.domElement.height = val;
+    },
+
+    hide: function() {
+        var instance = this;
+
+        instance.set('visible', false);
+
+        return instance;
+    },
+
+    render: function(opt_selector) {
+        var instance = this;
+
+        instance.heightChange_(instance.get('height'));
+        instance.visibleChange_(instance.get('visible'));
+        instance.widthChange_(instance.get('width'));
+
+        tracking.one(opt_selector || document.body).appendChild(
+            instance.domElement);
+
+        return instance;
+    },
+
+    show: function() {
+        var instance = this;
+
+        instance.set('visible', true);
+
+        return instance;
+    },
+
+    visibleChange_: function(val) {
+        var instance = this;
+
+        instance.domElement.style.display = val ? 'block' : 'none';
+    },
+
+    widthChange_: function(val) {
+        var instance = this;
+
+        instance.domElement.width = val;
+    }
+};
+
+tracking.DomElement = tracking.augment(DomElement, tracking.Attribute);
+
+// tracking.Canvas
+
+var Canvas = function(opt_config) {
+    var instance = this;
 
     instance.createCanvas_();
 };
 
 Canvas.prototype = {
     context: null,
-    domElement: null,
 
     createCanvas_: function() {
         var instance = this,
             domElement = document.createElement('canvas');
-
-        domElement.height = instance.get('height');
-        domElement.width = instance.get('width');
 
         instance.domElement = domElement;
         instance.context = domElement.getContext('2d');
@@ -257,15 +313,6 @@ Canvas.prototype = {
         }
     },
 
-    render: function(opt_selector) {
-        var instance = this;
-
-        tracking.one(opt_selector || document.body).appendChild(
-            instance.domElement);
-
-        return instance;
-    },
-
     toDataURL: function(opt_format) {
         var instance = this;
 
@@ -293,7 +340,7 @@ Canvas.prototype = {
     }
 };
 
-tracking.Canvas = tracking.augment(Canvas, tracking.Attribute);
+tracking.Canvas = tracking.augment(Canvas, tracking.DomElement);
 
 // tracking.Video
 
@@ -302,9 +349,7 @@ var Video = function(opt_config) {
 
     instance.setAttrs(tracking.merge({
         autoplay: true,
-        height: 240,
-        controls: true,
-        width: 320
+        controls: true
     }, opt_config), true);
 
     instance.trackers_ = {};
@@ -315,7 +360,6 @@ var Video = function(opt_config) {
 
 Video.prototype = {
     canvas: null,
-    domElement: null,
 
     trackers_: null,
 
@@ -334,8 +378,6 @@ Video.prototype = {
 
         domElement.autoplay = instance.get('autoplay');
         domElement.controls = instance.get('controls');
-        domElement.height = instance.get('height');
-        domElement.width = instance.get('width');
 
         instance.domElement = domElement;
     },
@@ -346,13 +388,6 @@ Video.prototype = {
         instance.syncVideoCanvas();
 
         return instance.canvas.getImageData();
-    },
-
-    heightChange_: function(val) {
-        var instance = this;
-
-        instance.domElement.height = val;
-        instance.canvas.domElement.height = val;
     },
 
     load: function() {
@@ -399,15 +434,6 @@ Video.prototype = {
             domElement = instance.domElement;
 
         domElement.play.apply(domElement, arguments);
-
-        return instance;
-    },
-
-    render: function(opt_selector) {
-        var instance = this;
-
-        tracking.one(opt_selector || document.body).appendChild(
-            instance.domElement);
 
         return instance;
     },
@@ -472,17 +498,10 @@ Video.prototype = {
         if (Object.keys(trackers).length === 1) {
             instance.loop_();
         }
-    },
-
-    widthChange_: function(val) {
-        var instance = this;
-
-        instance.domElement.width = val;
-        instance.canvas.domElement.width = val;
     }
 };
 
-tracking.Video = tracking.augment(Video, tracking.Attribute);
+tracking.Video = tracking.augment(Video, tracking.DomElement);
 
 // tracking.VideoCamera
 
@@ -490,9 +509,7 @@ var VideoCamera = function(opt_config) {
     var instance = this;
 
     instance.setAttrs(tracking.merge({
-        audio: true,
-        height: 240,
-        width: 320
+        audio: true
     }, opt_config), true);
 
     instance.initUserMedia_();

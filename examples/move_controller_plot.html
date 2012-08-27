@@ -9,10 +9,6 @@
 	<script type="text/javascript" src="js/splines.js"></script>
 
 	<style type="text/css">
-		#videoContainer {
-			display: none;
-		}
-
 		canvas {
 			-moz-transform: scale(-1, 1);
 			-o-transform: scale(-1, 1);
@@ -24,15 +20,8 @@
 </head>
 <body>
 
-<div id="videoContainer"></div>
-<div id="canvasContainer"></div>
-
-<br/>
-
 <script>
-var videoCamera = new tracking.VideoCamera().render('#videoContainer');
-
-videoCamera.renderVideoCanvas('#canvasContainer');
+var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas();
 
 var plotCanvas = new tracking.Canvas().render(),
 	drawPoints = [];
