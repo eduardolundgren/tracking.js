@@ -1,0 +1,77 @@
+<!doctype html>
+
+<html>
+<head>
+    <title>tracking.js + three.js: minecraft</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+
+    <script src="../src/tracking.js"></script>
+    <script src="../src/tracker/color.js"></script>
+
+    <script src="js/threejs/Three.js"></script>
+    <script src="js/threejs/ImprovedNoise.js"></script>
+    <script src="js/threejs/Detector.js"></script>
+    <script src="js/threejs/Stats.js"></script>
+
+    <link rel="stylesheet" href="css/minecraft.css">
+</head>
+<body>
+
+<div id="container"><br /><br /><br /><br /><br />Generating world...</div>
+<div id="info"><a href="http://github.com/eduardolundgren/tracking.js" target="_blank">tracking.js</a> and <a href="http://github.com/mrdoob/three.js" target="_blank">three.js</a> - <a href="http://www.minecraft.net/" target="_blank">minecraft</a> demo. featuring <a href="http://painterlypack.net/" target="_blank">painterly pack</a><br />(left or right: magenta, forward: cyan)</div>
+
+<div id="aim"></div>
+<div id="videoContainer"></div>
+
+<script src="js/threejs/minecraft.js"></script>
+
+<script>
+    var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas('#videoContainer');
+
+    var aim = tracking.one('#aim');
+
+    videoCamera.track(
+        {
+            type: 'color',
+            color: 'magenta',
+            onFound: function(track) {
+                var x = track.x,
+                    y = track.y;
+
+                if (x && y) {
+                    var mouseX = ((320 - track.x)/320)*window.innerWidth - controls.viewHalfX,
+                        mouseY = ((240 - track.y)/240)*window.innerHeight - controls.viewHalfY;
+
+                    controls.mouseX = mouseX;
+                    controls.mouseY = mouseY;
+
+                    aim.style.top = window.innerHeight - (mouseY + controls.viewHalfY) + 'px';
+                    aim.style.left = mouseX + controls.viewHalfX + 'px';
+                }
+            },
+            onNotFound: function() {
+                controls.moveLeft = false;
+                controls.moveRight = false;
+                controls.moveForward = false;
+                controls.moveBackward = false;
+            }
+        }
+    );
+
+    videoCamera.track(
+        {
+            type: 'color',
+            color: 'cyan',
+            onFound: function(track) {
+               controls.moveForward = true;
+            },
+            onNotFound: function() {
+                controls.moveForward = false;
+            }
+        }
+    );
+</script>
+
+</body>
+</html>

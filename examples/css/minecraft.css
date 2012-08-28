@@ -1,0 +1,41 @@
+body {
+    color: #61443e;
+    font-family:Monospace;
+    font-size:13px;
+    text-align:center;
+
+    background-color: #bfd1e5;
+    margin: 0px;
+    overflow: hidden;
+}
+
+#info {
+    position: absolute;
+    top: 0px; width: 100%;
+    padding: 5px;
+}
+
+a {
+    color: #a06851;
+}
+
+#videoContainer {
+    position: absolute;
+    right: 30px;
+    top: 30px;
+}
+
+#videoContainer canvas {
+    -moz-transform: scale(-1, 1);
+    -o-transform: scale(-1, 1);
+    -webkit-transform: scale(-1, 1);
+    filter: FlipH;
+    transform: scale(-1, 1);
+}
+
+#aim {
+    position: absolute;
+    width: 125px;
+    height: 125px;
+    background: url(../img/aim.png);
+}
