@@ -15,29 +15,31 @@
 
         },
 
-        blue: function(r, g, b) {
-            var threshold = 50;
-
-            if ((b - r) >= threshold && (b - g) >= threshold) {
-                return true;
-            }
-        },
-
         cyan: function(r, g, b) {
             var thresholdGreen = 60,
-                thresholdBlue = 60;
+                thresholdBlue = 60,
+                dx = r-0,
+                dy = g-255,
+                dz = b-255;
 
             if ((g - r) >= thresholdGreen && (b - r) >= thresholdBlue) {
                 return true;
             }
+
+            return Math.sqrt(dx*dx + dy*dy + dz*dz) < 80;
         },
 
         magenta: function(r, g, b) {
-            var threshold = 50;
+            var threshold = 50,
+                dx = r-255,
+                dy = g-0,
+                dz = b-255;
 
             if ((r - g) >= threshold && (b - g) >= threshold) {
                 return true;
             }
+
+            return Math.sqrt(dx*dx + dy*dy + dz*dz) < 140;
         },
 
         findCoordinates_: function(pixels, total) {
@@ -101,9 +103,11 @@
                         pixels[m], pixels[m+1], pixels[n], pixels[n+1]);
                 }
 
-                if (dist/total > 20) {
+                if (dist/total > 30) {
                     pixels[m] = -1;
                     pixels[m+1] = -1;
+
+                    total[m]--;
                 }
             }
         },
