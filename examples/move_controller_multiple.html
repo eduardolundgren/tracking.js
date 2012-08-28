@@ -26,14 +26,14 @@
 		{
 			type: 'color',
 			color: 'magenta',
-			callback: function(tracking) {
-				console.log('magenta', tracking.x, tracking.y, tracking.z);
+			callback: function(track) {
+				console.log('magenta', track.x, track.y, track.z);
 
-				var size = 60 - tracking.z;
+				var size = 60 - track.z;
 
 				videoCamera.canvas.context.strokeStyle = "rgb(255,0,255)";
 				videoCamera.canvas.context.lineWidth = 3;
-				videoCamera.canvas.context.strokeRect(tracking.x - size*0.5, tracking.y - size*0.5, size, size);
+				videoCamera.canvas.context.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
 			}
 		}
 	);
@@ -42,14 +42,14 @@
 		{
 			type: 'color',
 			color: 'cyan',
-			callback: function(tracking) {
-				console.log('cyan', tracking.x, tracking.y, tracking.z);
+			callback: function(track) {
+				console.log('cyan', track.x, track.y, track.z);
 
-				var size = 60 - tracking.z;
+				var size = 60 - track.z;
 
 				videoCamera.canvas.context.strokeStyle = "rgb(0,255,255)";
 				videoCamera.canvas.context.lineWidth = 3;
-				videoCamera.canvas.context.strokeRect(tracking.x - size*0.5, tracking.y - size*0.5, size, size);
+				videoCamera.canvas.context.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
 			}
 		}
 	);
