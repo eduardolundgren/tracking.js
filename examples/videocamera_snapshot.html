@@ -2,8 +2,8 @@
 
 <html>
 <head>
-	<title></title>
-	<script type="text/javascript" src="../src/tracking.js"></script>
+    <title></title>
+    <script type="text/javascript" src="../src/tracking.js"></script>
 </head>
 <body>
 
@@ -13,14 +13,14 @@
 <img id="picture" src="">
 
 <script>
-	var videoCamera = new tracking.VideoCamera().render('#videoContainer');
+    var videoCamera = new tracking.VideoCamera().render('#videoContainer');
 
-	var snapshot = function(w, h) {
-		var picture = tracking.one('#picture');
-	    picture.width = videoCamera.get('width');
-	    picture.height = videoCamera.get('height');
-	    picture.src = videoCamera.toDataURL();
-	};
+    var snapshot = function(w, h) {
+        var picture = tracking.one('#picture');
+        picture.width = videoCamera.get('width');
+        picture.height = videoCamera.get('height');
+        picture.src = videoCamera.toDataURL();
+    };
 </script>
 
 </body>

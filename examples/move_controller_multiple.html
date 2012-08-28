@@ -2,57 +2,57 @@
 
 <html>
 <head>
-	<title></title>
+    <title></title>
 
-	<script type="text/javascript" src="../src/tracking.js"></script>
-	<script type="text/javascript" src="../src/tracker/color.js"></script>
+    <script type="text/javascript" src="../src/tracking.js"></script>
+    <script type="text/javascript" src="../src/tracker/color.js"></script>
 
-	<style type="text/css">
-		canvas {
-			-moz-transform: scale(-1, 1);
-			-o-transform: scale(-1, 1);
-			-webkit-transform: scale(-1, 1);
-			filter: FlipH;
-			transform: scale(-1, 1);
-		}
-	</style>
+    <style type="text/css">
+        canvas {
+            -moz-transform: scale(-1, 1);
+            -o-transform: scale(-1, 1);
+            -webkit-transform: scale(-1, 1);
+            filter: FlipH;
+            transform: scale(-1, 1);
+        }
+    </style>
 </head>
 <body>
 
 <script>
-	var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas();
+    var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas();
 
-	var t1 = videoCamera.track(
-		{
-			type: 'color',
-			color: 'magenta',
-			callback: function(track) {
-				console.log('magenta', track.x, track.y, track.z);
+    var t1 = videoCamera.track(
+        {
+            type: 'color',
+            color: 'magenta',
+            callback: function(track) {
+                console.log('magenta', track.x, track.y, track.z);
 
-				var size = 60 - track.z;
+                var size = 60 - track.z;
 
-				videoCamera.canvas.context.strokeStyle = "rgb(255,0,255)";
-				videoCamera.canvas.context.lineWidth = 3;
-				videoCamera.canvas.context.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
-			}
-		}
-	);
+                videoCamera.canvas.context.strokeStyle = "rgb(255,0,255)";
+                videoCamera.canvas.context.lineWidth = 3;
+                videoCamera.canvas.context.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
+            }
+        }
+    );
 
-	var t2 = videoCamera.track(
-		{
-			type: 'color',
-			color: 'cyan',
-			callback: function(track) {
-				console.log('cyan', track.x, track.y, track.z);
+    var t2 = videoCamera.track(
+        {
+            type: 'color',
+            color: 'cyan',
+            callback: function(track) {
+                console.log('cyan', track.x, track.y, track.z);
 
-				var size = 60 - track.z;
+                var size = 60 - track.z;
 
-				videoCamera.canvas.context.strokeStyle = "rgb(0,255,255)";
-				videoCamera.canvas.context.lineWidth = 3;
-				videoCamera.canvas.context.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
-			}
-		}
-	);
+                videoCamera.canvas.context.strokeStyle = "rgb(0,255,255)";
+                videoCamera.canvas.context.lineWidth = 3;
+                videoCamera.canvas.context.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
+            }
+        }
+    );
 </script>
 
 </body>
