@@ -144,7 +144,11 @@
             );
 
             for (c = -1; (config = trackerGroup[++c]); ) {
-                if (total[c] < defaults.minFoundPixels) {
+                if (total[c] <= defaults.minFoundPixels) {
+                    if (config.onNotFound) {
+                        config.onNotFound.call(video, payload);
+                    }
+
                     continue;
                 }
 
@@ -154,8 +158,8 @@
 
                 payload.pixels = pixels[c];
 
-                if (config.callback) {
-                    config.callback.call(video, payload);
+                if (config.onFound) {
+                    config.onFound.call(video, payload);
                 }
             }
         }

@@ -26,11 +26,6 @@
         {
             type: 'color',
             color: 'magenta',
-
-            onNotFound: function() {
-                console.log('onNotFound');
-            },
-
             onFound: function(track) {
                 var pixels = track.pixels;
 
@@ -41,6 +36,8 @@
 
                 videoCamera.canvas.context.fillStyle = "rgb(0,0,0)";
                 videoCamera.canvas.context.fillRect(track.x, track.y, 5, 5);
+            },
+            onNotFound: function() {
             }
         }
     );

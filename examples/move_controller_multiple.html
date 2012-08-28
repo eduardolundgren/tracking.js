@@ -26,7 +26,7 @@
         {
             type: 'color',
             color: 'magenta',
-            callback: function(track) {
+            onFound: function(track) {
                 console.log('magenta', track.x, track.y, track.z);
 
                 var size = 60 - track.z;
@@ -42,7 +42,7 @@
         {
             type: 'color',
             color: 'cyan',
-            callback: function(track) {
+            onFound: function(track) {
                 console.log('cyan', track.x, track.y, track.z);
 
                 var size = 60 - track.z;
