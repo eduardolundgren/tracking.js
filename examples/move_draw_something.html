@@ -26,12 +26,29 @@
       position: relative;
       background: url(img/iphone.png);
     }
-
+    #selected {
+      width: 30px;
+      height: 30px;
+      border: 3px solid #000;
+      border-radius: 7px;
+      position: absolute;
+      display: none;
+    }
+    .pencil {
+      bottom: 153px;
+      left: 73px;
+    }
+    .erase {
+      bottom: 153px;
+      left: 128px;
+    }
   </style>
 </head>
 <body>
 
-<div id="iphoneContainer"></div>
+<div id="iphoneContainer">
+  <div id="selected"></div>
+</div>
 
 <script>
 var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas('#iphoneContainer');
@@ -39,7 +56,8 @@ var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas('
 var plotCanvas = new tracking.Canvas().render(),
     segment = 0,
     found = false,
-    drawSegments = [];
+    drawSegments = [],
+    selected = document.getElementById('selected');
 
 videoCamera.track(
     {
@@ -52,12 +70,20 @@ videoCamera.track(
 
             drawSegments[segment].push(track.x, track.y);
 
+            if (!found) {
+              console.log('found');
+              selected.className = 'pencil';
+              selected.style.display = 'block';
+            }
+
             found = true;
         },
         onNotFound: function() {
             if (found) {
+                console.log('notFound');
                 segment++;
                 found = false;
+                selected.style.display = 'none';
             }
         }
     }
