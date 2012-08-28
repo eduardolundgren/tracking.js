@@ -1,0 +1,55 @@
+<!doctype html>
+
+<html>
+<head>
+  <title>Draw Something</title>
+
+  <script type="text/javascript" src="../src/tracking.js"></script>
+  <script type="text/javascript" src="../src/tracker/color.js"></script>
+  <script type="text/javascript" src="js/splines.js"></script>
+
+  <style type="text/css">
+    canvas {
+      -moz-transform: scale(-1, 1);
+      -o-transform: scale(-1, 1);
+      -webkit-transform: scale(-1, 1);
+      filter: FlipH;
+      transform: scale(-1, 1);
+      position: absolute;
+      top: 305px;
+      left: 54px;
+    }
+    #iphoneContainer {
+      width: 425px;
+      height: 757px;
+      margin: 0 auto;
+      position: relative;
+      background: url(img/iphone.png);
+    }
+
+  </style>
+</head>
+<body>
+
+  <div id="iphoneContainer"></div>
+
+<script>
+var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas('#iphoneContainer');
+
+var plotCanvas = new tracking.Canvas().render(),
+  drawPoints = [];
+
+videoCamera.track(
+  {
+    type: 'color',
+    color: 'cyan',
+    callback: function(tracking) {
+      drawPoints.push(tracking.x, tracking.y);
+      drawSpline(videoCamera.canvas.context, drawPoints, 0.5, false);
+    }
+  }
+);
+</script>
+
+</body>
+</html>
