@@ -31,24 +31,55 @@
 </head>
 <body>
 
-  <div id="iphoneContainer"></div>
+<div id="iphoneContainer"></div>
 
 <script>
 var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas('#iphoneContainer');
 
 var plotCanvas = new tracking.Canvas().render(),
-  drawPoints = [];
+    segment = 0,
+    found = false,
+    drawSegments = [];
 
 videoCamera.track(
-  {
-    type: 'color',
-    color: 'magenta',
-    callback: function(track) {
-      drawPoints.push(track.x, track.y);
-      drawSpline(videoCamera.canvas.context, drawPoints, 0.5, false);
+    {
+        type: 'color',
+        color: 'magenta',
+        onFound: function(track) {
+            if (!drawSegments[segment]) {
+                drawSegments[segment]= [];
+            }
+
+            drawSegments[segment].push(track.x, track.y);
+
+            found = true;
+        },
+        onNotFound: function() {
+            if (found) {
+                segment++;
+                found = false;
+            }
+        }
     }
-  }
 );
+
+videoCamera.track(
+    {
+        type: 'color',
+        color: 'cyan',
+        onFound: function(track) {
+            segment = 0;
+            drawSegments = [];
+        }
+    }
+);
+
+(function loop() {
+    for (var i = 0, len = drawSegments.length; i < len; i++) {
+        drawSpline(videoCamera.canvas.context, drawSegments[i], 0.5, false);
+    }
+    requestAnimationFrame(loop);
+}());
 </script>
 
 </body>
