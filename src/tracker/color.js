@@ -7,9 +7,11 @@
     tracking.type.COLOR = {
         NAME: 'COLOR',
 
-        defaults_: {
+        defaults: {
 
-            color: 'magenta'
+            color: 'magenta',
+
+            minFoundPixels: 30
 
         },
 
@@ -22,8 +24,8 @@
         },
 
         cyan: function(r, g, b) {
-            var thresholdGreen = 30,
-                thresholdBlue = 30;
+            var thresholdGreen = 60,
+                thresholdBlue = 60;
 
             if ((g - r) >= thresholdGreen && (b - r) >= thresholdBlue) {
                 return true;
@@ -108,7 +110,7 @@
 
         track: function(trackerGroup, video) {
             var instance = this,
-                defaults = instance.defaults_,
+                defaults = instance.defaults,
                 config,
                 c,
                 total = [],
@@ -142,7 +144,7 @@
             );
 
             for (c = -1; (config = trackerGroup[++c]); ) {
-                if (total[c] < 30) {
+                if (total[c] < defaults.minFoundPixels) {
                     continue;
                 }
 
