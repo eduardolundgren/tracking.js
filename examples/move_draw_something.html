@@ -42,9 +42,9 @@ var plotCanvas = new tracking.Canvas().render(),
 videoCamera.track(
   {
     type: 'color',
-    color: 'cyan',
-    callback: function(tracking) {
-      drawPoints.push(tracking.x, tracking.y);
+    color: 'magenta',
+    callback: function(track) {
+      drawPoints.push(track.x, track.y);
       drawSpline(videoCamera.canvas.context, drawPoints, 0.5, false);
     }
   }
