@@ -16,8 +16,8 @@
         },
 
         cyan: function(r, g, b) {
-            var thresholdGreen = 60,
-                thresholdBlue = 60,
+            var thresholdGreen = 50,
+                thresholdBlue = 50,
                 dx = r-0,
                 dy = g-255,
                 dz = b-255;
