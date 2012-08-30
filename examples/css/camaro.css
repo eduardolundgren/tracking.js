@@ -1,0 +1,64 @@
+body {
+    background: #000;
+    color: #fff;
+    font-family: georgia;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
+    text-align: center;
+}
+
+h1 {
+
+}
+
+a {
+    color: skyblue
+}
+
+canvas {
+    pointer-events: none;
+    position: relative;
+    z-index: 10;
+}
+
+#d {
+    display: block;
+    margin: 1em 0 -2.5em 0;
+    position: relative;
+    text-align: center;
+    z-index: 0;
+}
+
+#buttons {
+    margin: 0.5em 0 0 0
+}
+
+button {
+    background: #222;
+    border: 0;
+    border-radius: 3px;
+    color: #fff;
+    cursor: pointer;
+    font-family: georgia;
+    padding: 0.2em 0.5em;
+}
+
+button:hover {
+    background: #333
+}
+
+canvas {
+    -moz-transform: scale(-1, 1);
+    -o-transform: scale(-1, 1);
+    -webkit-transform: scale(-1, 1);
+    filter: FlipH;
+    transform: scale(-1, 1);
+}
+
+#videoContainer {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	border: 5px solid #fff;
+}
