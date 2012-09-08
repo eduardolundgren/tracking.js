@@ -374,12 +374,18 @@ Video.prototype = {
 
     createVideo_: function() {
         var instance = this,
+            autoplay = instance.get('autoplay'),
             domElement = document.createElement('video');
 
-        domElement.autoplay = instance.get('autoplay');
+        domElement.autoplay = autoplay;
         domElement.controls = instance.get('controls');
 
         instance.domElement = domElement;
+
+        if (autoplay) {
+            // Firefox 18.0a1 (2012-08-31) doesn't respect autoplay property set, force play.
+            instance.play();
+        }
     },
 
     getVideoCanvasImageData: function() {
@@ -463,11 +469,14 @@ Video.prototype = {
 
     syncVideoCanvas: function() {
         var instance = this,
+            domElement = instance.domElement,
             width = instance.get('width'),
             height = instance.get('height');
 
-        instance.canvas.context.drawImage(
-            instance.domElement, 0, 0, width, height);
+        if (domElement.readyState === domElement.HAVE_ENOUGH_DATA) {
+            instance.canvas.context.drawImage(
+                instance.domElement, 0, 0, width, height);
+        }
 
         return instance;
     },
@@ -520,7 +529,10 @@ VideoCamera.prototype = {
         var instance = this;
 
         navigator.getUserMedia(
-            { audio: instance.get('audio'), video: true },
+            // Firefox 18.0a1 (2012-08-31) doesn't support audio yet, since we don't do nothing with audio, remove it for now.
+            navigator.mozGetUserMedia ?
+                { video: true } :
+                { audio: instance.get('audio'), video: true },
             tracking.bind(instance.defSuccessHandler_, instance),
             tracking.bind(instance.defErrorHandler_, instance));
     },
@@ -528,7 +540,13 @@ VideoCamera.prototype = {
     defSuccessHandler_: function(stream) {
         var instance = this;
 
-        instance.set('src', URL.createObjectURL(stream));
+        try {
+            instance.set('src', URL.createObjectURL(stream));
+        }
+        catch (err) {
+            // Firefox 18.0a1 (2012-08-31) doesn't require create object URL
+            instance.set('src', stream);
+        }
     },
 
     defErrorHandler_: function(err) {
