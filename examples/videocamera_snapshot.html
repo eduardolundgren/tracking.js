@@ -1,30 +1,28 @@
 <!doctype html>
-
 <html>
 <head>
-    <title></title>
 
+    <title>tracking.js - video camera snapshot</title>
     <meta charset="utf-8">
+    <script src="../src/tracking.js"></script>
 
-    <script type="text/javascript" src="../src/tracking.js"></script>
 </head>
 <body>
 
-<div id="videoContainer"></div>
-<button onclick="snapshot()">Take a Snapshot!</button>
-<br/>
-<img id="picture" src="">
+    <div id="videoContainer"></div>
+    <button onclick="snapshot()">Take a Snapshot!</button><br/>
+    <img id="picture" src="">
 
-<script>
-    var videoCamera = new tracking.VideoCamera().render('#videoContainer');
+    <script>
+        var videoCamera = new tracking.VideoCamera().render('#videoContainer');
 
-    var snapshot = function(w, h) {
-        var picture = tracking.one('#picture');
-        picture.width = videoCamera.get('width');
-        picture.height = videoCamera.get('height');
-        picture.src = videoCamera.toDataURL();
-    };
-</script>
+        var snapshot = function(w, h) {
+            var picture = tracking.one('#picture');
+            picture.width = videoCamera.get('width');
+            picture.height = videoCamera.get('height');
+            picture.src = videoCamera.toDataURL();
+        };
+    </script>
 
 </body>
 </html>
