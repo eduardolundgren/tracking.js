@@ -92,35 +92,3 @@ var App = {
     }
   }
 };
-
-App.glasses = new Image();
-App.glasses.src = '../examples/img/glasses.png';
-
-App.init = function() {
-  App.video = document.createElement('video');
-  App.backCanvas = document.createElement('canvas');
-  App.canvas = document.querySelector('#output');
-  App.canvas.style.display = 'none';
-  App.context = App.canvas.getContext('2d');
-  App.info = document.querySelector('#info');
-
-  navigator.getUserMedia_ = navigator.getUserMedia || navigator.webkitGetUserMedia || navigator.mozGetUserMedia || navigator.msGetUserMedia;
-
-  try {
-    navigator.getUserMedia_({
-      video: true,
-      audio: false
-    }, App.start, App.denied);
-  } catch (e) {
-    try {
-      navigator.getUserMedia_('video', App.start, App.denied);
-    } catch (e) {
-      App.error(e);
-    }
-  }
-
-  App.video.loop = App.video.muted = true;
-  App.video.load();
-};
-
-App.init();
