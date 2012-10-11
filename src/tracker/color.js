@@ -5,6 +5,7 @@
         distance = tracking.math.distance;
 
     tracking.type.COLOR = {
+
         NAME: 'COLOR',
 
         defaults: {
@@ -138,7 +139,7 @@
                             colorThreshold = instance[colorThreshold];
                         }
 
-                        if (colorThreshold(r, g, b, a, w, i, j)) {
+                        if (colorThreshold.call(instance, r, g, b, a, w, i, j)) {
                             total[c] += 2;
                             pixels[c].push(j, i);
                         }
@@ -167,6 +168,7 @@
                 }
             }
         }
+
     };
 
 }( window ));
