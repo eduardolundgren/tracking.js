@@ -301,15 +301,41 @@ Canvas.prototype = {
             width = imageData.width,
             height = imageData.height,
             data = imageData.data,
+            jump = opt_jump || 1,
             i = 0,
             j = 0,
             w;
 
-        for (i = 0; i < height; i++) {
-            for (j = 0; j < width; j++) {
+        for (i = 0; i < height; i+=jump) {
+            for (j = 0; j < width; j+=jump) {
                 w = i*width*4 + j*4;
-                fn.call(instance, data[w], data[w+1], data[w+2], data[w+3], w, i, j);
+                fn.call(instance, data[w], data[w+1], data[w+2], data[w+3], w, i, j, imageData);
             }
+        }
+    },
+
+    loadImage: function(src, opt_fn, opt_x, opt_y, opt_width, opt_height) {
+        var instance = this,
+            x = opt_x || 0,
+            y = opt_y || 0,
+            width = opt_width || instance.get('width'),
+            height = opt_height || instance.get('height'),
+            context = instance.context;
+
+        if (context) {
+            var img = new Image();
+
+            img.onload = function() {
+                context.drawImage(img, x, y, width, height);
+
+                if (opt_fn) {
+                    opt_fn.call(instance);
+                }
+
+                img = null;
+            };
+
+            img.src = src;
         }
     },
 
@@ -322,19 +348,19 @@ Canvas.prototype = {
     transform: function(fn) {
         var instance = this,
             imageData = instance.getImageData(),
-            newImageData = instance.context.createImageData(imageData),
-            newData = newImageData.data;
+            data = imageData.data,
+            value;
 
         instance.forEach(imageData, function(r, g, b, a, w, i, j) {
-            var value = (r + g + b)/3;
+            var value = fn.apply(instance, arguments);
 
-            newData[w] = value;
-            newData[w+1] = value;
-            newData[w+2] = value;
-            newData[w+3] = 255;
+            data[w] = value[0];
+            data[w+1] = value[1];
+            data[w+2] = value[2];
+            data[w+3] = value[3];
         });
 
-        instance.setImageData(newImageData);
+        instance.setImageData(imageData);
 
         return instance;
     }
@@ -560,6 +586,11 @@ tracking.VideoCamera = tracking.augment(VideoCamera, tracking.Video);
 if (!self.Int32Array) {
     self.Int32Array = Array;
     self.Float32Array = Array;
+}
+
+// self.Uint8ClampedArray polyfill
+if (!self.Uint8ClampedArray) {
+    self.Uint8ClampedArray = Array;
 }
 
 // window.URL polyfill
