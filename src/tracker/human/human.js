@@ -9,14 +9,14 @@
         defaults: {
             blockSize: 20,
 
-            blockJump: 50,
+            blockJump: 10,
 
             blockScale: 1.25,
 
             data: 'frontal_face'
         },
 
-        evalStage_: function(stage, integralImage, integralImageSquare, i, j, blockSize) {
+        evalStage_: function(stage, integralImage, integralImageSquare, i, j, width, height, blockSize) {
             var instance = this,
                 defaults = instance.defaults,
                 stageIndex = stage[0],
@@ -32,25 +32,26 @@
 
             for (t = 0; t < treeLen; t++) {
                 var node = tree[t],
+                    nodeLen = node.length,
 
-                    nodeThreshold = node[10],
-                    left = node[11],
-                    right = node[12],
+                    nodeThreshold = node[nodeLen-3],
+                    left = node[nodeLen-2],
+                    right = node[nodeLen-1],
 
                     total,
                     totalSquare,
                     mean,
                     variance,
 
-                    wb1 = i*blockSize + j,
-                    wb2 = i*blockSize + (j + blockSize),
-                    wb3 = (i + blockSize)*blockSize + j,
-                    wb4 = (i + blockSize)*blockSize + (j + blockSize),
+                    wb1 = i*width + j,
+                    wb2 = i*width + (j + blockSize),
+                    wb3 = (i + blockSize)*width + j,
+                    wb4 = (i + blockSize)*width + (j + blockSize),
 
                     rectsSum = 0,
-                    rectsLen = (node.length - 3)/5,
+                    rectsLen = (nodeLen - 3)/5,
                     r,
-                    x, y, width, height, weight, w1, w2, w3, w4;
+                    x1, y1, x2, y2, rectWidth, rectHeight, rectWeight, w1, w2, w3, w4;
 
                 total = integralImage[wb1] - integralImage[wb2] - integralImage[wb3] + integralImage[wb4];
                 totalSquare = integralImageSquare[wb1] - integralImageSquare[wb2] - integralImageSquare[wb3] + integralImageSquare[wb4];
@@ -65,21 +66,21 @@
                 }
 
                 for (r = 0; r < rectsLen; r++) {
-                     x = j + node[r*5];
-                     y = i + node[r*5 + 1];
-                     width = ~~(node[r*5 + 2]*scale);
-                     height = ~~(node[r*5 + 3]*scale);
-                     weight = node[r*5 + 4];
+                     x1 = j + node[r*5];
+                     y1 = i + node[r*5 + 1];
+                     rectWidth = ~~(node[r*5 + 2]*scale);
+                     rectHeight = ~~(node[r*5 + 3]*scale);
+                     rectWeight = node[r*5 + 4];
 
-                     w1 = y*width + x;
-                     w2 = y*width + (x + width);
-                     w3 = (y + height)*width + x;
-                     w4 = (y + height)*width + (x + width);
+                     w1 = x1*width + y1;
+                     w2 = x1*width + (y1 + rectWidth);
+                     w3 = (x1 + rectHeight)*width + y1;
+                     w4 = (x1 + rectHeight)*width + (y1 + rectWidth);
 
-                     rectsSum = (integralImage[w1] - integralImage[w2] - integralImage[w3] + integralImage[w4])*weight*inverseArea;
+                     rectsSum += (integralImage[w1] - integralImage[w2] - integralImage[w3] + integralImage[w4])*rectWeight;
                 }
 
-                if (rectsSum < nodeThreshold*variance) {
+                if (rectsSum*inverseArea < nodeThreshold*variance) {
                     stageSum += left;
                 }
                 else {
@@ -98,8 +99,8 @@
                 canvas = video.canvas,
                 height = canvas.get('height'),
                 width = canvas.get('width'),
-                integralImage = new Int32Array(width*height),
-                integralImageSquare = new Int32Array(width*height),
+                integralImage = new Array(width*height),
+                integralImageSquare = new Array(width*height),
 
                 imageLen = 0,
                 g,
@@ -114,8 +115,22 @@
             canvas.forEach(imageData, function(r, g, b, a, w, i, j) {
                 pixel = ~~(r*0.299 + b*0.587 + g*0.114);
 
-                pixelSum += pixel;
-                pixelSumSquare += pixel*pixel;
+                if (i === 0 & j === 0) {
+                    pixelSum = pixel;
+                    pixelSumSquare = pixel*pixel;
+                }
+                else if (i === 0) {
+                    pixelSum = pixel + integralImage[i*width + (j - 1)];
+                    pixelSumSquare = pixel*pixel + integralImageSquare[i*width + (j - 1)];
+                }
+                else if (j === 0) {
+                    pixelSum = pixel + integralImage[(i - 1)*width + j];
+                    pixelSumSquare = pixel*pixel + integralImageSquare[(i - 1)*width + j];
+                }
+                else {
+                    pixelSum = pixel + integralImage[i*width + (j - 1)] + integralImage[(i - 1)*width + j] - integralImage[(i - 1)*width + (j - 1)];
+                    pixelSumSquare = pixel*pixel + integralImageSquare[i*width + (j - 1)] + integralImageSquare[(i - 1)*width + j] - integralImageSquare[(i - 1)*width + (j - 1)];
+                }
 
                 integralImage[imageLen] = pixelSum;
                 integralImageSquare[imageLen] = pixelSumSquare;
@@ -132,17 +147,19 @@
             for (; blockSize <= maxBlockSize; blockSize = ~~(blockScale*blockSize)) {
                 for (i = 0; i < (height - blockSize); i+=blockJump) {
                     for (j = 0; j < (width - blockSize); j+=blockJump) {
+                        var pass = true;
+
                         for (s = 0; s < stagesLen; s++) {
                             var stage = stages[s];
 
-                            if (!instance.evalStage_(stage, integralImage, integralImageSquare, i, j, blockSize)) {
-                                // if (stage[0] > 10) {
-                                //     debugger;
-                                // }
+                            pass = instance.evalStage_(stage, integralImage, integralImageSquare, i, j, width, height, blockSize);
+
+                            if (!pass) {
                                 break;
                             }
+                        }
 
-                            console.log('ROSTO');
+                        if (pass) {
                         }
                     }
                 }
