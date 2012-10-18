@@ -29,25 +29,22 @@
     <script>
         var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas();
 
-        var t1 = videoCamera.track(
-            {
-                type: 'color',
-                color: 'magenta',
-                onFound: function(track) {
-                    var pixels = track.pixels;
+        var t1 = videoCamera.track({
+            type: 'color',
+            color: 'magenta',
+            onFound: function(track) {
+                var pixels = track.pixels;
 
-                    for (var i = 0, len = pixels.length; i < len; i += 2) {
-                        videoCamera.canvas.context.fillStyle = "rgb(255,0,255)";
-                        videoCamera.canvas.context.fillRect(pixels[i], pixels[i+1], 2, 2);
-                    }
-
-                    videoCamera.canvas.context.fillStyle = "rgb(0,0,0)";
-                    videoCamera.canvas.context.fillRect(track.x, track.y, 5, 5);
-                },
-                onNotFound: function() {
+                for (var i = 0, len = pixels.length; i < len; i += 2) {
+                    videoCamera.canvas.context.fillStyle = "rgb(255,0,255)";
+                    videoCamera.canvas.context.fillRect(pixels[i], pixels[i+1], 2, 2);
                 }
-            }
-        );
+
+                videoCamera.canvas.context.fillStyle = "rgb(0,0,0)";
+                videoCamera.canvas.context.fillRect(track.x, track.y, 5, 5);
+            },
+            onNotFound: function() {}
+        });
     </script>
 
 </body>
