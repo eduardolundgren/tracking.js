@@ -31,23 +31,20 @@
     <script>
         var mouseX, mouseY, videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas('#videoContainer');
 
-        videoCamera.track(
-            {
-                type: 'color',
-                color: 'magenta',
-                onFound: function(track) {
-                    var x = track.x,
-                        y = track.y;
+        videoCamera.track({
+            type: 'color',
+            color: 'magenta',
+            onFound: function(track) {
+                var x = track.x,
+                    y = track.y;
 
-                    if (x && y) {
-                        mouseX = ((320 - track.x)/320)*window.innerWidth - window.innerWidth/2,
-                        mouseY = ((240 - track.y)/240)*window.innerHeight - window.innerHeight;
-                    }
-                },
-                onNotFound: function() {
+                if (x && y) {
+                    mouseX = ((320 - track.x)/320)*window.innerWidth - window.innerWidth/2,
+                    mouseY = ((240 - track.y)/240)*window.innerHeight - window.innerHeight;
                 }
-            }
-        );
+            },
+            onNotFound: function() {}
+        });
     </script>
 
 </body>
