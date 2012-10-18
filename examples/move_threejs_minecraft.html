@@ -32,46 +32,42 @@
 
         var aim = tracking.one('#aim');
 
-        videoCamera.track(
-            {
-                type: 'color',
-                color: 'magenta',
-                onFound: function(track) {
-                    var x = track.x,
-                        y = track.y;
+        videoCamera.track({
+            type: 'color',
+            color: 'magenta',
+            onFound: function(track) {
+                var x = track.x,
+                    y = track.y;
 
-                    if (x && y) {
-                        var mouseX = ((320 - track.x)/320)*window.innerWidth - controls.viewHalfX,
-                            mouseY = ((240 - track.y)/240)*window.innerHeight - controls.viewHalfY;
+                if (x && y) {
+                    var mouseX = ((320 - track.x)/320)*window.innerWidth - controls.viewHalfX,
+                        mouseY = ((240 - track.y)/240)*window.innerHeight - controls.viewHalfY;
 
-                        controls.mouseX = mouseX;
-                        controls.mouseY = mouseY;
+                    controls.mouseX = mouseX;
+                    controls.mouseY = mouseY;
 
-                        aim.style.top = window.innerHeight - (mouseY + controls.viewHalfY) + 'px';
-                        aim.style.left = mouseX + controls.viewHalfX + 'px';
-                    }
-                },
-                onNotFound: function() {
-                    controls.moveLeft = false;
-                    controls.moveRight = false;
-                    controls.moveForward = false;
-                    controls.moveBackward = false;
+                    aim.style.top = window.innerHeight - (mouseY + controls.viewHalfY) + 'px';
+                    aim.style.left = mouseX + controls.viewHalfX + 'px';
                 }
+            },
+            onNotFound: function() {
+                controls.moveLeft = false;
+                controls.moveRight = false;
+                controls.moveForward = false;
+                controls.moveBackward = false;
             }
-        );
+        });
 
-        videoCamera.track(
-            {
-                type: 'color',
-                color: 'cyan',
-                onFound: function(track) {
-                   controls.moveForward = true;
-                },
-                onNotFound: function() {
-                    controls.moveForward = false;
-                }
+        videoCamera.track({
+            type: 'color',
+            color: 'cyan',
+            onFound: function(track) {
+               controls.moveForward = true;
+            },
+            onNotFound: function() {
+                controls.moveForward = false;
             }
-        );
+        });
     </script>
 
 </body>
