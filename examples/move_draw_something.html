@@ -65,55 +65,51 @@
           segment = 0,
           selectedElement = document.getElementById('selected');
 
-        videoCamera.track(
-          {
-              type: 'color',
-              color: 'magenta',
-              onFound: function(track) {
-                  if (!drawSegments[segment]) {
-                      drawSegments[segment]= [];
-                  }
+        videoCamera.track({
+          type: 'color',
+          color: 'magenta',
+          onFound: function(track) {
+              if (!drawSegments[segment]) {
+                  drawSegments[segment]= [];
+              }
 
-                  drawSegments[segment].push(track.x, track.y);
+              drawSegments[segment].push(track.x, track.y);
 
-                  if (!pencilFound) {
-                      selectedElement.className = 'pencil';
-                  }
+              if (!pencilFound) {
+                  selectedElement.className = 'pencil';
+              }
 
-                  pencilFound = true;
-              },
-              onNotFound: function() {
-                  if (pencilFound) {
-                      segment++;
-                      pencilFound = false;
-                      selectedElement.className = '';
-                  }
+              pencilFound = true;
+          },
+          onNotFound: function() {
+              if (pencilFound) {
+                  segment++;
+                  pencilFound = false;
+                  selectedElement.className = '';
               }
           }
-        );
+        });
 
-        videoCamera.track(
-          {
-              type: 'color',
-              color: 'cyan',
-              onFound: function(track) {
-                  segment = 0;
-                  drawSegments = [];
+        videoCamera.track({
+          type: 'color',
+          color: 'cyan',
+          onFound: function(track) {
+              segment = 0;
+              drawSegments = [];
 
-                  if (!eraseFound) {
-                      selectedElement.className = 'erase';
-                  }
+              if (!eraseFound) {
+                  selectedElement.className = 'erase';
+              }
 
-                  eraseFound = true;
-              },
-              onNotFound: function() {
-                  if (eraseFound) {
-                      eraseFound = false;
-                      selectedElement.className = '';
-                  }
+              eraseFound = true;
+          },
+          onNotFound: function() {
+              if (eraseFound) {
+                  eraseFound = false;
+                  selectedElement.className = '';
               }
           }
-        );
+        });
 
         (function loop() {
           for (var i = 0, len = drawSegments.length; i < len; i++) {
