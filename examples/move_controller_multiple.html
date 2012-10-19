@@ -27,16 +27,17 @@
 <body>
 
     <script>
-        var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas();
+        var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas(),
+            ctx = videoCamera.canvas.context;
 
         var t1 = videoCamera.track({
             type: 'color',
             color: 'magenta',
             onFound: function(track) {
                 var size = 60 - track.z;
-                videoCamera.canvas.context.strokeStyle = "rgb(255,0,255)";
-                videoCamera.canvas.context.lineWidth = 3;
-                videoCamera.canvas.context.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
+                ctx.strokeStyle = "rgb(255,0,255)";
+                ctx.lineWidth = 3;
+                ctx.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
             }
         });
 
@@ -45,9 +46,9 @@
             color: 'cyan',
             onFound: function(track) {
                 var size = 60 - track.z;
-                videoCamera.canvas.context.strokeStyle = "rgb(0,255,255)";
-                videoCamera.canvas.context.lineWidth = 3;
-                videoCamera.canvas.context.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
+                ctx.strokeStyle = "rgb(0,255,255)";
+                ctx.lineWidth = 3;
+                ctx.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
             }
         });
     </script>
