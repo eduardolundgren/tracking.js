@@ -78,27 +78,28 @@
 <body>
 
     <script>
-        var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas();
+        var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas(),
+            canvasClassList = document.querySelector('canvas').classList;
 
-        var t1 = videoCamera.track({
+        videoCamera.track({
             type: 'color',
             color: 'magenta',
             onFound: function(track) {
-                document.querySelector('canvas').classList.add('hue');
+                canvasClassList.add('hue');
             },
             onNotFound: function() {
-                document.querySelector('canvas').classList.remove('hue');
+                canvasClassList.remove('hue');
             }
         });
 
-        var t2 = videoCamera.track({
+        videoCamera.track({
             type: 'color',
             color: 'cyan',
             onFound: function(track) {
-                document.querySelector('canvas').classList.add('invert');
+                canvasClassList.add('invert');
             },
             onNotFound: function() {
-                document.querySelector('canvas').classList.remove('invert');
+                canvasClassList.remove('invert');
             }
         });
     </script>
