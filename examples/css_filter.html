@@ -1,0 +1,107 @@
+<!doctype html>
+<html>
+<head>
+
+    <title>tracking.js - hello world</title>
+
+    <meta charset="utf-8">
+
+    <script src="../src/tracking.js"></script>
+    <script src="../src/tracker/color.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        canvas {
+            -moz-transform: scale(-1, 1);
+            -o-transform: scale(-1, 1);
+            -webkit-transform: scale(-1, 1);
+            filter: FlipH;
+            transform: scale(-1, 1);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            position: absolute;
+        }
+        .hue {
+            -webkit-filter: hue-rotate(328deg);
+            -webkit-animation: hue 3s infinite;
+             -moz-animation: hue 3s infinite;
+               -o-animation: hue 3s infinite;
+                  animation: hue 3s infinite;
+        }
+        @-webkit-keyframes hue {
+          0%   { -webkit-filter: hue-rotate(1deg); }
+          100% { -webkit-filter: hue-rotate(359deg); }
+        }
+        @-moz-keyframes hue {
+          0%   { -webkit-filter: hue-rotate(1deg); }
+          100% { -webkit-filter: hue-rotate(359deg); }
+        }
+        @-o-keyframes hue {
+          0%   { -webkit-filter: hue-rotate(1deg); }
+          100% { -webkit-filter: hue-rotate(359deg); }
+        }
+        @keyframes hue {
+          0%   { -webkit-filter: hue-rotate(1deg); }
+          100% { -webkit-filter: hue-rotate(359deg); }
+        }
+        .invert{
+            -webkit-filter: invert(1);
+            -webkit-animation: invert 3s infinite;
+             -moz-animation: invert 3s infinite;
+               -o-animation: invert 3s infinite;
+                  animation: invert 3s infinite;
+        }
+        @-webkit-keyframes invert {
+          0% , 100%  { -webkit-filter: invert(0); }
+          50% { -webkit-filter: invert(1); }
+        }
+        @-moz-keyframes hue {
+          0%, 100%   { -webkit-filter: invert(0); }
+          50% { -webkit-filter: invert(1); }
+        }
+        @-o-keyframes hue {
+          0% , 100%  { -webkit-filter: invert(0); }
+          50% { -webkit-filter: invert(1); }
+        }
+        @keyframes hue {
+          0% , 100%  { -webkit-filter: invert(0); }
+          50% { -webkit-filter: invert(1); }
+        }
+    </style>
+
+</head>
+<body>
+
+    <script>
+        var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas();
+
+        var t1 = videoCamera.track({
+            type: 'color',
+            color: 'magenta',
+            onFound: function(track) {
+                document.querySelector('canvas').classList.add('hue');
+            },
+            onNotFound: function() {
+                document.querySelector('canvas').classList.remove('hue');
+            }
+        });
+
+        var t2 = videoCamera.track({
+            type: 'color',
+            color: 'cyan',
+            onFound: function(track) {
+                document.querySelector('canvas').classList.add('invert');
+            },
+            onNotFound: function() {
+                document.querySelector('canvas').classList.remove('invert');
+            }
+        });
+    </script>
+
+</body>
+</html>
