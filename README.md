@@ -36,7 +36,7 @@ videoCamera.track({
 });
 ```
 
-[Check the full code of this Hello World example.](https://github.com/zenorocha/tracking.js/blob/docs/examples/hello_world.html)
+[Check the full code of this Hello World example.](https://github.com/eduardolundgren/tracking.js/blob/master/examples/hello_world.html)
 
 ## About
 
