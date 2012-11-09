@@ -1,5 +1,44 @@
-## tracking.js
-### Change the way you interact with your browser
+# tracking.js
+
+Change the way you interact with your browser.
+
+## Getting Started
+
+Import the core library:
+
+``` html
+<script src="tracking.js"></script>
+```
+
+Import the color module:
+
+``` html
+<script src="tracker/color.js"></script>
+```
+
+Gets the user's camera:
+
+``` javascript
+var videoCamera = new tracking.VideoCamera().render();
+```
+
+Instantiates tracking by color magenta and displays X, Y and Z positions of the detected area in console:
+
+
+``` javascript
+videoCamera.track({
+    type: 'color',
+    color: 'magenta',
+    onFound: function(track) {
+      console.log(track.x, track.y, track.z);
+    },
+    onNotFound: function() {}
+});
+```
+
+[Check the full code of this Hello World example.](https://github.com/eduardolundgren/tracking.js/blob/master/examples/hello_world.html)
+
+## About
 
 It brings to web elements tracking techniques of a real scene captured by the camera, through natural interactions from object tracking, color markers, among others, allowing the development of interfaces and games through a simple and intuitive API.
 
