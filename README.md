@@ -30,8 +30,8 @@ videoCamera.track({
     type: 'color',
     color: 'magenta',
     onFound: function(track) {
-		console.log(track.x, track.y, track.z);
-	},
+      console.log(track.x, track.y, track.z);
+    },
     onNotFound: function() {}
 });
 ```
