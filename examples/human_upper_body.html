@@ -1,0 +1,44 @@
+<!doctype html>
+<html>
+<head>
+
+    <title>tracking.js - Human Frontal Upper Body</title>
+
+    <meta charset="utf-8">
+
+    <script src="../src/tracking.js"></script>
+    <script src="../src/tracker/human/human.js"></script>
+    <script src="../src/tracker/human/data/upper_body.js"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        canvas {
+            -moz-transform: scale(-1, 1);
+            -o-transform: scale(-1, 1);
+            -webkit-transform: scale(-1, 1);
+            filter: FlipH;
+            transform: scale(-1, 1);
+        }
+    </style>
+
+</head>
+<body>
+
+<script>
+    var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas();
+
+    var t1 = videoCamera.track(
+        {
+            type: 'human',
+            data: 'upper_body',
+            onFound: function(track) {
+            }
+        }
+    );
+</script>
+
+</body>
+</html>

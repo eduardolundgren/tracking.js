@@ -5,6 +5,8 @@
 	<title></title>
 
 	<script type="text/javascript" src="opencv_haarcascade_frontalface_alt.js"></script>
+	<script type="text/javascript" src="opencv_haarcascade_eye.js"></script>
+	<script type="text/javascript" src="opencv_haarcascade_upper_body.js"></script>
 </head>
 <body>
 	<script>
@@ -87,7 +89,9 @@
 
 		// output
 
-		var json = convert(opencv_haarcascade_frontalface_alt);
+		// var json = convert(opencv_haarcascade_frontalface_alt);
+		// var json = convert(opencv_haarcascade_eye);
+		var json = convert(opencv_haarcascade_upper_body);
 
 		console.log(json);
 	</script>
