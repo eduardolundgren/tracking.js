@@ -9,7 +9,7 @@
         defaults: {
             blockSize: 20,
 
-            blockJump: 10,
+            blockJump: 5,
 
             blockScale: 1.25,
 
@@ -25,7 +25,7 @@
                 treeLen = tree.length,
                 t,
 
-                inverseArea = 1/(blockSize*blockSize),
+                inverseArea = 1.0/(blockSize*blockSize),
                 scale = blockSize/defaults.blockSize,
 
                 stageSum = 0;
@@ -66,16 +66,19 @@
                 }
 
                 for (r = 0; r < rectsLen; r++) {
-                     x1 = j + node[r*5];
-                     y1 = i + node[r*5 + 1];
+                     x1 = j + ~~(node[r*5]*scale);
+                     y1 = i + ~~(node[r*5 + 1]*scale);
                      rectWidth = ~~(node[r*5 + 2]*scale);
                      rectHeight = ~~(node[r*5 + 3]*scale);
                      rectWeight = node[r*5 + 4];
 
-                     w1 = x1*width + y1;
-                     w2 = x1*width + (y1 + rectWidth);
-                     w3 = (x1 + rectHeight)*width + y1;
-                     w4 = (x1 + rectHeight)*width + (y1 + rectWidth);
+                     x2 = x1 + rectWidth;
+                     y2 = y1 + rectHeight;
+
+                     w1 = y1*width + x1;
+                     w2 = y1*width + x2;
+                     w3 = y2*width + x1;
+                     w4 = y2*width + x2;
 
                      rectsSum += (integralImage[w1] - integralImage[w2] - integralImage[w3] + integralImage[w4])*rectWeight;
                 }
@@ -99,8 +102,8 @@
                 canvas = video.canvas,
                 height = canvas.get('height'),
                 width = canvas.get('width'),
-                integralImage = new Array(width*height),
-                integralImageSquare = new Array(width*height),
+                integralImage = new Uint32Array(width*height),
+                integralImageSquare = new Uint32Array(width*height),
 
                 imageLen = 0,
                 g,
@@ -144,7 +147,7 @@
                 blockSize = defaults.blockSize,
                 maxBlockSize = Math.min(width, height);
 
-            for (; blockSize <= maxBlockSize; blockSize = ~~(blockScale*blockSize)) {
+            for (; blockSize <= maxBlockSize; blockSize = ~~(blockSize*blockScale)) {
                 for (i = 0; i < (height - blockSize); i+=blockJump) {
                     for (j = 0; j < (width - blockSize); j+=blockJump) {
                         var pass = true;
@@ -160,6 +163,10 @@
                         }
 
                         if (pass) {
+                            console.log('ROSTO');
+                            // canvas.setImageData(imageData);
+                            canvas.context.strokeStyle = "rgb(255,0,0)";
+                            canvas.context.strokeRect(j, i, blockSize, blockSize);
                         }
                     }
                 }
@@ -167,9 +174,5 @@
         }
 
     };
-
-    // canvas.setImageData(imageData);
-    // canvas.context.strokeStyle = "rgb(255,0,0)";
-    // canvas.context.strokeRect(j, i, blockSize, blockSize);
 
 }( window ));
