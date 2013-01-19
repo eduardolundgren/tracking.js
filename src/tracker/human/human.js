@@ -1,5 +1,50 @@
 (function (window, undefined) {
 
+     var DisjointSet = function(size) {
+        var instance = this,
+            parent_,
+            i;
+
+        size = instance.size = size || 0;
+
+        parent_ = instance.parent = new Uint32Array(size);
+
+        for (i = 0; i < size; i++) {
+            parent_[i] = i;
+        }
+    };
+
+    DisjointSet.prototype = {
+        parent: null,
+
+        size: null,
+
+        find: function(i) {
+            var instance = this,
+                parent_ = instance.parent,
+                result;
+
+            if (parent_[i] === i) {
+                return i;
+            }
+            else {
+                result = instance.find(parent_[i]);
+
+                parent_[i] = result;
+
+                return result;
+            }
+        },
+
+        union: function(i, j) {
+            var instance = this,
+                iRepresentative = instance.find(i),
+                jRepresentative = instance.find(j);
+
+            instance.parent[iRepresentative] = jRepresentative;
+        }
+    };
+
     tracking.type.HUMAN = {
 
         NAME: 'HUMAN',
@@ -13,13 +58,14 @@
 
             blockScale: 1.25,
 
-            data: 'frontal_face'
+            data: 'frontal_face',
+
+            minNeighborArea: 0.5
         },
 
         evalStage_: function(stage, integralImage, integralImageSquare, i, j, width, height, blockSize) {
             var instance = this,
                 defaults = instance.defaults,
-                stageIndex = stage[0],
                 stageThreshold = stage[1],
                 tree = stage[2],
                 treeLen = tree.length,
@@ -94,8 +140,101 @@
             return (stageSum > stageThreshold);
         },
 
+        merge_: function(rects, video) {
+            var instance = this,
+                defaults = instance.defaults,
+                minNeighborArea = defaults.minNeighborArea,
+                rectsLen = rects.length,
+                i,
+                j,
+                x1,
+                y1,
+                blockSize1,
+                x2,
+                y2,
+                x3,
+                y3,
+                x4,
+                y4,
+                blockSize2,
+                px1,
+                py1,
+                px2,
+                py2,
+                pArea,
+                rect1,
+                rect2,
+                disjointSet = new DisjointSet(rectsLen);
+
+            for (i = 0; i < rectsLen; i++) {
+                rect1 = rects[i];
+
+                x1 = rect1.x;
+                y1 = rect1.y;
+                blockSize1 = rect1.size;
+                x2 = x1 + blockSize1;
+                y2 = y1 + blockSize1;
+
+                for (j = 0; j < rectsLen; j++) {
+                    rect2 = rects[j];
+
+                    if (i === j) {
+                        continue;
+                    }
+
+                    x3 = rect2.x;
+                    y3 = rect2.y;
+                    blockSize2 = rect2.size;
+                    x4 = x3 + blockSize2;
+                    y4 = y3 + blockSize2;
+
+                    px1 = Math.max(x1, x3);
+                    py1 = Math.max(y1, y3);
+                    px2 = Math.min(x2, x4);
+                    py2 = Math.min(y2, y4);
+                    pArea = (px1 - px2)*(py1 - py2);
+
+                    if ((pArea/(blockSize1*blockSize1) >= minNeighborArea) &&
+                        (pArea/(blockSize2*blockSize2) >= minNeighborArea)) {
+
+                        disjointSet.union(i, j);
+                    }
+                }
+            }
+
+            var size = disjointSet.size,
+                parent = disjointSet.parent,
+                faces = [],
+                group,
+                rect,
+                smallRect,
+                smallRectGroup = {};
+
+            for (i = 0; i < size; i++) {
+                group = parent[i];
+                rect = rects[i];
+
+                if (!smallRectGroup[group]) {
+                    smallRectGroup[group] = rect;
+                }
+                if (rect.size < smallRectGroup[group].size) {
+                    smallRectGroup[group] = rect;
+                }
+            }
+
+            var faceRect;
+            for (i in smallRectGroup) {
+                faceRect = smallRectGroup[i];
+                faces.push(faceRect);
+            }
+
+            return faces;
+        },
+
         track: function(trackerGroup, video) {
             var instance = this,
+                // Human tracking finds multiple targets, doesn't need to support
+                // multiple track listeners, force to use only the first configuration.
                 config = trackerGroup[0],
                 defaults = instance.defaults,
                 imageData = video.getVideoCanvasImageData(),
@@ -106,7 +245,6 @@
                 integralImageSquare = new Uint32Array(width*height),
 
                 imageLen = 0,
-                g,
 
                 stages = instance.data[config.data || defaults.data],
                 stagesLen = stages.length,
@@ -145,7 +283,9 @@
                 blockJump = defaults.blockJump,
                 blockScale = defaults.blockScale,
                 blockSize = defaults.blockSize,
-                maxBlockSize = Math.min(width, height);
+                maxBlockSize = Math.min(width, height),
+                rectIndex = 0,
+                rects = [];
 
             for (; blockSize <= maxBlockSize; blockSize = ~~(blockSize*blockScale)) {
                 for (i = 0; i < (height - blockSize); i+=blockJump) {
@@ -163,13 +303,21 @@
                         }
 
                         if (pass) {
-                            console.log('ROSTO');
-                            // canvas.setImageData(imageData);
-                            canvas.context.strokeStyle = "rgb(255,0,0)";
-                            canvas.context.strokeRect(j, i, blockSize, blockSize);
+                            rects[rectIndex++] = {
+                                size: blockSize,
+                                x: j,
+                                y: i
+                            };
+
+                            // canvas.context.strokeStyle = "rgb(255,0,0)";
+                            // canvas.context.strokeRect(j, i, blockSize, blockSize);
                         }
                     }
                 }
+            }
+
+            if (config.onFound) {
+                config.onFound.call(video, instance.merge_(rects, video));
             }
         }
 

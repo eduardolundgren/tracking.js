@@ -28,13 +28,19 @@
 <body>
 
 <script>
-    var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas();
+    var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas(),
+        ctx = videoCamera.canvas.context;
 
     var t1 = videoCamera.track(
         {
             type: 'human',
             data: 'eye',
             onFound: function(track) {
+                for (var i = 0, len = track.length; i < len; i++) {
+                    var rect = track[i];
+                    ctx.strokeStyle = "rgb(0,255,0)";
+                    ctx.strokeRect(rect.x, rect.y, rect.size, rect.size);
+                }
             }
         }
     );
