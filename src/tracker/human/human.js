@@ -54,7 +54,7 @@
         defaults: {
             blockSize: 20,
 
-            blockJump: 5,
+            blockJump: 2,
 
             blockScale: 1.25,
 
@@ -71,10 +71,30 @@
                 treeLen = tree.length,
                 t,
 
+                stageSum = 0,
                 inverseArea = 1.0/(blockSize*blockSize),
                 scale = blockSize/defaults.blockSize,
 
-                stageSum = 0;
+                total,
+                totalSquare,
+                mean,
+                variance,
+                wb1 = i*width + j,
+                wb2 = i*width + (j + blockSize),
+                wb3 = (i + blockSize)*width + j,
+                wb4 = (i + blockSize)*width + (j + blockSize);
+
+            total = integralImage[wb1] - integralImage[wb2] - integralImage[wb3] + integralImage[wb4];
+            totalSquare = integralImageSquare[wb1] - integralImageSquare[wb2] - integralImageSquare[wb3] + integralImageSquare[wb4];
+            mean = total*inverseArea;
+            variance = totalSquare*inverseArea - mean*mean;
+
+            if (variance > 1) {
+                variance = Math.sqrt(variance);
+            }
+            else {
+                variance = 1;
+            }
 
             for (t = 0; t < treeLen; t++) {
                 var node = tree[t],
@@ -84,32 +104,10 @@
                     left = node[nodeLen-2],
                     right = node[nodeLen-1],
 
-                    total,
-                    totalSquare,
-                    mean,
-                    variance,
-
-                    wb1 = i*width + j,
-                    wb2 = i*width + (j + blockSize),
-                    wb3 = (i + blockSize)*width + j,
-                    wb4 = (i + blockSize)*width + (j + blockSize),
-
                     rectsSum = 0,
                     rectsLen = (nodeLen - 3)/5,
                     r,
                     x1, y1, x2, y2, rectWidth, rectHeight, rectWeight, w1, w2, w3, w4;
-
-                total = integralImage[wb1] - integralImage[wb2] - integralImage[wb3] + integralImage[wb4];
-                totalSquare = integralImageSquare[wb1] - integralImageSquare[wb2] - integralImageSquare[wb3] + integralImageSquare[wb4];
-                mean = total*inverseArea;
-                variance = totalSquare*inverseArea - mean*mean;
-
-                if (variance > 1) {
-                    variance = Math.sqrt(variance);
-                }
-                else {
-                    variance = 1;
-                }
 
                 for (r = 0; r < rectsLen; r++) {
                      x1 = j + ~~(node[r*5]*scale);
