@@ -1,50 +1,5 @@
 (function (window, undefined) {
 
-     var DisjointSet = function(size) {
-        var instance = this,
-            parent_,
-            i;
-
-        size = instance.size = size || 0;
-
-        parent_ = instance.parent = new Uint32Array(size);
-
-        for (i = 0; i < size; i++) {
-            parent_[i] = i;
-        }
-    };
-
-    DisjointSet.prototype = {
-        parent: null,
-
-        size: null,
-
-        find: function(i) {
-            var instance = this,
-                parent_ = instance.parent,
-                result;
-
-            if (parent_[i] === i) {
-                return i;
-            }
-            else {
-                result = instance.find(parent_[i]);
-
-                parent_[i] = result;
-
-                return result;
-            }
-        },
-
-        union: function(i, j) {
-            var instance = this,
-                iRepresentative = instance.find(i),
-                jRepresentative = instance.find(j);
-
-            instance.parent[iRepresentative] = jRepresentative;
-        }
-    };
-
     tracking.type.HUMAN = {
 
         NAME: 'HUMAN',
@@ -162,10 +117,22 @@
                 pArea,
                 rect1,
                 rect2,
-                disjointSet = new DisjointSet(rectsLen);
+                hasGroup = new Uint32Array(rectsLen),
+                face,
+                facesMap = {};
 
             for (i = 0; i < rectsLen; i++) {
+                if (hasGroup[i]) {
+                    continue;
+                }
+
                 rect1 = rects[i];
+
+                hasGroup[i] = 1;
+                facesMap[i] = {
+                    count: 0,
+                    rect: rect1
+                };
 
                 x1 = rect1.x;
                 y1 = rect1.y;
@@ -173,7 +140,11 @@
                 x2 = x1 + blockSize1;
                 y2 = y1 + blockSize1;
 
-                for (j = 0; j < rectsLen; j++) {
+                for (j = i + 1; j < rectsLen; j++) {
+                    if (hasGroup[j]) {
+                        continue;
+                    }
+
                     rect2 = rects[j];
 
                     if (i === j) {
@@ -195,35 +166,22 @@
                     if ((pArea/(blockSize1*blockSize1) >= minNeighborArea) &&
                         (pArea/(blockSize2*blockSize2) >= minNeighborArea)) {
 
-                        disjointSet.union(i, j);
+                        face = facesMap[i];
+                        hasGroup[j] = 1;
+                        face.count++;
+                        if (blockSize2 < blockSize1) {
+                            face.rect = rect2;
+                        }
                     }
                 }
             }
 
-            var size = disjointSet.size,
-                parent = disjointSet.parent,
-                faces = [],
-                group,
-                rect,
-                smallRect,
-                smallRectGroup = {};
-
-            for (i = 0; i < size; i++) {
-                group = parent[i];
-                rect = rects[i];
-
-                if (!smallRectGroup[group]) {
-                    smallRectGroup[group] = rect;
+            var faces = [];
+            for (i in facesMap) {
+                face = facesMap[i];
+                if (face.count > 0) {
+                    faces.push(face.rect);
                 }
-                if (rect.size < smallRectGroup[group].size) {
-                    smallRectGroup[group] = rect;
-                }
-            }
-
-            var faceRect;
-            for (i in smallRectGroup) {
-                faceRect = smallRectGroup[i];
-                faces.push(faceRect);
             }
 
             return faces;
