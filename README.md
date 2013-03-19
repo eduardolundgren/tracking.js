@@ -47,3 +47,9 @@ The concept of Natural Interaction proposes interfaces that understand the inten
 
 #### Who?
 Created by Eduardo Lundgren, one of the creators of AlloyUI, involved in many open-source projects, ex-contributor to jQuery and jQuery UI. Graduate in Telecommunications Engineering from UPE and taking a Masters in CS from UFPE. Currently development lead at Liferay.
+
+## Team
+
+* Eduardo Lundgren
+* Thiago Pereira
+* Zeno Rocha
