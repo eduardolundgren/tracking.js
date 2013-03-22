@@ -38,6 +38,12 @@ videoCamera.track({
 
 [Check the full code of this Hello World example.](https://github.com/eduardolundgren/tracking.js/blob/master/examples/hello_world.html)
 
+> **Note:** if you want to run tracking.js examples locally, you're going to need a local server, since `file:///` doesn't work with `getUserMedia()` in some browsers.
+
+> 1. Install Grunt and its dependencies: `npm install .` 
+> 2. Run a local server: `grunt server`
+> 3. Go to: `http://localhost:9001` and have fun :)
+
 ## About
 
 It brings to web elements tracking techniques of a real scene captured by the camera, through natural interactions from object tracking, color markers, among others, allowing the development of interfaces and games through a simple and intuitive API.
