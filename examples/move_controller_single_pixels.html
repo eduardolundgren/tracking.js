@@ -27,7 +27,8 @@
 <body>
 
     <script>
-    var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas();
+    var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas(),
+        ctx = videoCamera.canvas.context;
 
     videoCamera.track({
         type: 'color',
@@ -36,12 +37,12 @@
             var pixels = track.pixels;
 
             for (var i = 0, len = pixels.length; i < len; i += 2) {
-                videoCamera.canvas.context.fillStyle = "rgb(255,0,255)";
-                videoCamera.canvas.context.fillRect(pixels[i], pixels[i+1], 2, 2);
+                ctx.fillStyle = "rgb(255,0,255)";
+                ctx.fillRect(pixels[i], pixels[i+1], 2, 2);
             }
 
-            videoCamera.canvas.context.fillStyle = "rgb(0,0,0)";
-            videoCamera.canvas.context.fillRect(track.x, track.y, 5, 5);
+            ctx.fillStyle = "rgb(0,0,0)";
+            ctx.fillRect(track.x, track.y, 5, 5);
         }
     });
     </script>
