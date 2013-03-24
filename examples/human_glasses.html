@@ -1,0 +1,49 @@
+<!doctype html>
+<html>
+<head>
+
+    <title>tracking.js - Human Glasses</title>
+
+    <meta charset="utf-8">
+
+    <script src="../dist/tracking.min.js"></script>
+    <script src="../dist/tracker/human/human.min.js"></script>
+    <script src="../dist/tracker/human/data/frontal_face.min.js"></script>
+
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    canvas {
+        -moz-transform: scale(-1, 1);
+        -o-transform: scale(-1, 1);
+        -webkit-transform: scale(-1, 1);
+        filter: FlipH;
+        transform: scale(-1, 1);
+    }
+    </style>
+
+</head>
+<body>
+
+    <script>
+    var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas(),
+        ctx = videoCamera.canvas.context,
+        img = new Image();
+
+    img.src = 'img/glasses.png';
+
+    videoCamera.track({
+        type: 'human',
+        data: 'frontal_face',
+        onFound: function(track) {
+            if (track[0]) {
+                ctx.drawImage(img, track[0].x, track[0].y + 10, track[0].size, track[0].size);
+            }
+        }
+    });
+    </script>
+
+</body>
+</html>
