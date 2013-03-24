@@ -10,33 +10,32 @@
     <script src="../dist/tracker/color/color.min.js"></script>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-        }
-        canvas {
-            -moz-transform: scale(-1, 1);
-            -o-transform: scale(-1, 1);
-            -webkit-transform: scale(-1, 1);
-            filter: FlipH;
-            transform: scale(-1, 1);
-        }
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    canvas {
+        -moz-transform: scale(-1, 1);
+        -o-transform: scale(-1, 1);
+        -webkit-transform: scale(-1, 1);
+        filter: FlipH;
+        transform: scale(-1, 1);
+    }
     </style>
 
 </head>
 <body>
 
     <script>
-        var videoCamera = new tracking.VideoCamera().render();
+    var videoCamera = new tracking.VideoCamera().render();
 
-        var t1 = videoCamera.track({
-            type: 'color',
-            color: 'yellow',
-            onFound: function(track) {
-                console.log(track.x + track.y + track.z);
-            },
-            onNotFound: function() {}
-        });
+    videoCamera.track({
+        type: 'color',
+        color: 'yellow',
+        onFound: function(track) {
+            console.log(track.x + track.y + track.z);
+        }
+    });
     </script>
 
 </body>

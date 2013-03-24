@@ -11,40 +11,38 @@
     <script src="../dist/tracker/human/data/mouth.min.js"></script>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-        }
-        canvas {
-            -moz-transform: scale(-1, 1);
-            -o-transform: scale(-1, 1);
-            -webkit-transform: scale(-1, 1);
-            filter: FlipH;
-            transform: scale(-1, 1);
-        }
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    canvas {
+        -moz-transform: scale(-1, 1);
+        -o-transform: scale(-1, 1);
+        -webkit-transform: scale(-1, 1);
+        filter: FlipH;
+        transform: scale(-1, 1);
+    }
     </style>
 
 </head>
 <body>
 
-<script>
+    <script>
     var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas(),
         ctx = videoCamera.canvas.context;
 
-    var t1 = videoCamera.track(
-        {
-            type: 'human',
-            data: 'mouth',
-            onFound: function(track) {
-                for (var i = 0, len = track.length; i < len; i++) {
-                    var rect = track[i];
-                    ctx.strokeStyle = "rgb(0,255,0)";
-                    ctx.strokeRect(rect.x, rect.y, rect.size, rect.size);
-                }
+    videoCamera.track({
+        type: 'human',
+        data: 'mouth',
+        onFound: function(track) {
+            for (var i = 0, len = track.length; i < len; i++) {
+                var rect = track[i];
+                ctx.strokeStyle = "rgb(0,255,0)";
+                ctx.strokeRect(rect.x, rect.y, rect.size, rect.size);
             }
         }
-    );
-</script>
+    });
+    </script>
 
 </body>
 </html>
