@@ -10,47 +10,47 @@
     <script src="../dist/tracker/color/color.min.js"></script>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-        }
-        canvas {
-            -moz-transform: scale(-1, 1);
-            -o-transform: scale(-1, 1);
-            -webkit-transform: scale(-1, 1);
-            filter: FlipH;
-            transform: scale(-1, 1);
-        }
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    canvas {
+        -moz-transform: scale(-1, 1);
+        -o-transform: scale(-1, 1);
+        -webkit-transform: scale(-1, 1);
+        filter: FlipH;
+        transform: scale(-1, 1);
+    }
     </style>
 
 </head>
 <body>
 
     <script>
-        var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas(),
-            ctx = videoCamera.canvas.context;
+    var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas(),
+        ctx = videoCamera.canvas.context;
 
-        var t1 = videoCamera.track({
-            type: 'color',
-            color: 'magenta',
-            onFound: function(track) {
-                var size = 60 - track.z;
-                ctx.strokeStyle = "rgb(255,0,255)";
-                ctx.lineWidth = 3;
-                ctx.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
-            }
-        });
+    videoCamera.track({
+        type: 'color',
+        color: 'magenta',
+        onFound: function(track) {
+            var size = 60 - track.z;
+            ctx.strokeStyle = "rgb(255,0,255)";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
+        }
+    });
 
-        var t2 = videoCamera.track({
-            type: 'color',
-            color: 'cyan',
-            onFound: function(track) {
-                var size = 60 - track.z;
-                ctx.strokeStyle = "rgb(0,255,255)";
-                ctx.lineWidth = 3;
-                ctx.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
-            }
-        });
+    videoCamera.track({
+        type: 'color',
+        color: 'cyan',
+        onFound: function(track) {
+            var size = 60 - track.z;
+            ctx.strokeStyle = "rgb(0,255,255)";
+            ctx.lineWidth = 3;
+            ctx.strokeRect(track.x - size*0.5, track.y - size*0.5, size, size);
+        }
+    });
     </script>
 
 </body>

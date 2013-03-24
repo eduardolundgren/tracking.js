@@ -10,44 +10,40 @@
     <script src="../dist/tracker/color/color.min.js"></script>
 
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-        }
-        canvas {
-            -moz-transform: scale(-1, 1);
-            -o-transform: scale(-1, 1);
-            -webkit-transform: scale(-1, 1);
-            filter: FlipH;
-            transform: scale(-1, 1);
-        }
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    canvas {
+        -moz-transform: scale(-1, 1);
+        -o-transform: scale(-1, 1);
+        -webkit-transform: scale(-1, 1);
+        filter: FlipH;
+        transform: scale(-1, 1);
+    }
     </style>
 
 </head>
 <body>
 
     <script>
-        var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas();
+    var videoCamera = new tracking.VideoCamera().hide().render().renderVideoCanvas();
 
-        var t1 = videoCamera.track(
-            {
-                type: 'color',
-                color: 'magenta',
-                onFound: function(track) {
-                    var pixels = track.pixels;
+    videoCamera.track({
+        type: 'color',
+        color: 'magenta',
+        onFound: function(track) {
+            var pixels = track.pixels;
 
-                    for (var i = 0, len = pixels.length; i < len; i += 2) {
-                        videoCamera.canvas.context.fillStyle = "rgb(255,0,255)";
-                        videoCamera.canvas.context.fillRect(pixels[i], pixels[i+1], 2, 2);
-                    }
-
-                    videoCamera.canvas.context.fillStyle = "rgb(0,0,0)";
-                    videoCamera.canvas.context.fillRect(track.x, track.y, 5, 5);
-                },
-                onNotFound: function() {
-                }
+            for (var i = 0, len = pixels.length; i < len; i += 2) {
+                videoCamera.canvas.context.fillStyle = "rgb(255,0,255)";
+                videoCamera.canvas.context.fillRect(pixels[i], pixels[i+1], 2, 2);
             }
-        );
+
+            videoCamera.canvas.context.fillStyle = "rgb(0,0,0)";
+            videoCamera.canvas.context.fillRect(track.x, track.y, 5, 5);
+        }
+    });
     </script>
 
 </body>
