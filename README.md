@@ -52,21 +52,21 @@ videoCamera.track({
 
 ## Methods
 
-There are some handy chainable methods that you can use to achieve your goal, for example:
+There are some handy classes and chainable methods that you can use to achieve your goal, for example:
 
-* **tracking.VideoCamera()**
+* **new tracking.VideoCamera()**
 
 Requests user's camera using WebRTC's `getUserMedia()`.
 
-* **tracking.VideoCamera().render()**
+* **new tracking.VideoCamera().render()**
 
-Shows user's camera using a `<video>` element.
+Render user's camera using a `<video>` element into the DOM.
 
-* **tracking.VideoCamera().hide()**
+* **new tracking.VideoCamera().hide()**
 
-Don't shows user's camera.
+Hides the `<video>` rendered into the DOM by `tracking.VideoCamera()`. In order to add information to the scene the `<canvas>` element could be displayed instead of the `<video>`.
 
-* **tracking.VideoCamera().renderVideoCanvas()**
+* **new tracking.VideoCamera().renderVideoCanvas()**
 
 Renders user's camera using a `<canvas>` element.
 
@@ -106,7 +106,7 @@ new tracking.VideoCamera().track({
 
 ## Events
 
-* **onFound** : Each time your tracker find something this event will be dispared.
+* **onFound** : Each time your tracker find something this event will be fired.
 
 ``` javascript
 new tracking.VideoCamera().track({ 
@@ -116,7 +116,7 @@ new tracking.VideoCamera().track({
 });
 ```
 
-* **onNotFound** : Each time your tracker doesn't find something this event will be dispared.
+* **onNotFound** : Each time your tracker doesn't find something this event will be fired.
 
 ``` javascript
 new tracking.VideoCamera().track({ 
