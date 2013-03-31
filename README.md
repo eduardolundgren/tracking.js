@@ -44,6 +44,89 @@ videoCamera.track({
 > 2. Run a local server: `grunt server`
 > 3. Go to: `http://localhost:9001` and have fun :)
 
+## Structure
+
+* *tracking.js* : Library's core;
+* *color.js* : Module for color tracking;
+* *human.js* : Module for human tracking.
+
+## Methods
+
+There are some handy chainable methods that you can use to achieve your goal, for example:
+
+* **tracking.VideoCamera()**
+
+Requests user's camera using WebRTC's `getUserMedia()`.
+
+* **tracking.VideoCamera().render()**
+
+Shows user's camera using a `<video>` element.
+
+* **tracking.VideoCamera().hide()**
+
+Don't shows user's camera.
+
+* **tracking.VideoCamera().renderVideoCanvas()**
+
+Renders user's camera using a `<canvas>` element.
+
+## Parameters
+
+When initializing the object `tracking.VideoCamera().track()`, you can optionally specify some parameters, for instance:
+
+* **type** *{string}* : could be `color` or `human`.
+
+```
+new tracking.VideoCamera().track({ 
+	type: 'color' 
+});
+```
+
+### Color tracking
+
+* **color** *{string}* : could be `cyan`, `magenta` or `yellow` (default is `magenta`).
+
+```
+new tracking.VideoCamera().track({ 
+	type: 'color',
+	color: 'yellow'
+});
+```
+
+### Human tracking
+
+* **data** *{string}* : could be `eye`, `frontal_face`, `mouth` or `upper_body` (default is `frontal_face`).
+
+```
+new tracking.VideoCamera().track({ 
+	type: 'human',
+	data: 'eye'
+});
+```
+
+## Events
+
+* **onFound** : Each time your tracker find something this event will be dispared.
+
+```
+new tracking.VideoCamera().track({ 
+	onFound: function(track) {
+		// do something
+	}
+});
+```
+
+* **onNotFound** : Each time your tracker doesn't find something this event will be dispared.
+
+```
+new tracking.VideoCamera().track({ 
+	onNotFound: function(track) {
+		// do something
+	}
+});
+```
+
+
 ## About
 
 It brings to web elements tracking techniques of a real scene captured by the camera, through natural interactions from object tracking, color markers, among others, allowing the development of interfaces and games through a simple and intuitive API.
