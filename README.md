@@ -76,7 +76,7 @@ When initializing the object `tracking.VideoCamera().track()`, you can optionall
 
 * **type** *{string}* : could be `color` or `human`.
 
-```
+``` javascript
 new tracking.VideoCamera().track({ 
 	type: 'color' 
 });
@@ -86,7 +86,7 @@ new tracking.VideoCamera().track({
 
 * **color** *{string}* : could be `cyan`, `magenta` or `yellow` (default is `magenta`).
 
-```
+``` javascript
 new tracking.VideoCamera().track({ 
 	type: 'color',
 	color: 'yellow'
@@ -97,7 +97,7 @@ new tracking.VideoCamera().track({
 
 * **data** *{string}* : could be `eye`, `frontal_face`, `mouth` or `upper_body` (default is `frontal_face`).
 
-```
+``` javascript
 new tracking.VideoCamera().track({ 
 	type: 'human',
 	data: 'eye'
@@ -108,7 +108,7 @@ new tracking.VideoCamera().track({
 
 * **onFound** : Each time your tracker find something this event will be dispared.
 
-```
+``` javascript
 new tracking.VideoCamera().track({ 
 	onFound: function(track) {
 		// do something
@@ -118,14 +118,13 @@ new tracking.VideoCamera().track({
 
 * **onNotFound** : Each time your tracker doesn't find something this event will be dispared.
 
-```
+``` javascript
 new tracking.VideoCamera().track({ 
 	onNotFound: function(track) {
 		// do something
 	}
 });
 ```
-
 
 ## About
 
