@@ -56,6 +56,19 @@
             return Math.sqrt(dx*dx + dy*dy + dz*dz) < 100;
         },
 
+        black: function(r, g, b) {
+            var threshold = 50,
+                dx = r-0,
+                dy = g-0,
+                dz = b-0;
+
+            if ((r - g) >= threshold && (b - g) >= threshold) {
+                return true;
+            }
+
+            return Math.sqrt(dx*dx + dy*dy + dz*dz) < 100;
+        },
+
         findCoordinates_: function(pixels, total) {
             var instance = this,
                 dx = 0,
