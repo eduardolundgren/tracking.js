@@ -21,6 +21,7 @@ module.exports = function(grunt) {
           'dist/tracker/color/color.min.js': ['src/tracker/color/color.js'],
           'dist/tracker/human/human.min.js': ['src/tracker/human/human.js'],
           'dist/tracker/human/data/eye.min.js': ['src/tracker/human/data/eye.js'],
+          'dist/tracker/human/data/palm.min.js': ['src/tracker/human/data/palm.js'],
           'dist/tracker/human/data/frontal_face.min.js': ['src/tracker/human/data/frontal_face.js'],
           'dist/tracker/human/data/mouth.min.js': ['src/tracker/human/data/mouth.js'],
           'dist/tracker/human/data/upper_body.min.js': ['src/tracker/human/data/upper_body.js']
