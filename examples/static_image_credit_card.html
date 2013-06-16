@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+
+    <title>tracking.js - Static image Magnetic strip</title>
+
+    <meta charset="utf-8">
+
+    <script src="../dist/tracking.min.js"></script>
+    <script src="../dist/tracker/color/color.min.js"></script>
+
+    <style>
+    * {
+        margin: 0;
+        padding: 0;
+    }
+    </style>
+
+</head>
+<body>
+    <script>
+    var image = new tracking.VideoCamera().hide().render().renderVideoCanvas();
+    var ctx = image.canvas.context;
+
+    base_image = new Image();
+    base_image.src = 'img/creditcard.jpg';
+    base_image.onload = function(){
+      ctx.drawImage(base_image, 0, 0, 228, 228);
+    }
+
+    image.track({
+      type: 'color',
+      color: 'black',
+      onFound: function(track) {
+        console.log(track.x, track.y, track.z);
+      },
+      onNotFound: function() {}
+    });
+
+    </script>
+
+</body>
+</html>
