@@ -84,7 +84,7 @@ new tracking.VideoCamera().track({
 
 ### Color tracking
 
-* **color** *{string}* : could be `cyan`, `magenta` or `yellow` (default is `magenta`).
+* **color** *{string}* : could be `cyan`, `magenta`, `yellow` or `black` (default is `magenta`).
 
 ``` javascript
 new tracking.VideoCamera().track({ 
