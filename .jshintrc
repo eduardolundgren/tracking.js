@@ -1,0 +1,30 @@
+{
+  "asi": false,
+  "bitwise": false,
+  "curly": true,
+  "eqeqeq": true,
+  "esnext": true,
+  "evil": false,
+  "forin": false,
+  "globals": {
+    "document": true,
+    "navigator": true,
+    "tracking": true,
+    "window": true
+  },
+  "immed": true,
+  "indent": 2,
+  "lastsemic": false,
+  "maxdepth": false,
+  "multistr": false,
+  "newcap": true,
+  "noarg": true,
+  "node": true,
+  "onevar": false,
+  "quotmark": "single",
+  "regexp": true,
+  "smarttabs": true,
+  "trailing": true,
+  "undef": true,
+  "unused": true
+}
