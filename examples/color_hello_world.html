@@ -1,0 +1,46 @@
+<!doctype html>
+<html>
+<head>
+
+  <title>tracking.js - hello world</title>
+
+  <meta charset="utf-8">
+
+  <script src="../build/tracking.js"></script>
+
+  <style>
+  #rect {
+    border: 2px solid magenta;
+    height: 80px;
+    left: -1000px;
+    position: absolute;
+    top: -1000px;
+    width: 80px;
+  }
+  </style>
+</head>
+<body>
+  <div id="rect"></div>
+  <img id="img" src="assets/psmove.png" />
+
+  <script>
+    window.onload = function() {
+      var img = tracking.one('#img');
+      var rect = tracking.one('#rect');
+      var tracker = new tracking.ColorTracker();
+
+      tracking.track('#img', tracker);
+
+      tracker.onFound = function(payload) {
+        rect.style.left = (img.offsetLeft + payload[0].x - rect.offsetWidth/2) + 'px';
+        rect.style.top = (img.offsetTop + payload[0].y - rect.offsetHeight/2) + 'px';
+      };
+
+      tracker.onNotFound = function() {
+        console.log('Colors not found');
+      };
+    };
+  </script>
+
+</body>
+</html>
