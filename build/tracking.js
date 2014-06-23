@@ -79,6 +79,27 @@
   };
 
   /**
+   * Captures the user camera when tracking a video element and set its source
+   * to the camera stream.
+   * @param {HTMLVideoElement} element Canvas element to track.
+   * @param {object} opt_options Optional configuration to the tracker.
+   */
+  tracking.initUserMedia_ = function(element, opt_options) {
+    window.navigator.getUserMedia({
+      video: true,
+      audio: opt_options.audio
+    }, function(stream) {
+      try {
+        element.src = window.URL.createObjectURL(stream);
+      } catch (err) {
+        element.src = stream;
+      }
+    }, function() {
+      throw Error('Cannot capture user camera.');
+    });
+  };
+
+  /**
    * Tests whether the object is a dom node.
    * @param {object} o Object to be tested.
    * @return {boolean} True if the object is a dom node.
@@ -145,6 +166,8 @@
    * var tracker = new tracking.ColorTracker();
    *
    * tracking.track('#video', tracker);
+   * or
+   * tracking.track('#video', tracker, { camera: true });
    *
    * tracker.onFound = function(payload) {
    *   // console.log(payload[0].x, payload[0].y)
@@ -165,12 +188,17 @@
       throw new Error('Tracker not specified, try `tracking.track(element, new FaceTracker())`.');
     }
 
-    switch(element.nodeName.toLowerCase()) {
+    switch (element.nodeName.toLowerCase()) {
       case 'canvas':
         return this.trackCanvas_(element, tracker, opt_options);
       case 'img':
         return this.trackImg_(element, tracker, opt_options);
       case 'video':
+        if (opt_options) {
+          if (opt_options.camera) {
+            this.initUserMedia_(element, opt_options);
+          }
+        }
         return this.trackVideo_(element, tracker, opt_options);
       default:
         throw new Error('Element not supported, try in a canvas, img, or video.');
@@ -284,6 +312,11 @@
 
   if (!window.URL) {
     window.URL = window.URL || window.webkitURL || window.msURL || window.oURL;
+  }
+
+  if (!navigator.getUserMedia) {
+    navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia ||
+    navigator.mozGetUserMedia || navigator.msGetUserMedia;
   }
 }(window));
 
