@@ -60,7 +60,7 @@
 
   /**
    * Calculates the central coordinate from the cloud points. The cloud points
-   * is all points that are from the desired color.
+   * are all points that matches the desired color.
    * @param {Array.<number>} cloud Major row order array containing all the
    *     points from the desired color, e.g. [x1, y1, c2, y2, ...].
    * @param {number} total Total numbers of pixels of the desired color.
