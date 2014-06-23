@@ -5,6 +5,8 @@
    * @extends {tracking.Tracker}
    */
   tracking.ColorTracker = function() {
+    tracking.ColorTracker.base(this, 'constructor');
+
     this.setType('color');
     this.setColors(['magenta']);
   };
@@ -14,6 +16,8 @@
   /**
    * Holds the minimum number of found pixels to represent a blob.
    * @type {number}
+   * @default 30
+   * @static
    */
   tracking.ColorTracker.MIN_PIXELS = 30;
 
