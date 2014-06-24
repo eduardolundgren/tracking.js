@@ -178,7 +178,7 @@
       throw new Error('Element not found, try a different element or selector.');
     }
     if (!tracker) {
-      throw new Error('Tracker not specified, try `tracking.track(element, new FaceTracker())`.');
+      throw new Error('Tracker not specified, try `tracking.track(element, new tracking.FaceTracker())`.');
     }
 
     switch (element.nodeName.toLowerCase()) {
