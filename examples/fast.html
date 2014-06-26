@@ -1,0 +1,44 @@
+<!doctype html>
+
+<html>
+<head>
+  <title>tracking.js - fast algorithm</title>
+
+  <meta charset="utf-8">
+
+  <script src="../build/tracking.js"></script>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    var CornerTracker = function() {
+      CornerTracker.base(this, 'constructor');
+    };
+
+    tracking.inherits(CornerTracker, tracking.Tracker);
+
+    CornerTracker.prototype.track = function(pixels, width, height) {
+      var timeNow = new Date().getTime();
+      var corners = tracking.Fast.findCorners(pixels, width, height);
+      console.log('time:', new Date().getTime() - timeNow);
+
+      this.onFound(corners);
+    };
+
+    var canvas = tracking.one('#canvas');
+    var context = canvas.getContext('2d');
+
+    tracking.Canvas.loadImage(canvas, 'assets/book.jpg', 0, 0, 601, 809, function() {
+      var tracker = new CornerTracker();
+      tracker.onFound = function(corners) {
+        for (var i = 0; i < corners.length; i += 2) {
+          context.fillStyle = "rgb(255,0,0)";
+          context.fillRect(corners[i], corners[i+1], 1, 1);
+        }
+      };
+
+      tracking.track('#canvas', tracker);
+    });
+  </script>
+</body>
+</html>
