@@ -21,6 +21,10 @@
   tracking.Canvas.loadImage = function(canvas, src, x, y, width, height, opt_callback) {
     var instance = this;
     var img = new window.Image();
+
+    canvas.width = width;
+    canvas.height = height;
+
     img.onload = function() {
       var context = canvas.getContext('2d');
       context.drawImage(img, x, y, width, height);
