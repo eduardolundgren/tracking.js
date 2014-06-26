@@ -185,7 +185,7 @@
       throw new Error('Element not found, try a different element or selector.');
     }
     if (!tracker) {
-      throw new Error('Tracker not specified, try `tracking.track(element, new FaceTracker())`.');
+      throw new Error('Tracker not specified, try `tracking.track(element, new tracking.FaceTracker())`.');
     }
 
     switch (element.nodeName.toLowerCase()) {
@@ -330,9 +330,72 @@
 
   tracking.Brief.N = 128;
 
-  tracking.Brief.getDescriptors = function() {};
+  tracking.Brief.randomOffsets_ = {};
 
-  tracking.Brief.match = function() {};
+  tracking.Brief.getDescriptors = function(grayScale, width, corners) {
+    var descriptors = new Int32Array(corners.length * (this.N >> 5)),
+      descriptorWord = 0,
+      offsets = this.getRandomOffsets_(width),
+      position = 0;
+
+    for (var i = 0; i < corners.length; i += 2) {
+      var w = width*corners[i + 1] + corners[i];
+
+      for (var j = 0, n = this.N; j < n; j ++) {
+        if (grayScale[offsets[j + j] + w] < grayScale[offsets[j + j + 1] + w]) {
+          descriptorWord |= 1 << (j & 31);
+        }
+
+        if (!((j + 1) & 31)) {
+          descriptors[position++] = descriptorWord;
+          descriptorWord = 0;
+        }
+      }
+    }
+
+    return descriptors;
+  };
+
+  tracking.Brief.match = function(corners1, descriptors1, corners2, descriptors2) {
+    var len1 = corners1.length >> 1;
+    var len2 = corners2.length >> 1;
+    var matches = new Int32Array(len1);
+
+    for (var i = 0; i < len1; i++) {
+      var min = Infinity;
+      var minj = 0;
+      for (var j = 0; j < len2; j++) {
+        var dist = 0;
+        for (var k = 0, n = this.N >> 5; k < n; k++) {
+          dist += tracking.Math.hammingWeight(descriptors1[i*n + k] ^ descriptors2[j*n + k]);
+        }
+        if (dist < min) {
+          min = dist;
+          minj = j;
+        }
+      }
+      matches[i] = minj;
+    }
+
+    return matches;
+  };
+
+  tracking.Brief.getRandomOffsets_ = function(width) {
+    if (this.randomOffsets_[width]) {
+      return this.randomOffsets_[width];
+    }
+
+    var offsets = new Int32Array(2 * this.N),
+      position = 0;
+
+    for (var i = 0; i < this.N; i++) {
+      offsets[position++] = tracking.Math.uniformRandom(-15, 16) * width + tracking.Math.uniformRandom(-15, 16);
+      offsets[position++] = tracking.Math.uniformRandom(-15, 16) * width + tracking.Math.uniformRandom(-15, 16);
+    }
+
+    this.randomOffsets_[width] = offsets;
+    return this.randomOffsets_[width];
+  };
 }());
 
 (function() {
@@ -358,6 +421,10 @@
   tracking.Canvas.loadImage = function(canvas, src, x, y, width, height, opt_callback) {
     var instance = this;
     var img = new window.Image();
+
+    canvas.width = width;
+    canvas.height = height;
+
     img.onload = function() {
       var context = canvas.getContext('2d');
       context.drawImage(img, x, y, width, height);
@@ -406,7 +473,146 @@
    */
   tracking.Fast = {};
 
-  tracking.Fast.isCorner = function(p, w, i, j, data, width, height) {};
+  tracking.Fast.FAST_THRESHOLD = 20;
+
+  tracking.Fast.circles_ = {};
+
+  tracking.Fast.findCorners = function(grayScale, width, height) {
+    var baseCircle = this.getCircle_(width),
+      circle = new Int32Array(16),
+      corners = [],
+      i,
+      j,
+      k,
+      p,
+      w = 0;
+
+    for (i = 3; i < height - 3; i++) {
+      for (j = 3; j < width - 3; j++) {
+        w = i*width + j;
+        p = grayScale[w];
+
+        for (k = 0; k < 16; k++) {
+          circle[k] = grayScale[baseCircle[k] + w];
+        }
+
+        if (this.isCorner(circle, p, this.FAST_THRESHOLD)) {
+          corners.push(j, i);
+          j+=3;
+        }
+      }
+    }
+
+    return corners;
+  };
+
+  tracking.Fast.isCorner = function(circle, p, threshold) {
+    var brighter,
+      circlePoint,
+      darker;
+
+    if (this.isTriviallyExcluded(circle, p, threshold)) {
+      return false;
+    }
+
+    for (var x = 0; x < 16; x++) {
+      darker = true;
+      brighter = true;
+
+      for (var y = 0; y < 9; y++) {
+        circlePoint = circle[(x + y) & 15];
+
+        if (!this.isBrighter(circlePoint, p, threshold)) {
+          brighter = false;
+        }
+
+        if (!this.isDarker(circlePoint, p, threshold)) {
+          darker = false;
+        }
+      }
+    }
+
+    return brighter || darker;
+  };
+
+  tracking.Fast.isTriviallyExcluded = function(circle, p, threshold) {
+    var count = 0;
+    var circleTop = circle[0];
+    var circleRight = circle[4];
+    var circleBottom = circle[8];
+    var circleLeft = circle[12];
+
+    if (this.isBrighter(circleTop, p, threshold)) {
+      count++;
+    }
+    if (this.isBrighter(circleRight, p, threshold)) {
+      count++;
+    }
+    if (this.isBrighter(circleBottom, p, threshold)) {
+      count++;
+    }
+    if (this.isBrighter(circleLeft, p, threshold)) {
+      count++;
+    }
+
+    if (count < 3) {
+      count = 0;
+      if (this.isDarker(circleTop, p, threshold)) {
+        count++;
+      }
+      if (this.isDarker(circleRight, p, threshold)) {
+        count++;
+      }
+      if (this.isDarker(circleBottom, p, threshold)) {
+        count++;
+      }
+      if (this.isDarker(circleLeft, p, threshold)) {
+        count++;
+      }
+
+      if (count < 3) {
+        return true;
+      }
+    }
+
+    return false;
+  };
+
+  tracking.Fast.isBrighter = function(circlePoint, p, threshold) {
+    return circlePoint > p + threshold;
+  };
+
+  tracking.Fast.isDarker = function(circlePoint, p, threshold) {
+    return circlePoint < p - threshold;
+  };
+
+  tracking.Fast.getCircle_ = function(width) {
+    if (this.circles_[width]) {
+      return this.circles_[width];
+    }
+
+    var circle = new Int32Array(16);
+
+    circle[0] = -width - width - width;
+    circle[1] = circle[0] + 1;
+    circle[2] = circle[1] + width + 1;
+    circle[3] = circle[2] + width + 1;
+    circle[4] = circle[3] + width;
+    circle[5] = circle[4] + width;
+    circle[6] = circle[5] + width - 1;
+    circle[7] = circle[6] + width - 1;
+    circle[8] = circle[7] - 1;
+    circle[9] = circle[8] - 1;
+    circle[10] = circle[9] - width - 1;
+    circle[11] = circle[10] - width - 1;
+    circle[12] = circle[11] - width;
+    circle[13] = circle[12] - width;
+    circle[14] = circle[13] - width + 1;
+    circle[15] = circle[14] - width + 1;
+
+    this.circles_[width] = circle;
+    return circle;
+  };
 }());
 
 (function() {
@@ -482,6 +688,10 @@
     i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
 
     return ((i + (i >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+  };
+
+  tracking.Math.uniformRandom = function(a, b) {
+    return a + Math.random() * (b - a);
   };
 }());
 
@@ -610,6 +820,8 @@
    * @extends {tracking.Tracker}
    */
   tracking.ColorTracker = function() {
+    tracking.ColorTracker.base(this, 'constructor');
+
     this.setType('color');
     this.setColors(['magenta']);
   };
@@ -619,6 +831,8 @@
   /**
    * Holds the minimum number of found pixels to represent a blob.
    * @type {number}
+   * @default 30
+   * @static
    */
   tracking.ColorTracker.MIN_PIXELS = 30;
 
@@ -661,7 +875,7 @@
 
   /**
    * Calculates the central coordinate from the cloud points. The cloud points
-   * is all points that are from the desired color.
+   * are all points that matches the desired color.
    * @param {Array.<number>} cloud Major row order array containing all the
    *     points from the desired color, e.g. [x1, y1, c2, y2, ...].
    * @param {number} total Total numbers of pixels of the desired color.

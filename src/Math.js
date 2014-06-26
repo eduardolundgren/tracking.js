@@ -72,4 +72,8 @@
 
     return ((i + (i >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
   };
+
+  tracking.Math.uniformRandom = function(a, b) {
+    return a + Math.random() * (b - a);
+  };
 }());
