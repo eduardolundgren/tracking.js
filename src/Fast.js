@@ -23,5 +23,60 @@
    */
   tracking.Fast = {};
 
-  tracking.Fast.isCorner = function(p, w, i, j, data, width, height) {};
+  tracking.Fast.FAST_THRESHOLD = 10;
+
+  tracking.Fast.isCorner = function(p, w, i, j, data, width) {
+    var brighter,
+      circle,
+      darker,
+      ip,
+      overlap,
+      wip,
+      x,
+      y;
+
+    if (i <= 3 && j <= 3) {
+      return false;
+    }
+
+    circle = [
+      (i - 3) * width + (j),
+      (i - 3) * width + (j + 1),
+      (i - 2) * width + (j + 2),
+      (i - 1) * width + (j + 3),
+      (i) * width + (j + 3),
+      (i + 1) * width + (j + 3),
+      (i + 2) * width + (j + 2),
+      (i + 3) * width + (j + 1),
+      (i + 3) * width + (j),
+      (i + 3) * width + (j - 1),
+      (i + 2) * width + (j - 2),
+      (i + 1) * width + (j - 3),
+      (i) * width + (j - 3),
+      (i - 1) * width + (j - 3),
+      (i - 2) * width + (j - 2),
+      (i - 3) * width + (j - 1)
+    ];
+
+    for (x = 0; x < 16; x++) {
+      darker = true;
+      brighter = true;
+
+      for (y = 0; y < 9; y++) {
+        overlap = (x + y) % 16;
+        wip = circle[overlap];
+        ip = data[wip];
+
+        if ((ip >= (p + tracking.Fast.FAST_THRESHOLD)) === false) {
+          brighter = false;
+        }
+
+        if ((ip <= (p - tracking.Fast.FAST_THRESHOLD)) === false) {
+          darker = false;
+        }
+      }
+    }
+
+    return brighter || darker;
+  };
 }());
