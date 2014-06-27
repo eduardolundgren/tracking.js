@@ -22,11 +22,10 @@
     var instance = this;
     var img = new window.Image();
 
-    canvas.width = width;
-    canvas.height = height;
-
     img.onload = function() {
       var context = canvas.getContext('2d');
+      canvas.width = width;
+      canvas.height = height;
       context.drawImage(img, x, y, width, height);
       if (opt_callback) {
         opt_callback.call(instance);
