@@ -27,10 +27,10 @@
    * Holds the threshold to determine whether the tested pixel is brighter or
    * darker than the corner candidate p.
    * @type {number}
-   * @default 20
+   * @default 40
    * @static
    */
-  tracking.Fast.FAST_THRESHOLD = 20;
+  tracking.Fast.FAST_THRESHOLD = 40;
 
   /**
    * Caches coordinates values of the circle surounding the pixel candidate p.
