@@ -349,25 +349,25 @@
   tracking.Brief.randomOffsets_ = {};
 
   /**
-   * Generates a brinary string for each found corner extracted using an
+   * Generates a brinary string for each found keypoints extracted using an
    * extractor method.
    * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
    * @param {number} width The image width.
-   * @param {array} corners
+   * @param {array} keypoints
    * @return {Int32Array} Returns an array where for each four sequence int
    *     values represent the descriptor binary string (128 bits) necessary
    *     to describe the corner, e.g. [0,0,0,0, 0,0,0,0, ...].
    */
-  tracking.Brief.getDescriptors = function(pixels, width, corners) {
+  tracking.Brief.getDescriptors = function(pixels, width, keypoints) {
     // Optimizing divide by four operation using binary shift
     // (this.N >> 5) === this.N/4.
-    var descriptors = new Int32Array(corners.length * (this.N >> 5)),
+    var descriptors = new Int32Array(keypoints.length * (this.N >> 5)),
       descriptorWord = 0,
       offsets = this.getRandomOffsets_(width),
       position = 0;
 
-    for (var i = 0; i < corners.length; i += 2) {
-      var w = width * corners[i + 1] + corners[i];
+    for (var i = 0; i < keypoints.length; i += 2) {
+      var w = width * keypoints[i + 1] + keypoints[i];
 
       for (var j = 0, n = this.N; j < n; j++) {
         if (pixels[offsets[j + j] + w] < pixels[offsets[j + j + 1] + w]) {
@@ -399,19 +399,19 @@
    * in- trusion detection systems. Thus using binary strings reduces the size
    * of the descriptor and provides an interesting data structure that is fast
    * to operate whose similarity can be measured by the Hamming distance.
-   * @param {array} corners1
+   * @param {array} keypoints1
    * @param {array} descriptors1
-   * @param {array} corners2
+   * @param {array} keypoints2
    * @param {array} descriptors2
    * @return {Int32Array} Returns an array where the index is the corner1
    *     index coordinate, and the value is the corresponding match index of
-   *     corner2, e.g. corners1=[x0,y0,x1,y1,...] and
-   *     corners2=[x'0,y'0,x'1,y'1,...], if x0 matches x'1 and x1 matches x'0,
+   *     corner2, e.g. keypoints1=[x0,y0,x1,y1,...] and
+   *     keypoints2=[x'0,y'0,x'1,y'1,...], if x0 matches x'1 and x1 matches x'0,
    *     the return array would be [3,0].
    */
-  tracking.Brief.match = function(corners1, descriptors1, corners2, descriptors2) {
-    var len1 = corners1.length >> 1;
-    var len2 = corners2.length >> 1;
+  tracking.Brief.match = function(keypoints1, descriptors1, keypoints2, descriptors2) {
+    var len1 = keypoints1.length >> 1;
+    var len2 = keypoints2.length >> 1;
     var matches = new Int32Array(len1);
 
     for (var i = 0; i < len1; i++) {
