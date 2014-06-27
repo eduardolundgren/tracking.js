@@ -73,6 +73,12 @@
     return ((i + (i >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
   };
 
+  /**
+   * Generates a random number between [a, b] interval.
+   * @param {number} a
+   * @param {number} b
+   * @return {number}
+   */
   tracking.Math.uniformRandom = function(a, b) {
     return a + Math.random() * (b - a);
   };
