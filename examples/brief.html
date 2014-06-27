@@ -12,57 +12,40 @@
   <canvas id="canvas1"></canvas>
   <canvas id="canvas2"></canvas>
   <script>
-    var canvas1 = tracking.one('#canvas1');
-    var context1 = canvas1.getContext('2d');
-    var canvas2 = tracking.one('#canvas2');
-    var context2 = canvas2.getContext('2d');
-
     var width = 256;
     var height = 192;
+    var canvas1 = tracking.one('#canvas1');
+    var canvas2 = tracking.one('#canvas2');
+    var context1 = canvas1.getContext('2d');
+    var context2 = canvas2.getContext('2d');
 
-    tracking.Canvas.loadImage(canvas1, 'assets/box2.png', 0, 0, width, height, function() {
-        tracking.Canvas.loadImage(canvas2, 'assets/box1.png', 0, 0, width, height, function() {
+    tracking.Canvas.loadImage(canvas1, 'assets/box1.png', 0, 0, width, height, function() {
+        tracking.Canvas.loadImage(canvas2, 'assets/box2.png', 0, 0, width, height, function() {
 
-          var pixels1 = context1.getImageData(0, 0, width, height);
-          var grayScale1 = toGrayScale(pixels1.data, width, height);
-          var pixels2 = context2.getImageData(0, 0, width, height);
-          var grayScale2 = toGrayScale(pixels2.data, width, height);
+          var imageData1 = context1.getImageData(0, 0, width, height);
+          var imageData2 = context2.getImageData(0, 0, width, height);
 
-          var corners1 = tracking.Fast.findCorners(grayScale1, width, height);
-          var corners2 = tracking.Fast.findCorners(grayScale2, width, height);
+          var gray1 = tracking.Image.calculateLumaGrayscale(imageData1.data, width, height);
+          var gray2 = tracking.Image.calculateLumaGrayscale(imageData2.data, width, height);
 
-          var timeNow = new Date().getTime();
-          var descriptors1 = tracking.Brief.getDescriptors(grayScale1, width, corners1);
-          var descriptors2 = tracking.Brief.getDescriptors(grayScale2, width, corners2);
+          var corners1 = tracking.Fast.findCorners(gray1, width, height);
+          var corners2 = tracking.Fast.findCorners(gray2, width, height);
+
+          var descriptors1 = tracking.Brief.getDescriptors(gray1, width, corners1);
+          var descriptors2 = tracking.Brief.getDescriptors(gray2, width, corners2);
 
           var matches = tracking.Brief.match(corners1, descriptors1, corners2, descriptors2);
-          console.log('time:', new Date().getTime() - timeNow);
 
           for (var i = 0; i < matches.length; i++) {
             var color = '#' + Math.floor(Math.random()*16777215).toString(16);
             context1.fillStyle = color;
             context1.fillRect(corners1[2*i], corners1[2*i+1], 4, 4);
-
             context2.fillStyle = color;
             context2.fillRect(corners2[2*matches[i]], corners2[2*matches[i]+1], 4, 4);
           }
+
       });
     });
-
-    function toGrayScale(pixels, width, height) {
-      var grayScale = new Uint8ClampedArray(width * height),
-        position = 0,
-        w = 0;
-
-      for (var i = 0; i < height; i++) {
-        for (var j = 0; j < width; j++) {
-          grayScale[position++] = pixels[w]*0.299 + pixels[w + 1]*0.587 + pixels[w + 2]*0.114;
-          w += 4;
-        }
-      }
-
-      return grayScale;
-    }
   </script>
 </body>
 </html>
