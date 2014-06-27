@@ -322,30 +322,60 @@
 
 (function() {
   /**
-   * Brief utility.
+   * Brief intends for "Binary Robust Independent Elementary Features".This
+   * method generates a binary string for each keypoint found by an extractor
+   * method.
    * @static
    * @constructor
    */
   tracking.Brief = {};
 
+  /**
+   * The set of binary tests is defined by the nd (x,y)-location pairs
+   * uniquely chosen during the initialization. Values could vary between N =
+   * 128,256,512. N=128 yield good compromises between speed, storage
+   * efficiency, and recognition rate.
+   * @type {number}
+   */
   tracking.Brief.N = 128;
 
+  /**
+   * Caches coordinates values of (x,y)-location pairs uniquely chosen during
+   * the initialization.
+   * @type {Object.<number, Int32Array>}
+   * @private
+   * @static
+   */
   tracking.Brief.randomOffsets_ = {};
 
-  tracking.Brief.getDescriptors = function(grayScale, width, corners) {
+  /**
+   * Generates a brinary string for each found corner extracted using an
+   * extractor method.
+   * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
+   * @param {number} width The image width.
+   * @param {array} corners
+   * @return {Int32Array} Returns an array where for each four sequence int
+   *     values represent the descriptor binary string (128 bits) necessary
+   *     to describe the corner, e.g. [0,0,0,0, 0,0,0,0, ...].
+   */
+  tracking.Brief.getDescriptors = function(pixels, width, corners) {
+    // Optimizing divide by four operation using binary shift
+    // (this.N >> 5) === this.N/4.
     var descriptors = new Int32Array(corners.length * (this.N >> 5)),
       descriptorWord = 0,
       offsets = this.getRandomOffsets_(width),
       position = 0;
 
     for (var i = 0; i < corners.length; i += 2) {
-      var w = width*corners[i + 1] + corners[i];
+      var w = width * corners[i + 1] + corners[i];
 
-      for (var j = 0, n = this.N; j < n; j ++) {
-        if (grayScale[offsets[j + j] + w] < grayScale[offsets[j + j + 1] + w]) {
+      for (var j = 0, n = this.N; j < n; j++) {
+        if (pixels[offsets[j + j] + w] < pixels[offsets[j + j + 1] + w]) {
+          // TODO: Add comment.
           descriptorWord |= 1 << (j & 31);
         }
 
+        // TODO: Add comment.
         if (!((j + 1) & 31)) {
           descriptors[position++] = descriptorWord;
           descriptorWord = 0;
@@ -356,6 +386,29 @@
     return descriptors;
   };
 
+  /**
+   * Matches sets of features {mi} and {m′j} extracted from two images taken
+   * from similar, and often successive, viewpoints. A classical procedure
+   * runs as follows. For each point {mi} in the first image, search in a
+   * region of the second image around location {mi} for point {m′j}. The
+   * search is based on the similarity of the local image windows, also known
+   * as kernel windows, centered on the points, which strongly characterizes
+   * the points when the images are sufficiently close. Once each keypoint is
+   * described with its binary string, they need to be compared with the
+   * closest matching point. Distance metric is critical to the performance of
+   * in- trusion detection systems. Thus using binary strings reduces the size
+   * of the descriptor and provides an interesting data structure that is fast
+   * to operate whose similarity can be measured by the Hamming distance.
+   * @param {array} corners1
+   * @param {array} descriptors1
+   * @param {array} corners2
+   * @param {array} descriptors2
+   * @return {Int32Array} Returns an array where the index is the corner1
+   *     index coordinate, and the value is the corresponding match index of
+   *     corner2, e.g. corners1=[x0,y0,x1,y1,...] and
+   *     corners2=[x'0,y'0,x'1,y'1,...], if x0 matches x'1 and x1 matches x'0,
+   *     the return array would be [3,0].
+   */
   tracking.Brief.match = function(corners1, descriptors1, corners2, descriptors2) {
     var len1 = corners1.length >> 1;
     var len2 = corners2.length >> 1;
@@ -366,8 +419,10 @@
       var minj = 0;
       for (var j = 0; j < len2; j++) {
         var dist = 0;
+        // Optimizing divide by four operation using binary shift
+        // (this.N >> 5) === this.N/4.
         for (var k = 0, n = this.N >> 5; k < n; k++) {
-          dist += tracking.Math.hammingWeight(descriptors1[i*n + k] ^ descriptors2[j*n + k]);
+          dist += tracking.Math.hammingWeight(descriptors1[i * n + k] ^ descriptors2[j * n + k]);
         }
         if (dist < min) {
           min = dist;
@@ -380,6 +435,12 @@
     return matches;
   };
 
+  /**
+   * Gets the coordinates values of (x,y)-location pairs uniquely chosen
+   * during the initialization.
+   * @param {number} width The image width.
+   * @return {array} Array with the random offset values.
+   */
   tracking.Brief.getRandomOffsets_ = function(width) {
     if (this.randomOffsets_[width]) {
       return this.randomOffsets_[width];
@@ -422,11 +483,10 @@
     var instance = this;
     var img = new window.Image();
 
-    canvas.width = width;
-    canvas.height = height;
-
     img.onload = function() {
       var context = canvas.getContext('2d');
+      canvas.width = width;
+      canvas.height = height;
       context.drawImage(img, x, y, width, height);
       if (opt_callback) {
         opt_callback.call(instance);
@@ -473,32 +533,57 @@
    */
   tracking.Fast = {};
 
-  tracking.Fast.FAST_THRESHOLD = 20;
+  /**
+   * Holds the threshold to determine whether the tested pixel is brighter or
+   * darker than the corner candidate p.
+   * @type {number}
+   * @default 40
+   * @static
+   */
+  tracking.Fast.FAST_THRESHOLD = 40;
 
+  /**
+   * Caches coordinates values of the circle surounding the pixel candidate p.
+   * @type {Object.<number, Int32Array>}
+   * @private
+   * @static
+   */
   tracking.Fast.circles_ = {};
 
-  tracking.Fast.findCorners = function(grayScale, width, height) {
-    var baseCircle = this.getCircle_(width),
-      circle = new Int32Array(16),
-      corners = [],
-      i,
-      j,
-      k,
-      p,
-      w = 0;
+  /**
+   * Finds corners coordinates on the graysacaled image.
+   * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @return {array} Array containing the coordinates of all found corners,
+   *     e.g. [x0,y0,x1,y1,...], where P(x0,y0) represents a corner coordinate.
+   */
+  tracking.Fast.findCorners = function(pixels, width, height) {
+    var circleOffsets = this.getCircleOffsets_(width),
+      circlePixels = new Int32Array(16),
+      corners = [];
 
-    for (i = 3; i < height - 3; i++) {
-      for (j = 3; j < width - 3; j++) {
-        w = i*width + j;
-        p = grayScale[w];
+    // When looping through the image pixels, skips the first three lines from
+    // the image boundaries to constrain the surrounding circle inside the image
+    // area.
+    for (var i = 3; i < height - 3; i++) {
+      for (var j = 3; j < width - 3; j++) {
+        var w = i * width + j;
+        var p = pixels[w];
 
-        for (k = 0; k < 16; k++) {
-          circle[k] = grayScale[baseCircle[k] + w];
+        // Loops the circle offsets to read the pixel value for the sixteen
+        // surrounding pixels.
+        for (var k = 0; k < 16; k++) {
+          circlePixels[k] = pixels[w + circleOffsets[k]];
         }
 
-        if (this.isCorner(circle, p, this.FAST_THRESHOLD)) {
+        if (this.isCorner(p, circlePixels, this.FAST_THRESHOLD)) {
+          // The pixel p is classified as a corner, as optimization increment j
+          // by the circle radius 3 to skip the neighbor pixels inside the
+          // surrounding circle. This can be removed without compromising the
+          // result.
           corners.push(j, i);
-          j+=3;
+          j += 3;
         }
       }
     }
@@ -506,12 +591,24 @@
     return corners;
   };
 
-  tracking.Fast.isCorner = function(circle, p, threshold) {
+  /**
+   * Checks if the circle pixel is brigther than the candidate pixel p by
+   * a threshold.
+   * @param {number} circlePixel The circle pixel value.
+   * @param {number} p The value of the candidate pixel p.
+   * @param {number} threshold
+   * @return {Boolean}
+   */
+  tracking.Fast.isBrighter = function(circlePixel, p, threshold) {
+    return circlePixel - p > threshold;
+  };
+
+  tracking.Fast.isCorner = function(p, circlePixels, threshold) {
     var brighter,
-      circlePoint,
+      circlePixel,
       darker;
 
-    if (this.isTriviallyExcluded(circle, p, threshold)) {
+    if (this.isTriviallyExcluded(circlePixels, p, threshold)) {
       return false;
     }
 
@@ -520,13 +617,13 @@
       brighter = true;
 
       for (var y = 0; y < 9; y++) {
-        circlePoint = circle[(x + y) & 15];
+        circlePixel = circlePixels[(x + y) & 15];
 
-        if (!this.isBrighter(circlePoint, p, threshold)) {
+        if (!this.isBrighter(p, circlePixel, threshold)) {
           brighter = false;
         }
 
-        if (!this.isDarker(circlePoint, p, threshold)) {
+        if (!this.isDarker(p, circlePixel, threshold)) {
           darker = false;
         }
       }
@@ -535,12 +632,35 @@
     return brighter || darker;
   };
 
-  tracking.Fast.isTriviallyExcluded = function(circle, p, threshold) {
+  /**
+   * Checks if the circle pixel is darker than the candidate pixel p by
+   * a threshold.
+   * @param {number} circlePixel The circle pixel value.
+   * @param {number} p The value of the candidate pixel p.
+   * @param {number} threshold
+   * @return {Boolean}
+   */
+  tracking.Fast.isDarker = function(circlePixel, p, threshold) {
+    return p - circlePixel > threshold;
+  };
+
+  /**
+   * Fast check to test if the candidate pixel is a trivially excluded value.
+   * In order to be a corner, the candidate pixel value should be darker or
+   * brigther than 9-12 surrouding pixels, when at least three of the top,
+   * bottom, left and right pixels are brither or darker it can be
+   * automatically excluded improving the performance.
+   * @param {number} circlePixel The circle pixel value.
+   * @param {number} p The value of the candidate pixel p.
+   * @param {number} threshold
+   * @return {Boolean}
+   */
+  tracking.Fast.isTriviallyExcluded = function(circlePixels, p, threshold) {
     var count = 0;
-    var circleTop = circle[0];
-    var circleRight = circle[4];
-    var circleBottom = circle[8];
-    var circleLeft = circle[12];
+    var circleBottom = circlePixels[8];
+    var circleLeft = circlePixels[12];
+    var circleRight = circlePixels[4];
+    var circleTop = circlePixels[0];
 
     if (this.isBrighter(circleTop, p, threshold)) {
       count++;
@@ -569,7 +689,6 @@
       if (this.isDarker(circleLeft, p, threshold)) {
         count++;
       }
-
       if (count < 3) {
         return true;
       }
@@ -578,15 +697,13 @@
     return false;
   };
 
-  tracking.Fast.isBrighter = function(circlePoint, p, threshold) {
-    return circlePoint > p + threshold;
-  };
-
-  tracking.Fast.isDarker = function(circlePoint, p, threshold) {
-    return circlePoint < p - threshold;
-  };
-
-  tracking.Fast.getCircle_ = function(width) {
+  /**
+   * Gets the sixteen offset values of the circle surrounding pixel.
+   * @param {number} width The image width.
+   * @return {array} Array with the sixteen offset values of the circle
+   *     surrounding pixel.
+   */
+  tracking.Fast.getCircleOffsets_ = function(width) {
     if (this.circles_[width]) {
       return this.circles_[width];
     }
@@ -612,6 +729,42 @@
 
     this.circles_[width] = circle;
     return circle;
+  };
+}());
+
+(function() {
+  /**
+   * Image utility.
+   * @static
+   * @constructor
+   */
+  tracking.Image = {};
+
+  /**
+   * Converts a color from a colorspace based on an RGB color model to a
+   * grayscale representation of its luminance. The coefficients represent the
+   * measured intensity perception of typical trichromat humans, in
+   * particular, human vision is most sensitive to green and least sensitive
+   * to blue.
+   * @param {Uint8ClampedArray} pixels The pixels in a linear [r,g,b,a,...]
+   *     array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @return {Uint8ClampedArray} The grayscale pixels in a linear [p1,p2,...]
+   *     array, where `pn = rn*0.299 + gn*0.587 + bn*0.114`.
+   * @static
+   */
+  tracking.Image.calculateLumaGrayscale = function(pixels, width, height) {
+    var gray = new Uint8ClampedArray(width * height);
+    var p = 0;
+    var w = 0;
+    for (var i = 0; i < height; i++) {
+      for (var j = 0; j < width; j++) {
+        gray[p++] = pixels[w]*0.299 + pixels[w + 1]*0.587 + pixels[w + 2]*0.114;
+        w += 4;
+      }
+    }
+    return gray;
   };
 }());
 
@@ -690,6 +843,12 @@
     return ((i + (i >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
   };
 
+  /**
+   * Generates a random number between [a, b] interval.
+   * @param {number} a
+   * @param {number} b
+   * @return {number}
+   */
   tracking.Math.uniformRandom = function(a, b) {
     return a + Math.random() * (b - a);
   };
@@ -704,17 +863,18 @@
   tracking.Matrix = {};
 
   /**
-   * Loops the array organized as major-row order and executes `fn` callback for
-   * each iteration. The `fn` callback receives the following parameters:
+   * Loops the array organized as major-row order and executes `fn` callback
+   * for each iteration. The `fn` callback receives the following parameters:
    * `(r,g,b,a,index,i,j)`, where `r,g,b,a` represents the pixel color with
-   * alpha channel, `index` represents the position in the major-row order array
-   * and `i,j` the respective indexes positions in two dimentions.
-   * @param {Uint8ClampedArray} pixels The pixels to loop through.
+   * alpha channel, `index` represents the position in the major-row order
+   * array and `i,j` the respective indexes positions in two dimentions.
+   * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
+   *     through.
    * @param {number} width The image width.
    * @param {number} height The image height.
    * @param {function} fn The callback function for each pixel.
-   * @param {number} opt_jump Optional jump for the iteration, by default it is
-   *     1, hence loops all the pixels of the array.
+   * @param {number} opt_jump Optional jump for the iteration, by default it
+   *     is 1, hence loops all the pixels of the array.
    * @static
    */
   tracking.Matrix.forEach = function(pixels, width, height, fn, opt_jump) {
@@ -734,11 +894,12 @@
   /**
    * Loops the pixels array modifying each pixel based on `fn` transformation
    * function.
-   * @param {Uint8ClampedArray} pixels The pixels to transform.
+   * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
+   *     through.
    * @param {number} width The image width.
    * @param {number} height The image height.
    * @param {function} fn The transformation function.
-   * @return {Uint8ClampedArray} The transformed pixels.
+   * @return {array} The transformed pixels.
    * @static
    */
   tracking.Matrix.transform = function(pixels, width, height, fn) {
