@@ -11,44 +11,20 @@
 <body>
   <canvas id="canvas"></canvas>
   <script>
-    var CornerTracker = function() {
-      CornerTracker.base(this, 'constructor');
-    };
-
-    tracking.inherits(CornerTracker, tracking.Tracker);
-
-    CornerTracker.prototype.track = function(pixels, width, height) {
-      var grayScale = new Uint8ClampedArray(width * height),
-        position = 0,
-        w = 0;
-
-      for (var i = 0; i < height; i++) {
-        for (var j = 0; j < width; j++) {
-          grayScale[position++] = pixels[w]*0.299 + pixels[w + 1]*0.587 + pixels[w + 2]*0.114;
-          w += 4;
-        }
-      }
-
-      var timeNow = new Date().getTime();
-      var corners = tracking.Fast.findCorners(grayScale, width, height);
-      console.log('time:', new Date().getTime() - timeNow);
-
-      this.onFound(corners);
-    };
-
+    var width = 320;
+    var height = 240;
     var canvas = tracking.one('#canvas');
     var context = canvas.getContext('2d');
 
-    tracking.Canvas.loadImage(canvas, 'assets/book1.png', 0, 0, 320, 240, function() {
-      var tracker = new CornerTracker();
-      tracker.onFound = function(corners) {
-        for (var i = 0; i < corners.length; i += 2) {
-          context.fillStyle = "rgb(255,0,0)";
-          context.fillRect(corners[i], corners[i+1], 1, 1);
-        }
-      };
+    tracking.Canvas.loadImage(canvas, 'assets/book1.png', 0, 0, width, height, function() {
+      var imageData = context.getImageData(0, 0, width, height);
+      var gray = tracking.Image.calculateLumaGrayscale(imageData.data, width, height);
+      var corners = tracking.Fast.findCorners(gray, width, height);
 
-      tracking.track('#canvas', tracker);
+      for (var i = 0; i < corners.length; i += 2) {
+        context.fillStyle = '#f00';
+        context.fillRect(corners[i], corners[i + 1], 1, 1);
+      }
     });
   </script>
 </body>

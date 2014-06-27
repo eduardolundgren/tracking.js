@@ -23,32 +23,57 @@
    */
   tracking.Fast = {};
 
+  /**
+   * Holds the threshold to determine whether the tested pixel is brighter or
+   * darker than the corner candidate p.
+   * @type {number}
+   * @default 20
+   * @static
+   */
   tracking.Fast.FAST_THRESHOLD = 20;
 
+  /**
+   * Caches coordinates values of the circle surounding the pixel candidate p.
+   * @type {Object.<number, Int32Array>}
+   * @private
+   * @static
+   */
   tracking.Fast.circles_ = {};
 
-  tracking.Fast.findCorners = function(grayScale, width, height) {
-    var baseCircle = this.getCircle_(width),
-      circle = new Int32Array(16),
-      corners = [],
-      i,
-      j,
-      k,
-      p,
-      w = 0;
+  /**
+   * Finds corners coordinates on the graysacaled image.
+   * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @return {array} Array containing the coordinates of all found corners,
+   *     e.g. [x0,y0,x1,y1,...], where P(x0,y0) represents a corner coordinate.
+   */
+  tracking.Fast.findCorners = function(pixels, width, height) {
+    var circleOffsets = this.getCircleOffsets_(width),
+      circlePixels = new Int32Array(16),
+      corners = [];
 
-    for (i = 3; i < height - 3; i++) {
-      for (j = 3; j < width - 3; j++) {
-        w = i*width + j;
-        p = grayScale[w];
+    // When looping through the image pixels, skips the first three lines from
+    // the image boundaries to constrain the surrounding circle inside the image
+    // area.
+    for (var i = 3; i < height - 3; i++) {
+      for (var j = 3; j < width - 3; j++) {
+        var w = i * width + j;
+        var p = pixels[w];
 
-        for (k = 0; k < 16; k++) {
-          circle[k] = grayScale[baseCircle[k] + w];
+        // Loops the circle offsets to read the pixel value for the sixteen
+        // surrounding pixels.
+        for (var k = 0; k < 16; k++) {
+          circlePixels[k] = pixels[w + circleOffsets[k]];
         }
 
-        if (this.isCorner(circle, p, this.FAST_THRESHOLD)) {
+        if (this.isCorner(p, circlePixels, this.FAST_THRESHOLD)) {
+          // The pixel p is classified as a corner, as optimization increment j
+          // by the circle radius 3 to skip the neighbor pixels inside the
+          // surrounding circle. This can be removed without compromising the
+          // result.
           corners.push(j, i);
-          j+=3;
+          j += 3;
         }
       }
     }
@@ -56,12 +81,24 @@
     return corners;
   };
 
-  tracking.Fast.isCorner = function(circle, p, threshold) {
+  /**
+   * Checks if the circle pixel is brigther than the candidate pixel p by
+   * a threshold.
+   * @param {number} circlePixel The circle pixel value.
+   * @param {number} p The value of the candidate pixel p.
+   * @param {number} threshold
+   * @return {Boolean}
+   */
+  tracking.Fast.isBrighter = function(circlePixel, p, threshold) {
+    return circlePixel - p > threshold;
+  };
+
+  tracking.Fast.isCorner = function(p, circlePixels, threshold) {
     var brighter,
-      circlePoint,
+      circlePixel,
       darker;
 
-    if (this.isTriviallyExcluded(circle, p, threshold)) {
+    if (this.isTriviallyExcluded(circlePixels, p, threshold)) {
       return false;
     }
 
@@ -70,13 +107,13 @@
       brighter = true;
 
       for (var y = 0; y < 9; y++) {
-        circlePoint = circle[(x + y) & 15];
+        circlePixel = circlePixels[(x + y) & 15];
 
-        if (!this.isBrighter(circlePoint, p, threshold)) {
+        if (!this.isBrighter(p, circlePixel, threshold)) {
           brighter = false;
         }
 
-        if (!this.isDarker(circlePoint, p, threshold)) {
+        if (!this.isDarker(p, circlePixel, threshold)) {
           darker = false;
         }
       }
@@ -85,12 +122,35 @@
     return brighter || darker;
   };
 
-  tracking.Fast.isTriviallyExcluded = function(circle, p, threshold) {
+  /**
+   * Checks if the circle pixel is darker than the candidate pixel p by
+   * a threshold.
+   * @param {number} circlePixel The circle pixel value.
+   * @param {number} p The value of the candidate pixel p.
+   * @param {number} threshold
+   * @return {Boolean}
+   */
+  tracking.Fast.isDarker = function(circlePixel, p, threshold) {
+    return p - circlePixel > threshold;
+  };
+
+  /**
+   * Fast check to test if the candidate pixel is a trivially excluded value.
+   * In order to be a corner, the candidate pixel value should be darker or
+   * brigther than 9-12 surrouding pixels, when at least three of the top,
+   * bottom, left and right pixels are brither or darker it can be
+   * automatically excluded improving the performance.
+   * @param {number} circlePixel The circle pixel value.
+   * @param {number} p The value of the candidate pixel p.
+   * @param {number} threshold
+   * @return {Boolean}
+   */
+  tracking.Fast.isTriviallyExcluded = function(circlePixels, p, threshold) {
     var count = 0;
-    var circleTop = circle[0];
-    var circleRight = circle[4];
-    var circleBottom = circle[8];
-    var circleLeft = circle[12];
+    var circleBottom = circlePixels[8];
+    var circleLeft = circlePixels[12];
+    var circleRight = circlePixels[4];
+    var circleTop = circlePixels[0];
 
     if (this.isBrighter(circleTop, p, threshold)) {
       count++;
@@ -119,7 +179,6 @@
       if (this.isDarker(circleLeft, p, threshold)) {
         count++;
       }
-
       if (count < 3) {
         return true;
       }
@@ -128,15 +187,13 @@
     return false;
   };
 
-  tracking.Fast.isBrighter = function(circlePoint, p, threshold) {
-    return circlePoint > p + threshold;
-  };
-
-  tracking.Fast.isDarker = function(circlePoint, p, threshold) {
-    return circlePoint < p - threshold;
-  };
-
-  tracking.Fast.getCircle_ = function(width) {
+  /**
+   * Gets the sixteen offset values of the circle surrounding pixel.
+   * @param {number} width The image width.
+   * @return {array} Array with the sixteen offset values of the circle
+   *     surrounding pixel.
+   */
+  tracking.Fast.getCircleOffsets_ = function(width) {
     if (this.circles_[width]) {
       return this.circles_[width];
     }

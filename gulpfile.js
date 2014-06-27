@@ -26,6 +26,7 @@ gulp.task('build', function() {
     'src/Canvas.js',
     'src/EPnP.js',
     'src/Fast.js',
+    'src/Image.js',
     'src/Math.js',
     'src/Matrix.js',
     'src/Tracker.js',
