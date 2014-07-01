@@ -22,36 +22,6 @@
   };
 
   /**
-   * Calculates the Hamming distance between two binary strings of equal
-   * length is the number of positions at which the corresponding symbols are
-   * different. In another way, it measures the minimum number of
-   * substitutions required to change one string into the other, or the
-   * minimum number of errors that could have transformed one string into the
-   * other.
-   *
-   * Example:
-   * Binary string between   Hamming distance
-   *  1011101 and 1001001           2
-   *
-   * @param {Array.<number>} desc1 Array of numbers necessary to store the
-   *     binary string, e.g. for 128 bits this array requires at least 4
-   *     positions.
-   * @param {Array.<number>} desc3 Array of numbers necessary to store the
-   *     binary string, e.g. for 128 bits this array requires at least 4
-   *     positions.
-   * @return {number} The hamming distance.
-   */
-  tracking.Math.hammingDistance = function(desc1, desc2) {
-    var dist = 0, v, length;
-
-    for (v = 0, length = desc1.length; v < length; v++) {
-      dist += this.hammingWeight(desc1[v] ^ desc2[v]);
-    }
-
-    return dist;
-  };
-
-  /**
    * Calculates the Hamming weight of a string, which is the number of symbols that are
    * different from the zero-symbol of the alphabet used. It is thus
    * equivalent to the Hamming distance from the all-zero string of the same
