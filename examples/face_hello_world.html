@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+
+  <title>tracking.js - hello world</title>
+
+  <meta charset="utf-8">
+
+  <script src="../build/tracking.js"></script>
+  <script src="../build/data/face.js"></script>
+
+  <style>
+  .rect {
+    border: 2px solid magenta;
+    left: -1000px;
+    position: absolute;
+    top: -1000px;
+  }
+  </style>
+</head>
+<body>
+  <img id="img" src="assets/chicos.png" />
+
+  <script>
+    window.onload = function() {
+      var img = tracking.one('#img');
+      var tracker = new tracking.FaceTracker();
+
+      tracking.track('#img', tracker);
+
+      tracker.onFound = function(payload) {
+        payload.forEach(function(rect) {
+          window.plot(rect.x, rect.y, rect.size);
+        });
+      };
+
+      tracker.onNotFound = function() {
+        console.log('Faces not found');
+      };
+
+      window.plot = function(x, y, size) {
+        var rect = document.createElement('div');
+        document.body.appendChild(rect);
+        rect.classList.add('rect');
+        rect.style.width = size + 'px';
+        rect.style.height = size + 'px';
+        rect.style.left = (img.offsetLeft + x) + 'px';
+        rect.style.top = (img.offsetTop + y) + 'px';
+      };
+    };
+  </script>
+
+</body>
+</html>
