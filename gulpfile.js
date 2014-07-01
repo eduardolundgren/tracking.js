@@ -31,8 +31,11 @@ gulp.task('build', function() {
     'src/Math.js',
     'src/Matrix.js',
     'src/Tracker.js',
+    'src/HAARTracker.js',
     'src/ColorTracker.js',
-    'src/HumanTracker.js'
+    'src/EyeTracker.js',
+    'src/FaceTracker.js',
+    'src/MouthTracker.js'
   ];
 
   return gulp.src(files)
