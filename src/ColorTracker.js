@@ -1,13 +1,13 @@
 (function() {
   /**
-   * ColorTracker utility.
+   * ColorTracker utility to track colored blobs in a frrame using color
+   * difference evaluation.
    * @constructor
    * @extends {tracking.Tracker}
    */
   tracking.ColorTracker = function() {
     tracking.ColorTracker.base(this, 'constructor');
 
-    this.setType('color');
     this.setColors(['magenta']);
   };
 

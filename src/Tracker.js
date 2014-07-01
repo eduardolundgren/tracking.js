@@ -6,20 +6,6 @@
   tracking.Tracker = function() {};
 
   /**
-   * Specifies the tracker type.
-   * @type {string}
-   */
-  tracking.Tracker.prototype.type = null;
-
-  /**
-   * Gets the tracker type.
-   * @return {string}
-   */
-  tracking.Tracker.prototype.getType = function() {
-    return this.type;
-  };
-
-  /**
    * Fires when the tracker founds a target into the video frame.
    * @param {Video} video The `Video` instance being tracked.
    * @param {object} payload The payload of the tracker, e.g. this can be an
@@ -38,14 +24,6 @@
    * @param {object} payload The payload of the tracker.
    */
   tracking.Tracker.prototype.onNotFound = function() {};
-
-  /**
-   * Sets the tracker type.
-   * @param {string} type
-   */
-  tracking.Tracker.prototype.setType = function(type) {
-    this.type = type;
-  };
 
   /**
    * Tracks the pixels on the array. This method is called for each video
