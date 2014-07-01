@@ -1,7 +1,7 @@
 /**
  * tracking.js - Augmented Reality JavaScript Framework.
  * @author Eduardo Lundgren <edu@rdo.io>
- * @version v0.0.1
+ * @version v1.0.0-alpha
  * @link http://trackingjs.com
  * @license BSD
  */
@@ -278,38 +278,6 @@
   // Browser polyfills
   //===================
 
-  if (!window.self.Int8Array) {
-    window.self.Int8Array = Array;
-  }
-
-  if (!window.self.Uint8Array) {
-    window.self.Uint8Array = Array;
-  }
-
-  if (!window.self.Uint8ClampedArray) {
-    window.self.Uint8ClampedArray = Array;
-  }
-
-  if (!window.self.Uint16Array) {
-    window.self.Uint16Array = Array;
-  }
-
-  if (!window.self.Int32Array) {
-    window.self.Int32Array = Array;
-  }
-
-  if (!window.self.Uint32Array) {
-    window.self.Uint32Array = Array;
-  }
-
-  if (!window.self.Float32Array) {
-    window.self.Float32Array = Array;
-  }
-
-  if (!window.self.Float64Array) {
-    window.self.Float64Array = Array;
-  }
-
   if (!window.URL) {
     window.URL = window.URL || window.webkitURL || window.msURL || window.oURL;
   }
@@ -506,6 +474,254 @@
   tracking.EPnP = {};
 
   tracking.EPnP.solve = function(objectPoints, imagePoints, cameraMatrix) {};
+}());
+
+(function() {
+  /*
+   * ViolaJones utility.
+   * @static
+   * @constructor
+   */
+  tracking.ViolaJones = {};
+
+  /**
+   * Holds the minimum area of intersection that defines when a rectangle is
+   * from the same group. Often when a face is matched multiple rectangles are
+   * classified as possible rectangles to represent the face, when they
+   * intersects they are grouped as one face.
+   * @type {number}
+   * @default 0.5
+   * @static
+   */
+  tracking.ViolaJones.BOUNDING_REGIONS_OVERLAP = 0.5;
+
+  /**
+   * Holds the block size.
+   * @type {number}
+   * @default 20
+   * @static
+   */
+  tracking.ViolaJones.BLOCK_SIZE = 20;
+
+  /**
+   * Holds the block jump size.
+   * @type {number}
+   * @default 2
+   * @static
+   */
+  tracking.ViolaJones.BLOCK_JUMP = 2;
+
+  /**
+   * Holds the block scale factor.
+   * @type {number}
+   * @default 1.25
+   * @static
+   */
+  tracking.ViolaJones.BLOCK_SCALE = 1.25;
+
+  /**
+   * Detects through the HAAR cascade data rectangles matches.
+   * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {number} data The HAAR cascade data.
+   * @return {array} Found rectangles.
+   */
+  tracking.ViolaJones.detect = function(pixels, width, height, data) {
+    var integralImages = tracking.Matrix.computeIntergralImage(pixels, width, height);
+    var integralImage = integralImages[0];
+    var integralImageSquare = integralImages[1];
+
+    var blockSize = this.BLOCK_SIZE;
+    var blockSizeInverse = 1.0 / this.BLOCK_SIZE;
+    var maxBlockSize = Math.min(width, height);
+    var position = 0;
+    var payload = [];
+
+    for (; blockSize <= maxBlockSize; blockSize = ~~(blockSize * this.BLOCK_SCALE)) {
+      var scale = blockSize * blockSizeInverse;
+      var inverseArea = 1.0 / (blockSize * blockSize);
+
+      var i = 0;
+      var j = 0;
+      var xmax = (height - blockSize);
+      var ymax = (width - blockSize);
+
+      for (var x = 0.0; x < xmax; x += this.BLOCK_JUMP) {
+        i = ~~x;
+        for (var y = 0.0; y < ymax; y += this.BLOCK_JUMP) {
+          j = ~~y;
+          if (this.evalStages_(data, integralImage, integralImageSquare, i, j, width, blockSize, scale, inverseArea)) {
+            payload[position++] = {
+              size: blockSize,
+              x: j,
+              y: i
+            };
+          }
+        }
+      }
+    }
+    return tracking.ViolaJones.mergeRectangles(payload);
+  };
+
+  /**
+   * Evaluates if the block size on i,j position is a valid HAAR cascade
+   * stage.
+   * @param {number} data The HAAR cascade data.
+   * @param {Array.<number>} integralImage Summed area table of an image
+   *     computed by `tracking.Matrix.computeIntergralImage`.
+   * @param {Array.<number>} integralImageSquare Summed squared area table of
+   *     an image computed by `tracking.Matrix.computeIntergralImage`.
+   * @param {number} i Vertical position of the pixel to be evaluated.
+   * @param {number} j Horizontal position of the pixel to be evaluated.
+   * @param {number} width The image width.
+   * @param {number} blockSize The block size.
+   * @param {number} scale The scale factor of the block size and its original
+   *     size.
+   * @param {number} inverseArea The inverse area of the block size.
+   * @return {boolean} Whether the region passes all the stage tests.
+   */
+  tracking.ViolaJones.evalStages_ = function(data, integralImage, integralImageSquare, i, j, width, blockSize, scale, inverseArea) {
+    var wb1 = i * width + j;
+    var wb2 = i * width + (j + blockSize);
+    var wb3 = (i + blockSize) * width + j;
+    var wb4 = (i + blockSize) * width + (j + blockSize);
+
+    var total = integralImage[wb1] - integralImage[wb2] - integralImage[wb3] + integralImage[wb4];
+    var totalSquare = integralImageSquare[wb1] - integralImageSquare[wb2] - integralImageSquare[wb3] + integralImageSquare[wb4];
+
+    var mean = total * inverseArea;
+    var variance = totalSquare * inverseArea - mean * mean;
+    if (variance > 1) {
+      variance = Math.sqrt(variance);
+    } else {
+      variance = 1;
+    }
+
+    var length = data.length;
+
+    for (var w = 0; w < length; ) {
+      var stageSum = 0;
+      var stageThreshold = data[w++];
+      var nodeLength = data[w++];
+
+      while (nodeLength--) {
+        var rectsSum = 0;
+        var rectsLength = data[w++];
+
+        for (var r = 0; r < rectsLength; r++) {
+          var rectLeft = j + ~~(data[w++] * scale);
+          var rectTop = i + ~~(data[w++] * scale);
+          var rectWidth = ~~(data[w++] * scale);
+          var rectHeight = ~~(data[w++] * scale);
+          var rectWeight = data[w++];
+          var recRight = rectLeft + rectWidth;
+          var recBottom = rectTop + rectHeight;
+          var w1 = rectTop * width + rectLeft;
+          var w2 = rectTop * width + recRight;
+          var w3 = recBottom * width + rectLeft;
+          var w4 = recBottom * width + recRight;
+          rectsSum += (integralImage[w1] - integralImage[w2] - integralImage[w3] + integralImage[w4]) * rectWeight;
+        }
+
+        var nodeThreshold = data[w++];
+        var nodeLeft = data[w++];
+        var nodeRight = data[w++];
+
+        if (rectsSum * inverseArea < nodeThreshold * variance) {
+          stageSum += nodeLeft;
+        } else {
+          stageSum += nodeRight;
+        }
+      }
+
+      if (stageSum <= stageThreshold) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  /**
+   * Postprocess the detected sub-windows in order to combine overlapping.
+   * detections into a single detection.
+   * @param {array} rects
+   * @return {array}
+   */
+  tracking.ViolaJones.mergeRectangles = function(rects) {
+    var rectsLen = rects.length;
+    var hasGroup = new Uint32Array(rectsLen);
+    var rect;
+    var rectsMap = {};
+
+    for (var i = 0; i < rectsLen; i++) {
+      if (hasGroup[i]) {
+        continue;
+      }
+
+      var rect1 = rects[i];
+
+      hasGroup[i] = true;
+      rectsMap[i] = {
+        count: 1,
+        rect: rect1
+      };
+
+      var x1 = rect1.x;
+      var y1 = rect1.y;
+      var blockSize1 = rect1.size;
+      var x2 = x1 + blockSize1;
+      var y2 = y1 + blockSize1;
+
+      for (var j = i + 1; j < rectsLen; j++) {
+        if (hasGroup[j]) {
+          continue;
+        }
+
+        var rect2 = rects[j];
+
+        if (i === j) {
+          continue;
+        }
+
+        var x3 = rect2.x;
+        var y3 = rect2.y;
+        var blockSize2 = rect2.size;
+        var x4 = x3 + blockSize2;
+        var y4 = y3 + blockSize2;
+
+        if (tracking.Math.intersectRect(x1, y1, x2, y2, x3, y3, x4, y4)) {
+          var px1 = Math.max(x1, x3);
+          var py1 = Math.max(y1, y3);
+          var px2 = Math.min(x2, x4);
+          var py2 = Math.min(y2, y4);
+          var pArea = (px1 - px2) * (py1 - py2);
+
+          if ((pArea / (blockSize1 * blockSize1) >= this.BOUNDING_REGIONS_OVERLAP) &&
+            (pArea / (blockSize2 * blockSize2) >= this.BOUNDING_REGIONS_OVERLAP)) {
+
+            rect = rectsMap[i];
+            hasGroup[j] = true;
+            rect.count++;
+            if (blockSize2 < blockSize1) {
+              rect.rect = rect2;
+            }
+          }
+        }
+      }
+    }
+
+    var faces = [];
+    for (i in rectsMap) {
+      rect = rectsMap[i];
+      if (rect.count > 1) {
+        faces.push(rect.rect);
+      }
+    }
+
+    return faces;
+  };
+
 }());
 
 (function() {
@@ -792,36 +1008,6 @@
   };
 
   /**
-   * Calculates the Hamming distance between two binary strings of equal
-   * length is the number of positions at which the corresponding symbols are
-   * different. In another way, it measures the minimum number of
-   * substitutions required to change one string into the other, or the
-   * minimum number of errors that could have transformed one string into the
-   * other.
-   *
-   * Example:
-   * Binary string between   Hamming distance
-   *  1011101 and 1001001           2
-   *
-   * @param {Array.<number>} desc1 Array of numbers necessary to store the
-   *     binary string, e.g. for 128 bits this array requires at least 4
-   *     positions.
-   * @param {Array.<number>} desc3 Array of numbers necessary to store the
-   *     binary string, e.g. for 128 bits this array requires at least 4
-   *     positions.
-   * @return {number} The hamming distance.
-   */
-  tracking.Math.hammingDistance = function(desc1, desc2) {
-    var dist = 0, v, length;
-
-    for (v = 0, length = desc1.length; v < length; v++) {
-      dist += this.hammingWeight(desc1[v] ^ desc2[v]);
-    }
-
-    return dist;
-  };
-
-  /**
    * Calculates the Hamming weight of a string, which is the number of symbols that are
    * different from the zero-symbol of the alphabet used. It is thus
    * equivalent to the Hamming distance from the all-zero string of the same
@@ -852,6 +1038,28 @@
   tracking.Math.uniformRandom = function(a, b) {
     return a + Math.random() * (b - a);
   };
+
+  /**
+   * Tests if a rectangle intersects with another.
+   *
+   *  x0y0 --------       x2y2 --------
+   *      |       |           |       |
+   *      -------- x1y1       -------- x3y3
+   *
+   * @param {number} x0 Horizontal coordinate of P0.
+   * @param {number} y0 Vertical coordinate of P0.
+   * @param {number} x1 Horizontal coordinate of P1.
+   * @param {number} y1 Vertical coordinate of P1.
+   * @param {number} x2 Horizontal coordinate of P2.
+   * @param {number} y2 Vertical coordinate of P2.
+   * @param {number} x3 Horizontal coordinate of P3.
+   * @param {number} y3 Vertical coordinate of P3.
+   * @return {boolean}
+   */
+  tracking.Math.intersectRect = function(x0, y0, x1, y1, x2, y2, x3, y3) {
+    return !(x2 > x1 || x3 < x0 || y2 > y1 || y3 < y0);
+  };
+
 }());
 
 (function() {
@@ -892,26 +1100,59 @@
   };
 
   /**
-   * Loops the pixels array modifying each pixel based on `fn` transformation
-   * function.
-   * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
-   *     through.
+   * Computes the integral image and the integral image squared of the input
+   * pixels. The input pixels will be converted to grayscale using the
+   * following transformation, `~~(r * 0.299 + b * 0.587 + g * 0.114)`. A
+   * summed area table is a data structure and algorithm for quickly and
+   * efficiently generating the sum of values in a rectangular subset of a
+   * grid. In the image processing domain, it is also known as an integral
+   * image.
+   * @param {Uint8ClampedArray} pixels The pixels to loop through.
    * @param {number} width The image width.
    * @param {number} height The image height.
-   * @param {function} fn The transformation function.
-   * @return {array} The transformed pixels.
+   * @return {Array.<Array.<number>>} Array containing in the first position
+   *     the integral image and in the second position the integral image
+   *     squared.
    * @static
    */
-  tracking.Matrix.transform = function(pixels, width, height, fn) {
-    tracking.Matrix.forEach(pixels, width, height, function(r, g, b, a, w) {
-      var pixel = fn.apply(null, arguments);
-      pixels[w] = pixel[0];
-      pixels[w + 1] = pixel[1];
-      pixels[w + 2] = pixel[2];
-      pixels[w + 3] = pixel[3];
-    });
-    return pixels;
+  tracking.Matrix.computeIntergralImage = function(pixels, width, height) {
+    var integralImage = new Int32Array(width * height),
+      integralImageSquare = new Int32Array(width * height),
+      position = 0,
+      pixelSum = 0,
+      pixelSumSquare = 0;
+
+    for (var i = 0; i < height; i++) {
+      for (var j = 0; j < width; j++) {
+        var w = i * width * 4 + j * 4;
+        var pixel = ~~(pixels[w] * 0.299 + pixels[w+1] * 0.587 + pixels[w+2] * 0.114);
+
+        if (i === 0 && j === 0) {
+          pixelSum = pixel;
+          pixelSumSquare = pixel * pixel;
+        } else if (i === 0) {
+          pixelSum = pixel + integralImage[i * width + (j - 1)];
+          pixelSumSquare = pixel * pixel + integralImageSquare[i * width + (j - 1)];
+        } else if (j === 0) {
+          pixelSum = pixel + integralImage[(i - 1) * width + j];
+          pixelSumSquare = pixel * pixel + integralImageSquare[(i - 1) * width + j];
+        } else {
+          pixelSum = pixel + integralImage[i * width + (j - 1)] + integralImage[(i - 1) * width + j] - integralImage[(i - 1) * width + (j - 1)];
+          pixelSumSquare = pixel * pixel + integralImageSquare[i * width + (j - 1)] + integralImageSquare[(i - 1) * width + j] - integralImageSquare[(i - 1) * width + (j - 1)];
+        }
+
+        integralImage[position] = pixelSum;
+        integralImageSquare[position] = pixelSumSquare;
+        position++;
+      }
+    }
+
+    return [
+      integralImage,
+      integralImageSquare
+    ];
   };
+
 }());
 
 (function() {
@@ -920,20 +1161,6 @@
    * @constructor
    */
   tracking.Tracker = function() {};
-
-  /**
-   * Specifies the tracker type.
-   * @type {string}
-   */
-  tracking.Tracker.prototype.type = null;
-
-  /**
-   * Gets the tracker type.
-   * @return {string}
-   */
-  tracking.Tracker.prototype.getType = function() {
-    return this.type;
-  };
 
   /**
    * Fires when the tracker founds a target into the video frame.
@@ -956,14 +1183,6 @@
   tracking.Tracker.prototype.onNotFound = function() {};
 
   /**
-   * Sets the tracker type.
-   * @param {string} type
-   */
-  tracking.Tracker.prototype.setType = function(type) {
-    this.type = type;
-  };
-
-  /**
    * Tracks the pixels on the array. This method is called for each video
    * frame in order to decide whether `onFound` or `onNotFound` callback will
    * be fired.
@@ -976,14 +1195,81 @@
 
 (function() {
   /**
-   * ColorTracker utility.
+   * HAARTracker utility.
+   * @constructor
+   * @extends {tracking.Tracker}
+   */
+  tracking.HAARTracker = function() {
+    tracking.HAARTracker.base(this, 'constructor');
+  };
+
+  tracking.inherits(tracking.HAARTracker, tracking.Tracker);
+
+  /**
+   * Holds the HAAR cascade data converted from OpenCV training.
+   * @type {array}
+   * @static
+   */
+  tracking.HAARTracker.data = {};
+
+  /**
+   * Specifies the tracker HAAR data for the instance.
+   * @type {array}
+   */
+  tracking.Tracker.prototype.data = null;
+
+  /**
+   * Gets the tracker HAAR data.
+   * @return {string}
+   */
+  tracking.Tracker.prototype.getData = function() {
+    return this.data;
+  };
+
+  /**
+   * Tracks the `Video` frames. This method is called for each video frame in
+   * order to decide whether `onFound` or `onNotFound` callback will be fired.
+   * @param {Uint8ClampedArray} pixels The pixels data to track.
+   * @param {number} width The pixels canvas width.
+   * @param {number} height The pixels canvas height.
+   */
+  tracking.HAARTracker.prototype.track = function(pixels, width, height) {
+    var data = this.getData();
+    if (!data) {
+      throw new Error('HAAR cascade data not set.');
+    }
+    var payload = tracking.ViolaJones.detect(pixels, width, height, data);
+    if (payload.length) {
+      if (this.onFound) {
+        this.onFound.call(this, payload);
+      }
+    } else {
+      if (this.onNotFound) {
+        this.onNotFound.call(this, payload);
+      }
+    }
+  };
+
+  /**
+   * Sets the tracker HAAR data.
+   * @param {array} data
+   */
+  tracking.Tracker.prototype.setData = function(data) {
+    this.data = data;
+  };
+
+}());
+
+(function() {
+  /**
+   * ColorTracker utility to track colored blobs in a frrame using color
+   * difference evaluation.
    * @constructor
    * @extends {tracking.Tracker}
    */
   tracking.ColorTracker = function() {
     tracking.ColorTracker.base(this, 'constructor');
 
-    this.setType('color');
     this.setColors(['magenta']);
   };
 
@@ -1228,277 +1514,47 @@
 
 }());
 
-// (function() {
-//   tracking.type.HUMAN = {
+(function() {
+  /**
+   * EyeTracker utility.
+   * @constructor
+   * @extends {tracking.HAARTracker}
+   */
+  tracking.EyeTracker = function() {
+    tracking.EyeTracker.base(this, 'constructor');
 
-//     NAME: 'HUMAN',
+    this.setData(new Float64Array(tracking.HAARTracker.data.eye));
+  };
 
-//     data: {},
+  tracking.inherits(tracking.EyeTracker, tracking.HAARTracker);
+}());
 
-//     defaults: {
-//       blockSize: 20,
+(function() {
+  /**
+   * FaceTracker utility.
+   * @constructor
+   * @extends {tracking.HAARTracker}
+   */
+  tracking.FaceTracker = function() {
+    tracking.FaceTracker.base(this, 'constructor');
 
-//       blockJump: 2,
+    this.setData(new Float64Array(tracking.HAARTracker.data.face));
+  };
 
-//       blockScale: 1.25,
+  tracking.inherits(tracking.FaceTracker, tracking.HAARTracker);
+}());
 
-//       data: 'frontal_face',
+(function() {
+  /**
+   * MouthTracker utility.
+   * @constructor
+   * @extends {tracking.HAARTracker}
+   */
+  tracking.MouthTracker = function() {
+    tracking.MouthTracker.base(this, 'constructor');
 
-//       minNeighborArea: 0.5
-//     },
+    this.setData(new Float64Array(tracking.HAARTracker.data.mouth));
+  };
 
-//     evalStage_: function(stage, integralImage, integralImageSquare, i, j, width, height, blockSize) {
-//       var instance = this,
-//         defaults = instance.defaults,
-//         stageThreshold = stage[1],
-//         tree = stage[2],
-//         treeLen = tree.length,
-//         t,
-
-//         stageSum = 0,
-//         inverseArea = 1.0 / (blockSize * blockSize),
-//         scale = blockSize / defaults.blockSize,
-
-//         total,
-//         totalSquare,
-//         mean,
-//         variance,
-//         wb1 = i * width + j,
-//         wb2 = i * width + (j + blockSize),
-//         wb3 = (i + blockSize) * width + j,
-//         wb4 = (i + blockSize) * width + (j + blockSize);
-
-//       total = integralImage[wb1] - integralImage[wb2] - integralImage[wb3] + integralImage[wb4];
-//       totalSquare = integralImageSquare[wb1] - integralImageSquare[wb2] - integralImageSquare[wb3] + integralImageSquare[wb4];
-//       mean = total * inverseArea;
-//       variance = totalSquare * inverseArea - mean * mean;
-
-//       if (variance > 1) {
-//         variance = Math.sqrt(variance);
-//       } else {
-//         variance = 1;
-//       }
-
-//       for (t = 0; t < treeLen; t++) {
-//         var node = tree[t],
-//           nodeLen = node.length,
-
-//           nodeThreshold = node[nodeLen - 3],
-//           left = node[nodeLen - 2],
-//           right = node[nodeLen - 1],
-
-//           rectsSum = 0,
-//           rectsLen = (nodeLen - 3) / 5,
-//           r,
-//           x1, y1, x2, y2, rectWidth, rectHeight, rectWeight, w1, w2, w3, w4;
-
-//         for (r = 0; r < rectsLen; r++) {
-//           x1 = j + ~~(node[r * 5] * scale);
-//           y1 = i + ~~(node[r * 5 + 1] * scale);
-//           rectWidth = ~~(node[r * 5 + 2] * scale);
-//           rectHeight = ~~(node[r * 5 + 3] * scale);
-//           rectWeight = node[r * 5 + 4];
-
-//           x2 = x1 + rectWidth;
-//           y2 = y1 + rectHeight;
-
-//           w1 = y1 * width + x1;
-//           w2 = y1 * width + x2;
-//           w3 = y2 * width + x1;
-//           w4 = y2 * width + x2;
-
-//           rectsSum += (integralImage[w1] - integralImage[w2] - integralImage[w3] + integralImage[w4]) * rectWeight;
-//         }
-
-//         if (rectsSum * inverseArea < nodeThreshold * variance) {
-//           stageSum += left;
-//         } else {
-//           stageSum += right;
-//         }
-//       }
-
-//       return (stageSum > stageThreshold);
-//     },
-
-//     merge_: function(rects) {
-//       var instance = this,
-//         defaults = instance.defaults,
-//         minNeighborArea = defaults.minNeighborArea,
-//         rectsLen = rects.length,
-//         i,
-//         j,
-//         x1,
-//         y1,
-//         blockSize1,
-//         x2,
-//         y2,
-//         x3,
-//         y3,
-//         x4,
-//         y4,
-//         blockSize2,
-//         px1,
-//         py1,
-//         px2,
-//         py2,
-//         pArea,
-//         rect1,
-//         rect2,
-//         hasGroup = new Uint32Array(rectsLen),
-//         face,
-//         facesMap = {};
-
-//       for (i = 0; i < rectsLen; i++) {
-//         if (hasGroup[i]) {
-//           continue;
-//         }
-
-//         rect1 = rects[i];
-
-//         hasGroup[i] = 1;
-//         facesMap[i] = {
-//           count: 0,
-//           rect: rect1
-//         };
-
-//         x1 = rect1.x;
-//         y1 = rect1.y;
-//         blockSize1 = rect1.size;
-//         x2 = x1 + blockSize1;
-//         y2 = y1 + blockSize1;
-
-//         for (j = i + 1; j < rectsLen; j++) {
-//           if (hasGroup[j]) {
-//             continue;
-//           }
-
-//           rect2 = rects[j];
-
-//           if (i === j) {
-//             continue;
-//           }
-
-//           x3 = rect2.x;
-//           y3 = rect2.y;
-//           blockSize2 = rect2.size;
-//           x4 = x3 + blockSize2;
-//           y4 = y3 + blockSize2;
-
-//           px1 = Math.max(x1, x3);
-//           py1 = Math.max(y1, y3);
-//           px2 = Math.min(x2, x4);
-//           py2 = Math.min(y2, y4);
-//           pArea = (px1 - px2) * (py1 - py2);
-
-//           if ((pArea / (blockSize1 * blockSize1) >= minNeighborArea) &&
-//             (pArea / (blockSize2 * blockSize2) >= minNeighborArea)) {
-
-//             face = facesMap[i];
-//             hasGroup[j] = 1;
-//             face.count++;
-//             if (blockSize2 < blockSize1) {
-//               face.rect = rect2;
-//             }
-//           }
-//         }
-//       }
-
-//       var faces = [];
-//       for (i in facesMap) {
-//         face = facesMap[i];
-//         if (face.count > 0) {
-//           faces.push(face.rect);
-//         }
-//       }
-
-//       return faces;
-//     },
-
-//     track: function(trackerGroup, video) {
-//       var instance = this,
-//         // Human tracking finds multiple targets, doesn't need to support
-//         // multiple track listeners, force to use only the first configuration.
-//         config = trackerGroup[0],
-//         defaults = instance.defaults,
-//         imageData = video.getVideoCanvasImageData(),
-//         canvas = video.canvas,
-//         height = canvas.get('height'),
-//         width = canvas.get('width'),
-//         integralImage = new Uint32Array(width * height),
-//         integralImageSquare = new Uint32Array(width * height),
-
-//         imageLen = 0,
-
-//         stages = instance.data[config.data || defaults.data],
-//         stagesLen = stages.length,
-//         s,
-//         pixel,
-//         pixelSum = 0,
-//         pixelSumSquare = 0;
-
-//       canvas.forEach(imageData, function(r, g, b, a, w, i, j) {
-//         pixel = ~~(r * 0.299 + b * 0.587 + g * 0.114);
-
-//         if (i === 0 && j === 0) {
-//           pixelSum = pixel;
-//           pixelSumSquare = pixel * pixel;
-//         } else if (i === 0) {
-//           pixelSum = pixel + integralImage[i * width + (j - 1)];
-//           pixelSumSquare = pixel * pixel + integralImageSquare[i * width + (j - 1)];
-//         } else if (j === 0) {
-//           pixelSum = pixel + integralImage[(i - 1) * width + j];
-//           pixelSumSquare = pixel * pixel + integralImageSquare[(i - 1) * width + j];
-//         } else {
-//           pixelSum = pixel + integralImage[i * width + (j - 1)] + integralImage[(i - 1) * width + j] - integralImage[(i - 1) * width + (j - 1)];
-//           pixelSumSquare = pixel * pixel + integralImageSquare[i * width + (j - 1)] + integralImageSquare[(i - 1) * width + j] - integralImageSquare[(i - 1) * width + (j - 1)];
-//         }
-
-//         integralImage[imageLen] = pixelSum;
-//         integralImageSquare[imageLen] = pixelSumSquare;
-//         imageLen++;
-//       });
-
-//       var i,
-//         j,
-//         blockJump = defaults.blockJump,
-//         blockScale = defaults.blockScale,
-//         blockSize = defaults.blockSize,
-//         maxBlockSize = Math.min(width, height),
-//         rectIndex = 0,
-//         rects = [];
-
-//       for (; blockSize <= maxBlockSize; blockSize = ~~(blockSize * blockScale)) {
-//         for (i = 0; i < (height - blockSize); i += blockJump) {
-//           for (j = 0; j < (width - blockSize); j += blockJump) {
-//             var pass = true;
-
-//             for (s = 0; s < stagesLen; s++) {
-//               var stage = stages[s];
-
-//               pass = instance.evalStage_(stage, integralImage, integralImageSquare, i, j, width, height, blockSize);
-
-//               if (!pass) {
-//                 break;
-//               }
-//             }
-
-//             if (pass) {
-//               rects[rectIndex++] = {
-//                 size: blockSize,
-//                 x: j,
-//                 y: i
-//               };
-
-//               // canvas.context.strokeStyle = "rgb(255,0,0)";
-//               // canvas.context.strokeRect(j, i, blockSize, blockSize);
-//             }
-//           }
-//         }
-//       }
-
-//       if (config.onFound) {
-//         config.onFound.call(video, instance.merge_(rects, video));
-//       }
-//     }
-//   };
-// }());
+  tracking.inherits(tracking.MouthTracker, tracking.HAARTracker);
+}());
