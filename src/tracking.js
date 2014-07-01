@@ -271,38 +271,6 @@
   // Browser polyfills
   //===================
 
-  if (!window.self.Int8Array) {
-    window.self.Int8Array = Array;
-  }
-
-  if (!window.self.Uint8Array) {
-    window.self.Uint8Array = Array;
-  }
-
-  if (!window.self.Uint8ClampedArray) {
-    window.self.Uint8ClampedArray = Array;
-  }
-
-  if (!window.self.Uint16Array) {
-    window.self.Uint16Array = Array;
-  }
-
-  if (!window.self.Int32Array) {
-    window.self.Int32Array = Array;
-  }
-
-  if (!window.self.Uint32Array) {
-    window.self.Uint32Array = Array;
-  }
-
-  if (!window.self.Float32Array) {
-    window.self.Float32Array = Array;
-  }
-
-  if (!window.self.Float64Array) {
-    window.self.Float64Array = Array;
-  }
-
   if (!window.URL) {
     window.URL = window.URL || window.webkitURL || window.msURL || window.oURL;
   }
