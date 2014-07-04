@@ -493,7 +493,7 @@
    * @default 0.5
    * @static
    */
-  tracking.ViolaJones.BOUNDING_REGIONS_OVERLAP = 0.5;
+  tracking.ViolaJones.REGIONS_OVERLAP = 0.5;
 
   /**
    * Holds the block size.
@@ -528,6 +528,7 @@
    * @return {array} Found rectangles.
    */
   tracking.ViolaJones.detect = function(pixels, width, height, data) {
+    var round = Math.round;
     var integralImages = tracking.Matrix.computeIntergralImage(pixels, width, height);
     var integralImage = integralImages[0];
     var integralImageSquare = integralImages[1];
@@ -538,19 +539,16 @@
     var position = 0;
     var payload = [];
 
-    for (; blockSize <= maxBlockSize; blockSize = ~~(blockSize * this.BLOCK_SCALE)) {
-      var scale = blockSize * blockSizeInverse;
+    for (; blockSize <= maxBlockSize; blockSize = round(blockSize * this.BLOCK_SCALE)) {
       var inverseArea = 1.0 / (blockSize * blockSize);
+      var scale = blockSize * blockSizeInverse;
 
-      var i = 0;
-      var j = 0;
       var xmax = (height - blockSize);
       var ymax = (width - blockSize);
+      var jump = round(this.BLOCK_JUMP * scale);
 
-      for (var x = 0.0; x < xmax; x += this.BLOCK_JUMP) {
-        i = ~~x;
-        for (var y = 0.0; y < ymax; y += this.BLOCK_JUMP) {
-          j = ~~y;
+      for (var i = 0; i < xmax; i += jump) {
+        for (var j = 0; j < ymax; j += jump) {
           if (this.evalStages_(data, integralImage, integralImageSquare, i, j, width, blockSize, scale, inverseArea)) {
             payload[position++] = {
               size: blockSize,
@@ -561,7 +559,7 @@
         }
       }
     }
-    return tracking.ViolaJones.mergeRectangles(payload);
+    return this.mergeRectangles_(payload);
   };
 
   /**
@@ -580,6 +578,7 @@
    *     size.
    * @param {number} inverseArea The inverse area of the block size.
    * @return {boolean} Whether the region passes all the stage tests.
+   * @private
    */
   tracking.ViolaJones.evalStages_ = function(data, integralImage, integralImageSquare, i, j, width, blockSize, scale, inverseArea) {
     var wb1 = i * width + j;
@@ -610,10 +609,10 @@
         var rectsLength = data[w++];
 
         for (var r = 0; r < rectsLength; r++) {
-          var rectLeft = j + ~~(data[w++] * scale);
-          var rectTop = i + ~~(data[w++] * scale);
-          var rectWidth = ~~(data[w++] * scale);
-          var rectHeight = ~~(data[w++] * scale);
+          var rectLeft = j + Math.round(data[w++] * scale);
+          var rectTop = i + Math.round(data[w++] * scale);
+          var rectWidth = Math.round(data[w++] * scale);
+          var rectHeight = Math.round(data[w++] * scale);
           var rectWeight = data[w++];
           var recRight = rectLeft + rectWidth;
           var recBottom = rectTop + rectHeight;
@@ -647,79 +646,61 @@
    * detections into a single detection.
    * @param {array} rects
    * @return {array}
+   * @private
    */
-  tracking.ViolaJones.mergeRectangles = function(rects) {
-    var rectsLen = rects.length;
-    var hasGroup = new Uint32Array(rectsLen);
-    var rect;
-    var rectsMap = {};
+  tracking.ViolaJones.mergeRectangles_ = function(rects) {
+    var disjointSet = new tracking.DisjointSet(rects.length);
 
-    for (var i = 0; i < rectsLen; i++) {
-      if (hasGroup[i]) {
-        continue;
-      }
+    for (var i = 0; i < rects.length; i++) {
+      var r1 = rects[i];
+      for (var j = 0; j < rects.length; j++) {
+        var r2 = rects[j];
+        if (tracking.Math.intersectRect(r1.x, r1.y, r1.x + r1.size, r1.y + r1.size, r2.x, r2.y, r2.x + r2.size, r2.y + r2.size)) {
+          var x1 = Math.max(r1.x, r2.x);
+          var y1 = Math.max(r1.y, r2.y);
+          var x2 = Math.min(r1.x + r1.size, r2.x + r2.size);
+          var y2 = Math.min(r1.y + r1.size, r2.y + r2.size);
+          var overlap = (x1 - x2) * (y1 - y2);
+          var area1 = (r1.size * r1.size);
+          var area2 = (r2.size * r2.size);
 
-      var rect1 = rects[i];
-
-      hasGroup[i] = true;
-      rectsMap[i] = {
-        count: 1,
-        rect: rect1
-      };
-
-      var x1 = rect1.x;
-      var y1 = rect1.y;
-      var blockSize1 = rect1.size;
-      var x2 = x1 + blockSize1;
-      var y2 = y1 + blockSize1;
-
-      for (var j = i + 1; j < rectsLen; j++) {
-        if (hasGroup[j]) {
-          continue;
-        }
-
-        var rect2 = rects[j];
-
-        if (i === j) {
-          continue;
-        }
-
-        var x3 = rect2.x;
-        var y3 = rect2.y;
-        var blockSize2 = rect2.size;
-        var x4 = x3 + blockSize2;
-        var y4 = y3 + blockSize2;
-
-        if (tracking.Math.intersectRect(x1, y1, x2, y2, x3, y3, x4, y4)) {
-          var px1 = Math.max(x1, x3);
-          var py1 = Math.max(y1, y3);
-          var px2 = Math.min(x2, x4);
-          var py2 = Math.min(y2, y4);
-          var pArea = (px1 - px2) * (py1 - py2);
-
-          if ((pArea / (blockSize1 * blockSize1) >= this.BOUNDING_REGIONS_OVERLAP) &&
-            (pArea / (blockSize2 * blockSize2) >= this.BOUNDING_REGIONS_OVERLAP)) {
-
-            rect = rectsMap[i];
-            hasGroup[j] = true;
-            rect.count++;
-            if (blockSize2 < blockSize1) {
-              rect.rect = rect2;
-            }
+          if ((overlap / (area1 * (area1 / area2)) >= this.REGIONS_OVERLAP) &&
+            (overlap / (area2 * (area1 / area2)) >= this.REGIONS_OVERLAP)) {
+            disjointSet.union(i, j);
           }
         }
       }
     }
 
-    var faces = [];
-    for (i in rectsMap) {
-      rect = rectsMap[i];
-      if (rect.count > 1) {
-        faces.push(rect.rect);
+    var map = {};
+    for (var k = 0; k < disjointSet.length; k++) {
+      var rep = disjointSet.find(k);
+      if (!map[rep]) {
+        map[rep] = {
+          count: 1,
+          size: rects[k].size,
+          x: rects[k].x,
+          y: rects[k].y
+        };
+        continue;
       }
+      map[rep].count++;
+      map[rep].size += rects[k].size;
+      map[rep].x += rects[k].x;
+      map[rep].y += rects[k].y;
     }
 
-    return faces;
+    var result = [];
+    Object.keys(map).forEach(function(key) {
+      var rect = map[key];
+      result.push({
+        size: rect.size / rect.count,
+        x: rect.x / rect.count,
+        y: rect.y / rect.count
+      });
+    });
+
+    return result;
   };
 
 }());
@@ -1157,6 +1138,67 @@
 
 (function() {
   /**
+   * DisjointSet utility with path compression. Some applications involve
+   * grouping n distinct objects into a collection of disjoint sets. Two
+   * important operations are then finding which set a given object belongs to
+   * and uniting the two sets. A disjoint set data structure maintains a
+   * collection S={ S1 , S2 ,..., Sk } of disjoint dynamic sets. Each set is
+   * identified by a representative, which usually is a member in the set.
+   * @static
+   * @constructor
+   */
+  tracking.DisjointSet = function(length) {
+    if (length === undefined) {
+      throw new Error('DisjointSet length not specified.');
+    }
+    this.length = length;
+    this.parent = new Uint32Array(length);
+    for (var i = 0; i < length; i++) {
+      this.parent[i] = i;
+    }
+  };
+
+  /**
+   * Holds the length of the internal set.
+   * @type {number}
+   */
+  tracking.DisjointSet.prototype.length = null;
+
+  /**
+   * Holds the set containing the representative values.
+   * @type {Array.<number>}
+   */
+  tracking.DisjointSet.prototype.parent = null;
+
+  /**
+   * Finds a pointer to the representative of the set containing i.
+   * @param {number} i
+   * @return {number} The representative set of i.
+   */
+  tracking.DisjointSet.prototype.find = function(i) {
+    if (this.parent[i] === i) {
+      return i;
+    } else {
+      return (this.parent[i] = this.find(this.parent[i]));
+    }
+  };
+
+  /**
+   * Unites two dynamic sets containing objects i and j, say Si and Sj, into
+   * a new set that Si ∪ Sj, assuming that Si ∩ Sj = ∅;
+   * @param {number} i
+   * @param {number} j
+   */
+  tracking.DisjointSet.prototype.union = function(i, j) {
+    var iRepresentative = this.find(i);
+    var jRepresentative = this.find(j);
+    this.parent[iRepresentative] = jRepresentative;
+  };
+
+}());
+
+(function() {
+  /**
    * Tracker utility.
    * @constructor
    */
@@ -1523,7 +1565,10 @@
   tracking.EyeTracker = function() {
     tracking.EyeTracker.base(this, 'constructor');
 
-    this.setData(new Float64Array(tracking.HAARTracker.data.eye));
+    var data = tracking.HAARTracker.data.eye;
+    if (data) {
+      this.setData(new Float64Array(data));
+    }
   };
 
   tracking.inherits(tracking.EyeTracker, tracking.HAARTracker);
@@ -1538,7 +1583,10 @@
   tracking.FaceTracker = function() {
     tracking.FaceTracker.base(this, 'constructor');
 
-    this.setData(new Float64Array(tracking.HAARTracker.data.face));
+    var data = tracking.HAARTracker.data.face;
+    if (data) {
+      this.setData(new Float64Array(data));
+    }
   };
 
   tracking.inherits(tracking.FaceTracker, tracking.HAARTracker);
@@ -1553,7 +1601,10 @@
   tracking.MouthTracker = function() {
     tracking.MouthTracker.base(this, 'constructor');
 
-    this.setData(new Float64Array(tracking.HAARTracker.data.mouth));
+    var data = tracking.HAARTracker.data.mouth;
+    if (data) {
+      this.setData(new Float64Array(data));
+    }
   };
 
   tracking.inherits(tracking.MouthTracker, tracking.HAARTracker);
