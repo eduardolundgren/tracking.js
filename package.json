@@ -18,6 +18,9 @@
     "type": "git",
     "url": "git@github.com:eduardolundgren/tracking.js.git"
   },
+  "scripts": {
+    "test": "gulp test"
+  },
   "license": "BSD",
   "dependencies": {},
   "devDependencies": {
