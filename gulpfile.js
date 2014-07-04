@@ -30,6 +30,7 @@ gulp.task('build', function() {
     'src/Image.js',
     'src/Math.js',
     'src/Matrix.js',
+    'src/DisjointSet.js',
     'src/Tracker.js',
     'src/HAARTracker.js',
     'src/ColorTracker.js',
