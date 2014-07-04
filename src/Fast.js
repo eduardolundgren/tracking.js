@@ -111,15 +111,25 @@
 
         if (!this.isBrighter(p, circlePixel, threshold)) {
           brighter = false;
+          if (darker === false) {
+            break;
+          }
         }
 
         if (!this.isDarker(p, circlePixel, threshold)) {
           darker = false;
+          if (brighter === false) {
+            break;
+          }
         }
+      }
+
+      if (brighter || darker) {
+        return true;
       }
     }
 
-    return brighter || darker;
+    return false;
   };
 
   /**
