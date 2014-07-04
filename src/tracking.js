@@ -260,10 +260,12 @@
     canvas.height = height;
 
     window.requestAnimationFrame(function() {
-      if (element.readyState === element.HAVE_ENOUGH_DATA) {
-        context.drawImage(element, 0, 0, width, height);
-        tracking.trackCanvas_(canvas, tracker);
-      }
+      try {
+        if (element.readyState === element.HAVE_ENOUGH_DATA) {
+          context.drawImage(element, 0, 0, width, height);
+          tracking.trackCanvas_(canvas, tracker);
+        }
+      } catch (err) {}
       tracking.trackVideo_(element, tracker);
     });
   };
