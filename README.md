@@ -2,6 +2,8 @@
 
 Change the way you interact with your browser.
 
+[![Build Status](https://travis-ci.org/eduardolundgren/tracking.js.svg?branch=1.0.0-alpha)](https://travis-ci.org/eduardolundgren/tracking.js)
+
 ## Getting Started
 
 Import the core library:
