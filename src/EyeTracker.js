@@ -7,7 +7,10 @@
   tracking.EyeTracker = function() {
     tracking.EyeTracker.base(this, 'constructor');
 
-    this.setData(new Float64Array(tracking.HAARTracker.data.eye));
+    var data = tracking.HAARTracker.data.eye;
+    if (data) {
+      this.setData(new Float64Array(data));
+    }
   };
 
   tracking.inherits(tracking.EyeTracker, tracking.HAARTracker);

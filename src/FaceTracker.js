@@ -7,7 +7,10 @@
   tracking.FaceTracker = function() {
     tracking.FaceTracker.base(this, 'constructor');
 
-    this.setData(new Float64Array(tracking.HAARTracker.data.face));
+    var data = tracking.HAARTracker.data.face;
+    if (data) {
+      this.setData(new Float64Array(data));
+    }
   };
 
   tracking.inherits(tracking.FaceTracker, tracking.HAARTracker);

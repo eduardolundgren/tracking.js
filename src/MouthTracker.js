@@ -7,7 +7,10 @@
   tracking.MouthTracker = function() {
     tracking.MouthTracker.base(this, 'constructor');
 
-    this.setData(new Float64Array(tracking.HAARTracker.data.mouth));
+    var data = tracking.HAARTracker.data.mouth;
+    if (data) {
+      this.setData(new Float64Array(data));
+    }
   };
 
   tracking.inherits(tracking.MouthTracker, tracking.HAARTracker);
