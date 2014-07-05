@@ -51,9 +51,6 @@
    */
   tracking.ViolaJones.detect = function(pixels, width, height, data) {
     var integralImages = tracking.Matrix.computeIntergralImage(pixels, width, height);
-    var integralImage = integralImages[0];
-    var integralImageSquare = integralImages[1];
-
     var blockSize = this.BLOCK_SIZE;
     var blockSizeInverse = 1.0 / this.BLOCK_SIZE;
     var maxBlockSize = Math.min(width, height);
@@ -70,7 +67,7 @@
 
       for (var i = 0; i < xmax; i += jump) {
         for (var j = 0; j < ymax; j += jump) {
-          if (this.evalStages_(data, integralImage, integralImageSquare, i, j, width, blockSize, scale, inverseArea)) {
+          if (this.evalStages_(data, integralImages, i, j, width, blockSize, scale, inverseArea)) {
             payload[position++] = {
               size: blockSize,
               x: j,
@@ -87,10 +84,9 @@
    * Evaluates if the block size on i,j position is a valid HAAR cascade
    * stage.
    * @param {number} data The HAAR cascade data.
-   * @param {Array.<number>} integralImage Summed area table of an image
-   *     computed by `tracking.Matrix.computeIntergralImage`.
-   * @param {Array.<number>} integralImageSquare Summed squared area table of
-   *     an image computed by `tracking.Matrix.computeIntergralImage`.
+   * @param {Array.<Array.<number>>} integralImages Array containing in the
+   *     first position the integral image and in the second position the integral
+   *     image squared.
    * @param {number} i Vertical position of the pixel to be evaluated.
    * @param {number} j Horizontal position of the pixel to be evaluated.
    * @param {number} width The image width.
@@ -101,7 +97,9 @@
    * @return {boolean} Whether the region passes all the stage tests.
    * @private
    */
-  tracking.ViolaJones.evalStages_ = function(data, integralImage, integralImageSquare, i, j, width, blockSize, scale, inverseArea) {
+  tracking.ViolaJones.evalStages_ = function(data, integralImages, i, j, width, blockSize, scale, inverseArea) {
+    var integralImage = integralImages[0];
+    var integralImageSquare = integralImages[1];
     var wb1 = i * width + j;
     var wb2 = i * width + (j + blockSize);
     var wb3 = (i + blockSize) * width + j;
