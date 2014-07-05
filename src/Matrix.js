@@ -43,7 +43,8 @@
    * efficiently generating the sum of values in a rectangular subset of a
    * grid. In the image processing domain, it is also known as an integral
    * image.
-   * @param {Uint8ClampedArray} pixels The pixels to loop through.
+   * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
+   *     through.
    * @param {number} width The image width.
    * @param {number} height The image height.
    * @return {Array.<Array.<number>>} Array containing in the first position
