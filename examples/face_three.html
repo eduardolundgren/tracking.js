@@ -12,9 +12,21 @@
         font-weight: bold;
         overflow: hidden;
       }
+      video {
+        background: #fff;
+        border: 3px solid #f2f2f2;
+        bottom: 0;
+        right: 0;
+        position: absolute;
+      }
     </style>
   </head>
   <body>
+    <!-- <audio src="http://cl.ly/WPd7/m83-midnight-city.mp3" loop autoplay></audio> -->
+    <video id="video" width="320" height="240" preload autoplay loop muted>
+
+    <script src="../build/tracking-min.js"></script>
+    <script src="../build/data/face.js"></script>
     <script src="../bower_components/threejs/build/three.min.js"></script>
     <script>
       var container;
@@ -24,10 +36,16 @@
       var windowHalfX = window.innerWidth / 2;
       var windowHalfY = window.innerHeight / 2;
 
-      document.addEventListener('mousemove', onDocumentMouseMove, false);
-
       init();
       animate();
+
+      window.onload = function() {
+        var video = document.querySelector('#video');
+        var tracker = new tracking.FaceTracker();
+
+        tracking.track('#video', tracker, { camera: true });
+        tracker.onFound = onFaceMove;
+      };
 
       function init() {
         container = document.createElement('div');
@@ -124,9 +142,9 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
       }
 
-      function onDocumentMouseMove(event) {
-        mouseX = (event.clientX - windowHalfX) * 10;
-        mouseY = (event.clientY - windowHalfY) * 10;
+      function onFaceMove(track) {
+        mouseX = ((((320 - track[0].x) / 320) * window.innerWidth) - windowHalfX) * 10;
+        mouseY = ((((240 - track[0].y) / 240) * window.innerHeight) - windowHalfY) * 10;
       }
 
       function animate() {
