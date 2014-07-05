@@ -163,7 +163,7 @@
   };
 
   /**
-   * Postprocess the detected sub-windows in order to combine overlapping.
+   * Postprocess the detected sub-windows in order to combine overlapping
    * detections into a single detection.
    * @param {array} rects
    * @return {array}
