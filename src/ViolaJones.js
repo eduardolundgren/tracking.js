@@ -50,7 +50,6 @@
    * @return {array} Found rectangles.
    */
   tracking.ViolaJones.detect = function(pixels, width, height, data) {
-    var round = Math.round;
     var integralImages = tracking.Matrix.computeIntergralImage(pixels, width, height);
     var integralImage = integralImages[0];
     var integralImageSquare = integralImages[1];
@@ -61,13 +60,13 @@
     var position = 0;
     var payload = [];
 
-    for (; blockSize <= maxBlockSize; blockSize = round(blockSize * this.BLOCK_SCALE)) {
+    for (; blockSize <= maxBlockSize; blockSize = (blockSize * this.BLOCK_SCALE + 0.5) | 0) {
       var inverseArea = 1.0 / (blockSize * blockSize);
       var scale = blockSize * blockSizeInverse;
 
       var xmax = (height - blockSize);
       var ymax = (width - blockSize);
-      var jump = round(this.BLOCK_JUMP * scale);
+      var jump = (this.BLOCK_JUMP * scale + 0.5) | 0;
 
       for (var i = 0; i < xmax; i += jump) {
         for (var j = 0; j < ymax; j += jump) {
@@ -131,10 +130,10 @@
         var rectsLength = data[w++];
 
         for (var r = 0; r < rectsLength; r++) {
-          var rectLeft = j + Math.round(data[w++] * scale);
-          var rectTop = i + Math.round(data[w++] * scale);
-          var rectWidth = Math.round(data[w++] * scale);
-          var rectHeight = Math.round(data[w++] * scale);
+          var rectLeft = j + (data[w++] * scale + 0.5) | 0;
+          var rectTop = i + (data[w++] * scale + 0.5) | 0;
+          var rectWidth = (data[w++] * scale + 0.5) | 0;
+          var rectHeight = (data[w++] * scale + 0.5) | 0;
           var rectWeight = data[w++];
           var recRight = rectLeft + rectWidth;
           var recBottom = rectTop + rectHeight;
