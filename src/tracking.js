@@ -253,21 +253,33 @@
   tracking.trackVideo_ = function(element, tracker) {
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
-    var width = element.offsetWidth;
-    var height = element.offsetHeight;
+    var width;
+    var height;
 
-    canvas.width = width;
-    canvas.height = height;
+    var resizeCanvas_ = function() {
+      width = element.offsetWidth;
+      height = element.offsetHeight;
+      canvas.width = width;
+      canvas.height = height;
+    };
+    resizeCanvas_();
+    element.addEventListener('resize', resizeCanvas_);
 
-    window.requestAnimationFrame(function() {
-      try {
+    var requestFrame_ = function() {
+      window.requestAnimationFrame(function() {
         if (element.readyState === element.HAVE_ENOUGH_DATA) {
-          context.drawImage(element, 0, 0, width, height);
+          // Firefox v~30.0 gets confused with the video readyState firing an
+          // erroneous HAVE_ENOUGH_DATA just before HAVE_CURRENT_DATA state,
+          // hence keep trying to read it until resolved.
+          try {
+            context.drawImage(element, 0, 0, width, height);
+          } catch(err) {}
           tracking.trackCanvas_(canvas, tracker);
         }
-      } catch (err) {}
-      tracking.trackVideo_(element, tracker);
-    });
+        requestFrame_();
+      });
+    };
+    requestFrame_();
   };
 
   // Browser polyfills
