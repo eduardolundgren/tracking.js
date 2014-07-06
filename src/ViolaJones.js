@@ -110,10 +110,10 @@
 
     var mean = total * inverseArea;
     var variance = totalSquare * inverseArea - mean * mean;
-    if (variance > 1) {
-      variance = Math.sqrt(variance);
-    } else {
-      variance = 1;
+
+    var standardDeviation = 1;
+    if (variance > 0) {
+      standardDeviation = Math.sqrt(variance);
     }
 
     var length = data.length;
@@ -146,7 +146,7 @@
         var nodeLeft = data[w++];
         var nodeRight = data[w++];
 
-        if (rectsSum * inverseArea < nodeThreshold * variance) {
+        if (rectsSum * inverseArea < nodeThreshold * standardDeviation) {
           stageSum += nodeLeft;
         } else {
           stageSum += nodeRight;
