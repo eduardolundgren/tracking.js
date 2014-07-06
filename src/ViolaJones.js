@@ -153,7 +153,7 @@
         }
       }
 
-      if (stageSum <= stageThreshold) {
+      if (stageSum < stageThreshold) {
         return false;
       }
     }
