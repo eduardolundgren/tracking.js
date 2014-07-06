@@ -1,0 +1,23 @@
+{
+  "name": "tracking.js",
+  "version": "1.0.0-alpha",
+  "homepage": "http://trackingjs.com",
+  "authors": [
+    "Eduardo Lundgren <edu@rdo.io>"
+  ],
+  "description": "Augmented Reality JavaScript Framework.",
+  "main": "build/tracking.js",
+  "keywords": [
+    "tracking",
+    "webrtc"
+  ],
+  "license": "BSD",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components"
+  ],
+  "dependencies": {
+    "threejs": "~0.0.67"
+  }
+}
