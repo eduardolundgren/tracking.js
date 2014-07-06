@@ -8,12 +8,10 @@
 
   <script src="../build/tracking.js"></script>
   <script src="../build/data/face.js"></script>
-  <script src="../build/data/eye.js"></script>
-  <script src="../build/data/mouth.js"></script>
 
   <style>
   #rect {
-    border: 2px solid magenta;
+    border: 2px solid green;
     left: -1000px;
     position: absolute;
     top: -1000px;
@@ -31,14 +29,21 @@
       var rect = tracking.one('#rect');
 
       var tracker = new tracking.FaceTracker();
+      tracker.setInitialScale(4);
+      tracker.setStepSize(1.3);
 
       tracking.track('#video', tracker, { camera: true });
 
       tracker.onFound = function(payload) {
-        rect.style.width = payload[0].size + 'px';
-        rect.style.height = payload[0].size + 'px';
+        rect.style.width = payload[0].width + 'px';
+        rect.style.height = payload[0].height + 'px';
         rect.style.left = (video.offsetLeft + payload[0].x) + 'px';
         rect.style.top = (video.offsetTop + payload[0].y) + 'px';
+      };
+
+      tracker.onNotFound = function() {
+        rect.style.left = '-1000px';
+        rect.style.top = '-1000px';
       };
     };
   </script>
