@@ -128,18 +128,16 @@
         var rectsLength = data[w++];
 
         for (var r = 0; r < rectsLength; r++) {
-          var rectLeft = j + (data[w++] * scale + 0.5) | 0;
-          var rectTop = i + (data[w++] * scale + 0.5) | 0;
+          var rectLeft = (j + data[w++] * scale + 0.5) | 0;
+          var rectTop = (i + data[w++] * scale + 0.5) | 0;
           var rectWidth = (data[w++] * scale + 0.5) | 0;
           var rectHeight = (data[w++] * scale + 0.5) | 0;
           var rectWeight = data[w++];
-          var recRight = rectLeft + rectWidth;
-          var recBottom = rectTop + rectHeight;
-          var w1 = rectTop * width + rectLeft;
-          var w2 = rectTop * width + recRight;
-          var w3 = recBottom * width + rectLeft;
-          var w4 = recBottom * width + recRight;
-          rectsSum += (integralImage[w1] - integralImage[w2] - integralImage[w3] + integralImage[w4]) * rectWeight;
+          var wA = rectTop*width + rectLeft;
+          var wB = wA + rectWidth;
+          var wD = wA + rectHeight*width;
+          var wC = wD + rectWidth;
+          rectsSum += (integralImage[wA] - integralImage[wB] - integralImage[wD] + integralImage[wC]) * rectWeight;
         }
 
         var nodeThreshold = data[w++];
