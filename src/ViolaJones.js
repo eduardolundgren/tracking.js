@@ -18,66 +18,46 @@
   tracking.ViolaJones.REGIONS_OVERLAP = 0.5;
 
   /**
-   * Holds the block size.
-   * @type {number}
-   * @default 20
-   * @static
-   */
-  tracking.ViolaJones.BLOCK_SIZE = 20;
-
-  /**
-   * Holds the block jump size.
-   * @type {number}
-   * @default 2
-   * @static
-   */
-  tracking.ViolaJones.BLOCK_JUMP = 2;
-
-  /**
-   * Holds the block scale factor.
-   * @type {number}
-   * @default 1.25
-   * @static
-   */
-  tracking.ViolaJones.BLOCK_SCALE = 1.25;
-
-  /**
    * Detects through the HAAR cascade data rectangles matches.
    * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
+   * @param {number} initialScale The initial scale to start the block scaling.
+   * @param {number} scaleFactor The scale factor to scale the feature block.
+   * @param {number} stepSize The block step size.
    * @param {number} data The HAAR cascade data.
    * @return {array} Found rectangles.
    */
-  tracking.ViolaJones.detect = function(pixels, width, height, data) {
+  tracking.ViolaJones.detect = function(pixels, width, height, initialScale, scaleFactor, stepSize, data) {
+    var total = 0;
+    var rects = [];
     var integralImages = tracking.Matrix.computeIntergralImage(pixels, width, height);
-    var blockSize = this.BLOCK_SIZE;
-    var blockSizeInverse = 1.0 / this.BLOCK_SIZE;
-    var maxBlockSize = Math.min(width, height);
-    var position = 0;
-    var payload = [];
+    var minWidth = data[0];
+    var minHeight = data[1];
+    var scale = initialScale * scaleFactor;
+    var blockWidth = (scale * minWidth) | 0;
+    var blockHeight = (scale * minHeight) | 0;
 
-    for (; blockSize <= maxBlockSize; blockSize = (blockSize * this.BLOCK_SCALE + 0.5) | 0) {
-      var inverseArea = 1.0 / (blockSize * blockSize);
-      var scale = blockSize * blockSizeInverse;
-
-      var xmax = (height - blockSize);
-      var ymax = (width - blockSize);
-      var jump = (this.BLOCK_JUMP * scale + 0.5) | 0;
-
-      for (var i = 0; i < xmax; i += jump) {
-        for (var j = 0; j < ymax; j += jump) {
-          if (this.evalStages_(data, integralImages, i, j, width, blockSize, scale, inverseArea)) {
-            payload[position++] = {
-              size: blockSize,
+    while (blockWidth < width && blockHeight < height) {
+      var step = (scale * stepSize + 0.5) | 0;
+      for (var i = 0; i < (height - blockHeight); i += step) {
+        for (var j = 0; j < (width - blockWidth); j += step) {
+          if (this.evalStages_(data, integralImages, i, j, width, blockWidth, blockHeight, scale)) {
+            rects[total++] = {
+              width: blockWidth,
+              height: blockHeight,
               x: j,
               y: i
             };
           }
         }
       }
+
+      scale *= scaleFactor;
+      blockWidth = (scale * minWidth) | 0;
+      blockHeight = (scale * minHeight) | 0;
     }
-    return this.mergeRectangles_(payload);
+    return this.mergeRectangles_(rects);
   };
 
   /**
@@ -97,19 +77,16 @@
    * @return {boolean} Whether the region passes all the stage tests.
    * @private
    */
-  tracking.ViolaJones.evalStages_ = function(data, integralImages, i, j, width, blockSize, scale, inverseArea) {
+  tracking.ViolaJones.evalStages_ = function(data, integralImages, i, j, width, blockWidth, blockHeight, scale) {
+    var inverseArea = 1.0 / (blockWidth * blockHeight);
     var integralImage = integralImages[0];
     var integralImageSquare = integralImages[1];
-    var wb1 = i * width + j;
-    var wb2 = i * width + (j + blockSize);
-    var wb3 = (i + blockSize) * width + j;
-    var wb4 = (i + blockSize) * width + (j + blockSize);
-
-    var total = integralImage[wb1] - integralImage[wb2] - integralImage[wb3] + integralImage[wb4];
-    var totalSquare = integralImageSquare[wb1] - integralImageSquare[wb2] - integralImageSquare[wb3] + integralImageSquare[wb4];
-
-    var mean = total * inverseArea;
-    var variance = totalSquare * inverseArea - mean * mean;
+    var wbA = i * width + j;
+    var wbB = wbA + blockWidth;
+    var wbD = wbA + blockHeight * width;
+    var wbC = wbD + blockWidth;
+    var mean = (integralImage[wbA] - integralImage[wbB] - integralImage[wbD] + integralImage[wbC]) * inverseArea;
+    var variance = (integralImageSquare[wbA] - integralImageSquare[wbB] - integralImageSquare[wbD] + integralImageSquare[wbC]) * inverseArea - mean * mean;
 
     var standardDeviation = 1;
     if (variance > 0) {
@@ -118,7 +95,7 @@
 
     var length = data.length;
 
-    for (var w = 0; w < length; ) {
+    for (var w = 2; w < length; ) {
       var stageSum = 0;
       var stageThreshold = data[w++];
       var nodeLength = data[w++];
@@ -133,9 +110,9 @@
           var rectWidth = (data[w++] * scale + 0.5) | 0;
           var rectHeight = (data[w++] * scale + 0.5) | 0;
           var rectWeight = data[w++];
-          var wA = rectTop*width + rectLeft;
+          var wA = rectTop * width + rectLeft;
           var wB = wA + rectWidth;
-          var wD = wA + rectHeight*width;
+          var wD = wA + rectHeight * width;
           var wC = wD + rectWidth;
           rectsSum += (integralImage[wA] - integralImage[wB] - integralImage[wD] + integralImage[wC]) * rectWeight;
         }
@@ -172,14 +149,14 @@
       var r1 = rects[i];
       for (var j = 0; j < rects.length; j++) {
         var r2 = rects[j];
-        if (tracking.Math.intersectRect(r1.x, r1.y, r1.x + r1.size, r1.y + r1.size, r2.x, r2.y, r2.x + r2.size, r2.y + r2.size)) {
+        if (tracking.Math.intersectRect(r1.x, r1.y, r1.x + r1.width, r1.y + r1.height, r2.x, r2.y, r2.x + r2.width, r2.y + r2.height)) {
           var x1 = Math.max(r1.x, r2.x);
           var y1 = Math.max(r1.y, r2.y);
-          var x2 = Math.min(r1.x + r1.size, r2.x + r2.size);
-          var y2 = Math.min(r1.y + r1.size, r2.y + r2.size);
+          var x2 = Math.min(r1.x + r1.width, r2.x + r2.width);
+          var y2 = Math.min(r1.y + r1.height, r2.y + r2.height);
           var overlap = (x1 - x2) * (y1 - y2);
-          var area1 = (r1.size * r1.size);
-          var area2 = (r2.size * r2.size);
+          var area1 = (r1.width * r1.height);
+          var area2 = (r2.width * r2.height);
 
           if ((overlap / (area1 * (area1 / area2)) >= this.REGIONS_OVERLAP) &&
             (overlap / (area2 * (area1 / area2)) >= this.REGIONS_OVERLAP)) {
@@ -195,14 +172,16 @@
       if (!map[rep]) {
         map[rep] = {
           count: 1,
-          size: rects[k].size,
+          width: rects[k].width,
+          height: rects[k].height,
           x: rects[k].x,
           y: rects[k].y
         };
         continue;
       }
       map[rep].count++;
-      map[rep].size += rects[k].size;
+      map[rep].width += rects[k].width;
+      map[rep].height += rects[k].height;
       map[rep].x += rects[k].x;
       map[rep].y += rects[k].y;
     }
@@ -211,9 +190,10 @@
     Object.keys(map).forEach(function(key) {
       var rect = map[key];
       result.push({
-        size: rect.size / rect.count,
-        x: rect.x / rect.count,
-        y: rect.y / rect.count
+        width: (rect.width / rect.count + 0.5) | 0,
+        height: (rect.height / rect.count + 0.5) | 0,
+        x: (rect.x / rect.count + 0.5) | 0,
+        y: (rect.y / rect.count + 0.5) | 0
       });
     });
 
