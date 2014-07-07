@@ -8,6 +8,7 @@
 
   <script src="../build/tracking.js"></script>
   <script src="../build/data/face.js"></script>
+  <script src="../build/data/eye.js"></script>
 
   <style>
   .rect {
@@ -19,25 +20,27 @@
   </style>
 </head>
 <body>
-  <img id="img" src="assets/chicos.png" />
+  <img id="img" src="assets/faces.png" />
 
   <script>
     window.onload = function() {
       var img = tracking.one('#img');
-      var tracker = new tracking.FaceTracker();
-      tracker.setStepSize(2);
 
-      tracking.track('#img', tracker);
+      var faceTracker = new tracking.FaceTracker();
+      faceTracker.setInitialScale(2);
 
-      tracker.onFound = function(payload) {
+      var eyeTracker = new tracking.EyeTracker();
+      eyeTracker.setStepSize(1.7);
+
+      tracking.track('#img', faceTracker);
+      tracking.track('#img', eyeTracker);
+
+      faceTracker.onFound = function(payload) {
         payload.forEach(function(rect) {
           window.plot(rect.x, rect.y, rect.width, rect.height);
         });
       };
-
-      tracker.onNotFound = function() {
-        console.log('Faces not found');
-      };
+      eyeTracker.onFound = faceTracker.onFound;
 
       window.plot = function(x, y, w, h) {
         var rect = document.createElement('div');
