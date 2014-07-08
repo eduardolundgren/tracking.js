@@ -511,19 +511,34 @@
 
   /**
    * Detects through the HAAR cascade data rectangles matches.
-   * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
-   * @param {number} initialScale The initial scale to start the block scaling.
+   * @param {number} initialScale The initial scale to start the block
+   *     scaling.
    * @param {number} scaleFactor The scale factor to scale the feature block.
    * @param {number} stepSize The block step size.
+   * @param {number} edgesDensity Percentage density edges inside the
+   *     classifier block. Value from [0.0, 1.0], defaults to 0.2. If specified
+   *     edge detection will be applied to the image to prune dead areas of the
+   *     image, this can improve significantly performance.
    * @param {number} data The HAAR cascade data.
    * @return {array} Found rectangles.
+   * @static
    */
-  tracking.ViolaJones.detect = function(pixels, width, height, initialScale, scaleFactor, stepSize, data) {
+  tracking.ViolaJones.detect = function(pixels, width, height, initialScale, scaleFactor, stepSize, edgesDensity, data) {
     var total = 0;
     var rects = [];
-    var integralImages = tracking.Matrix.computeIntergralImage(pixels, width, height);
+    var integralImage = new Int32Array(width * height);
+    var integralImageSquare = new Int32Array(width * height);
+
+    var integralImageSobel;
+    if (edgesDensity > 0) {
+      integralImageSobel = new Int32Array(width * height);
+    }
+
+    tracking.Matrix.computeIntergralImage(pixels, width, height, integralImage, integralImageSquare, integralImageSobel);
+
     var minWidth = data[0];
     var minHeight = data[1];
     var scale = initialScale * scaleFactor;
@@ -534,7 +549,14 @@
       var step = (scale * stepSize + 0.5) | 0;
       for (var i = 0; i < (height - blockHeight); i += step) {
         for (var j = 0; j < (width - blockWidth); j += step) {
-          if (this.evalStages_(data, integralImages, i, j, width, blockWidth, blockHeight, scale)) {
+
+          if (edgesDensity > 0) {
+            if (this.isTriviallyExcluded(edgesDensity, integralImageSobel, i, j, width, blockWidth, blockHeight)) {
+              continue;
+            }
+          }
+
+          if (this.evalStages_(data, integralImage, integralImageSquare, i, j, width, blockWidth, blockHeight, scale)) {
             rects[total++] = {
               width: blockWidth,
               height: blockHeight,
@@ -553,12 +575,35 @@
   };
 
   /**
+   * Fast check to test whether the edges density inside the block is greater
+   * than a threshold, if true it tests the stages. This can improve
+   * significantly performance.
+   * @param {number} edgesDensity Percentage density edges inside the
+   *     classifier block.
+   * @param {array} integralImageSobel The integral image of a sobel image.
+   * @param {number} i Vertical position of the pixel to be evaluated.
+   * @param {number} j Horizontal position of the pixel to be evaluated.
+   * @param {number} width The image width.
+   * @return {boolean} True whether the block at position i,j can be skipped,
+   *     false otherwise.
+   * @static
+   */
+  tracking.ViolaJones.isTriviallyExcluded = function(edgesDensity, integralImageSobel, i, j, width, blockWidth, blockHeight) {
+    var wbA = i * width + j;
+    var wbB = wbA + blockWidth;
+    var wbD = wbA + blockHeight * width;
+    var wbC = wbD + blockWidth;
+    var blockEdgesDensity = (integralImageSobel[wbA] - integralImageSobel[wbB] - integralImageSobel[wbD] + integralImageSobel[wbC])/(blockWidth*blockHeight*255);
+    if (blockEdgesDensity < edgesDensity) {
+      return true;
+    }
+    return false;
+  };
+
+  /**
    * Evaluates if the block size on i,j position is a valid HAAR cascade
    * stage.
    * @param {number} data The HAAR cascade data.
-   * @param {Array.<Array.<number>>} integralImages Array containing in the
-   *     first position the integral image and in the second position the integral
-   *     image squared.
    * @param {number} i Vertical position of the pixel to be evaluated.
    * @param {number} j Horizontal position of the pixel to be evaluated.
    * @param {number} width The image width.
@@ -568,11 +613,10 @@
    * @param {number} inverseArea The inverse area of the block size.
    * @return {boolean} Whether the region passes all the stage tests.
    * @private
+   * @static
    */
-  tracking.ViolaJones.evalStages_ = function(data, integralImages, i, j, width, blockWidth, blockHeight, scale) {
+  tracking.ViolaJones.evalStages_ = function(data, integralImage, integralImageSquare, i, j, width, blockWidth, blockHeight, scale) {
     var inverseArea = 1.0 / (blockWidth * blockHeight);
-    var integralImage = integralImages[0];
-    var integralImageSquare = integralImages[1];
     var wbA = i * width + j;
     var wbB = wbA + blockWidth;
     var wbD = wbA + blockHeight * width;
@@ -594,6 +638,7 @@
 
       while (nodeLength--) {
         var rectsSum = 0;
+        var tilted = data[w++];
         var rectsLength = data[w++];
 
         for (var r = 0; r < rectsLength; r++) {
@@ -633,6 +678,7 @@
    * @param {array} rects
    * @return {array}
    * @private
+   * @static
    */
   tracking.ViolaJones.mergeRectangles_ = function(rects) {
     var disjointSet = new tracking.DisjointSet(rects.length);
@@ -697,11 +743,12 @@
 (function() {
   /*
    * FAST intends for "Features from Accelerated Segment Test". This method
-   * performs a point segment test corner detection. The segment test criterion
-   * operates by considering a circle of sixteen pixels around the corner
-   * candidate p. The detector classifies p as a corner if there exists a set of n
-   * contiguous pixelsin the circle which are all brighter than the intensity of
-   * the candidate pixel Ip plus a threshold t, or all darker than Ip − t.
+   * performs a point segment test corner detection. The segment test
+   * criterion operates by considering a circle of sixteen pixels around the
+   * corner candidate p. The detector classifies p as a corner if there exists
+   * a set of n contiguous pixelsin the circle which are all brighter than the
+   * intensity of the candidate pixel Ip plus a threshold t, or all darker
+   * than Ip − t.
    *
    *       15 00 01
    *    14          02
@@ -713,7 +760,6 @@
    *
    * For more reference:
    * http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.60.3991&rep=rep1&type=pdf
-   *
    * @static
    * @constructor
    */
@@ -942,26 +988,182 @@
    * measured intensity perception of typical trichromat humans, in
    * particular, human vision is most sensitive to green and least sensitive
    * to blue.
-   * @param {Uint8ClampedArray} pixels The pixels in a linear [r,g,b,a,...]
-   *     array.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
-   * @return {Uint8ClampedArray} The grayscale pixels in a linear [p1,p2,...]
-   *     array, where `pn = rn*0.299 + gn*0.587 + bn*0.114`.
+   * @param {Uint8ClampedArray} The grayscale pixels in a linear [p,p,p,a,...]
+   *     array.
    * @static
    */
-  tracking.Image.calculateLumaGrayscale = function(pixels, width, height) {
-    var gray = new Uint8ClampedArray(width * height);
+  tracking.Image.grayscale = function(pixels, width, height) {
+    var gray = new Uint8ClampedArray(width * height * 4);
     var p = 0;
     var w = 0;
     for (var i = 0; i < height; i++) {
       for (var j = 0; j < width; j++) {
-        gray[p++] = pixels[w]*0.299 + pixels[w + 1]*0.587 + pixels[w + 2]*0.114;
+        var value = pixels[w] * 0.299 + pixels[w + 1] * 0.587 + pixels[w + 2] * 0.114;
+        gray[p++] = value;
+        gray[p++] = value;
+        gray[p++] = value;
+        gray[p++] = pixels[w + 3];
         w += 4;
       }
     }
     return gray;
   };
+
+  /**
+   * Fast horizontal separable convolution. A point spread function (PSF) is
+   * said to be separable if it can be broken into two one-dimensional
+   * signals: a vertical and a horizontal projection. The convolution is
+   * performed by sliding the kernel over the image, generally starting at the
+   * top left corner, so as to move the kernel through all the positions where
+   * the kernel fits entirely within the boundaries of the image. Adpated from
+   * https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {array} weightsVector The weighting vector, e.g [-1,0,1].
+   * @param {number} opaque
+   * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.horizontalConvolve = function(pixels, width, height, weightsVector, opaque) {
+    var side = weightsVector.length;
+    var halfSide = Math.floor(side / 2);
+    var output = new Float32Array(width * height * 4);
+    var alphaFac = opaque ? 1 : 0;
+
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        var sy = y;
+        var sx = x;
+        var offset = (y * width + x) * 4;
+        var r = 0;
+        var g = 0;
+        var b = 0;
+        var a = 0;
+        for (var cx = 0; cx < side; cx++) {
+          var scy = sy;
+          var scx = Math.min(width - 1, Math.max(0, sx + cx - halfSide));
+          var poffset = (scy * width + scx) * 4;
+          var wt = weightsVector[cx];
+          r += pixels[poffset] * wt;
+          g += pixels[poffset + 1] * wt;
+          b += pixels[poffset + 2] * wt;
+          a += pixels[poffset + 3] * wt;
+        }
+        output[offset] = r;
+        output[offset + 1] = g;
+        output[offset + 2] = b;
+        output[offset + 3] = a + alphaFac * (255 - a);
+      }
+    }
+    return output;
+  };
+
+  /**
+   * Fast vertical separable convolution. A point spread function (PSF) is
+   * said to be separable if it can be broken into two one-dimensional
+   * signals: a vertical and a horizontal projection. The convolution is
+   * performed by sliding the kernel over the image, generally starting at the
+   * top left corner, so as to move the kernel through all the positions where
+   * the kernel fits entirely within the boundaries of the image. Adpated from
+   * https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {array} weightsVector The weighting vector, e.g [-1,0,1].
+   * @param {number} opaque
+   * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.verticalConvolve = function(pixels, width, height, weightsVector, opaque) {
+    var side = weightsVector.length;
+    var halfSide = Math.floor(side / 2);
+    var output = new Float32Array(width * height * 4);
+    var alphaFac = opaque ? 1 : 0;
+
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        var sy = y;
+        var sx = x;
+        var offset = (y * width + x) * 4;
+        var r = 0;
+        var g = 0;
+        var b = 0;
+        var a = 0;
+        for (var cy = 0; cy < side; cy++) {
+          var scy = Math.min(height - 1, Math.max(0, sy + cy - halfSide));
+          var scx = sx;
+          var poffset = (scy * width + scx) * 4;
+          var wt = weightsVector[cy];
+          r += pixels[poffset] * wt;
+          g += pixels[poffset + 1] * wt;
+          b += pixels[poffset + 2] * wt;
+          a += pixels[poffset + 3] * wt;
+        }
+        output[offset] = r;
+        output[offset + 1] = g;
+        output[offset + 2] = b;
+        output[offset + 3] = a + alphaFac * (255 - a);
+      }
+    }
+    return output;
+  };
+
+  /**
+   * Fast separable convolution. A point spread function (PSF) is said to be
+   * separable if it can be broken into two one-dimensional signals: a
+   * vertical and a horizontal projection. The convolution is performed by
+   * sliding the kernel over the image, generally starting at the top left
+   * corner, so as to move the kernel through all the positions where the
+   * kernel fits entirely within the boundaries of the image. Adpated from
+   * https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {array} horizWeights The horizontal weighting vector, e.g [-1,0,1].
+   * @param {array} vertWeights The vertical vector, e.g [-1,0,1].
+   * @param {number} opaque
+   * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.separableConvolve = function(pixels, width, height, horizWeights, vertWeights, opaque) {
+    var vertical = this.verticalConvolve(pixels, width, height, vertWeights, opaque);
+    return this.horizontalConvolve(vertical, width, height, horizWeights, opaque);
+  };
+
+  /**
+   * Compute image edges using Sobel operator. Computes the vertical and
+   * horizontal gradients of the image and combines the computed images to
+   * find edges in the image. The way we implement the Sobel filter here is by
+   * first grayscaling the image, then taking the horizontal and vertical
+   * gradients and finally combining the gradient images to make up the final
+   * image. Adpated from https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @return {array} The edge pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.sobel = function(pixels, width, height) {
+    pixels = this.grayscale(pixels, width, height);
+    var output = new Float32Array(width * height * 4);
+    var sobelSignVector = new Float32Array([-1, 0, 1]);
+    var sobelScaleVector = new Float32Array([1, 2, 1]);
+    var vertical = this.separableConvolve(pixels, width, height, sobelSignVector, sobelScaleVector);
+    var horizontal = this.separableConvolve(pixels, width, height, sobelScaleVector, sobelSignVector);
+
+    for (var i = 0; i < output.length; i += 4) {
+      var v = vertical[i];
+      var h = horizontal[i];
+      var p = Math.sqrt(h * h + v * v);
+      output[i] = p;
+      output[i + 1] = p;
+      output[i + 2] = p;
+      output[i + 3] = 255;
+    }
+
+    return output;
+  };
+
 }());
 
 (function() {
@@ -1080,58 +1282,103 @@
   };
 
   /**
-   * Computes the integral image and the integral image squared of the input
-   * pixels. The input pixels will be converted to grayscale using the
-   * following transformation, `~~(r * 0.299 + b * 0.587 + g * 0.114)`. A
-   * summed area table is a data structure and algorithm for quickly and
-   * efficiently generating the sum of values in a rectangular subset of a
-   * grid. In the image processing domain, it is also known as an integral
-   * image.
+   * Computes the integral image, the integral image squared and the integral
+   * image for sobel for the input pixels. The pixels are converted to
+   * grayscale before compute integral image.
    * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
    *     through.
    * @param {number} width The image width.
    * @param {number} height The image height.
-   * @return {Array.<Array.<number>>} Array containing in the first position
-   *     the integral image and in the second position the integral image
-   *     squared.
+   * @param {array} opt_integralImage Empty array of size `width * height` to
+   *     be filled with the integral image values. If not specified compute sum
+   *     values will be skipped.
+   * @param {array} opt_integralImageSquare Empty array of size `width *
+   *     height` to be filled with the integral image squared values. If not
+   *     specified compute squared values will be skipped.
+   * @param {array} opt_integralImageSobel Empty array of size `width *
+   *     height` to be filled with the integral image of sobel values. If not
+   *     specified compute sobel filtering will be skipped.
    * @static
    */
-  tracking.Matrix.computeIntergralImage = function(pixels, width, height) {
-    var integralImage = new Int32Array(width * height),
-      integralImageSquare = new Int32Array(width * height),
-      position = 0,
-      pixelSum = 0,
-      pixelSumSquare = 0;
-
+  tracking.Matrix.computeIntergralImage = function(pixels, width, height, opt_integralImage, opt_integralImageSquare, opt_integralImageSobel) {
+    if (arguments.length < 4) {
+      throw new Error('You should specify at least one output array in the order: sum, square, sobel.');
+    }
+    var pixelsSobel;
+    if (opt_integralImageSobel) {
+      pixelsSobel = tracking.Image.sobel(pixels, width, height);
+    }
     for (var i = 0; i < height; i++) {
       for (var j = 0; j < width; j++) {
         var w = i * width * 4 + j * 4;
-        var pixel = ~~(pixels[w] * 0.299 + pixels[w+1] * 0.587 + pixels[w+2] * 0.114);
-
-        if (i === 0 && j === 0) {
-          pixelSum = pixel;
-          pixelSumSquare = pixel * pixel;
-        } else if (i === 0) {
-          pixelSum = pixel + integralImage[i * width + (j - 1)];
-          pixelSumSquare = pixel * pixel + integralImageSquare[i * width + (j - 1)];
-        } else if (j === 0) {
-          pixelSum = pixel + integralImage[(i - 1) * width + j];
-          pixelSumSquare = pixel * pixel + integralImageSquare[(i - 1) * width + j];
-        } else {
-          pixelSum = pixel + integralImage[i * width + (j - 1)] + integralImage[(i - 1) * width + j] - integralImage[(i - 1) * width + (j - 1)];
-          pixelSumSquare = pixel * pixel + integralImageSquare[i * width + (j - 1)] + integralImageSquare[(i - 1) * width + j] - integralImageSquare[(i - 1) * width + (j - 1)];
+        var pixel = ~~(pixels[w] * 0.299 + pixels[w + 1] * 0.587 + pixels[w + 2] * 0.114);
+        if (opt_integralImage) {
+          this.integralImageSum_(pixels, width, opt_integralImage, i, j, pixel);
         }
-
-        integralImage[position] = pixelSum;
-        integralImageSquare[position] = pixelSumSquare;
-        position++;
+        if (opt_integralImageSquare) {
+          this.integralImageSquare_(pixels, width, opt_integralImageSquare, i, j, pixel);
+        }
+        if (opt_integralImageSobel) {
+          this.integralImageSum_(pixels, width, opt_integralImageSobel, i, j, pixelsSobel[w]);
+        }
       }
     }
+  };
 
-    return [
-      integralImage,
-      integralImageSquare
-    ];
+  /**
+   * Helper method to compute the integral image squared.
+   * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
+   *     through.
+   * @param {number} width The image width.
+   * @param {array} integralImage Empty array of size `width * height` to
+   *     be filled with the integral image values. If not specified compute sum
+   *     values will be skipped.
+   * @param {number} i Vertical position of the pixel to be evaluated.
+   * @param {number} j Horizontal position of the pixel to be evaluated.
+   * @param {number} pixel Pixel value to be added to the integral image.
+   * @static
+   * @private
+   */
+  tracking.Matrix.integralImageSquare_ = function(pixels, width, integralImageSquare, i, j, pixel) {
+    var value = 0;
+    if (i === 0 && j === 0) {
+      value = pixel * pixel;
+    } else if (i === 0) {
+      value = pixel * pixel + integralImageSquare[i * width + (j - 1)];
+    } else if (j === 0) {
+      value = pixel * pixel + integralImageSquare[(i - 1) * width + j];
+    } else {
+      value = pixel * pixel + integralImageSquare[i * width + (j - 1)] + integralImageSquare[(i - 1) * width + j] - integralImageSquare[(i - 1) * width + (j - 1)];
+    }
+    integralImageSquare[i * width + j] = value;
+  };
+
+  /**
+   * Helper method to compute the integral image sum.
+   * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
+   *     through.
+   * @param {number} width The image width.
+   * @param {array} integralImage Empty array of size `width * height` to
+   *     be filled with the integral image values. If not specified compute sum
+   *     values will be skipped.
+   * @param {number} i Vertical position of the pixel to be evaluated.
+   * @param {number} j Horizontal position of the pixel to be evaluated.
+   * @param {number} pixel Pixel value to be added to the integral image.
+   * @static
+   * @private
+   */
+  tracking.Matrix.integralImageSum_ = function(pixels, width, integralImage, i, j, pixel) {
+    var value = 0;
+    if (i === 0 && j === 0) {
+      value = pixel;
+    } else if (i === 0) {
+      value = pixel + integralImage[i * width + (j - 1)];
+    } else if (j === 0) {
+      value = pixel + integralImage[(i - 1) * width + j];
+    } else {
+      value = pixel + integralImage[i * width + (j - 1)] + integralImage[(i - 1) * width + j] - integralImage[(i - 1) * width + (j - 1)];
+    }
+    integralImage[i * width + j] = value;
   };
 
 }());
@@ -1258,42 +1505,58 @@
    * Specifies the tracker HAAR data for the instance.
    * @type {array}
    */
-  tracking.Tracker.prototype.data = null;
+  tracking.HAARTracker.prototype.data = null;
+
+  /**
+   * Specifies the edges density of a block in order to decide whether to skip
+   * it or not.
+   * @default 0.2
+   * @type {number}
+   */
+  tracking.HAARTracker.prototype.edgesDensity = 0.2;
 
   /**
    * Specifies the initial scale to start the feature block scaling.
    * @default 1.0
    * @type {number}
    */
-  tracking.Tracker.prototype.initialScale = 1.0;
+  tracking.HAARTracker.prototype.initialScale = 1.0;
 
   /**
    * Specifies the scale factor to scale the feature block.
    * @default 1.25
    * @type {number}
    */
-  tracking.Tracker.prototype.scaleFactor = 1.25;
+  tracking.HAARTracker.prototype.scaleFactor = 1.25;
 
   /**
    * Specifies the block step size.
    * @default 1.5
    * @type {number}
    */
-  tracking.Tracker.prototype.stepSize = 1.5;
+  tracking.HAARTracker.prototype.stepSize = 1.5;
 
   /**
    * Gets the tracker HAAR data.
    * @return {string}
    */
-  tracking.Tracker.prototype.getData = function() {
+  tracking.HAARTracker.prototype.getData = function() {
     return this.data;
+  };
+
+  /**
+   * Gets the edges density value.
+   * @return {number}
+   */
+  tracking.HAARTracker.prototype.getEdgesDensity = function() {
+    return this.edgesDensity;
   };
 
   /**
    * Gets the initial scale to start the feature block scaling.
    * @return {number}
    */
-  tracking.Tracker.prototype.getInitialScale = function() {
+  tracking.HAARTracker.prototype.getInitialScale = function() {
     return this.initialScale;
   };
 
@@ -1301,7 +1564,7 @@
    * Gets the scale factor to scale the feature block.
    * @return {number}
    */
-  tracking.Tracker.prototype.getScaleFactor = function() {
+  tracking.HAARTracker.prototype.getScaleFactor = function() {
     return this.scaleFactor;
   };
 
@@ -1309,7 +1572,7 @@
    * Gets the block step size.
    * @return {number}
    */
-  tracking.Tracker.prototype.getStepSize = function() {
+  tracking.HAARTracker.prototype.getStepSize = function() {
     return this.stepSize;
   };
 
@@ -1325,7 +1588,7 @@
     if (!data) {
       throw new Error('HAAR cascade data not set.');
     }
-    var payload = tracking.ViolaJones.detect(pixels, width, height, this.getInitialScale(), this.getScaleFactor(), this.getStepSize(), data);
+    var payload = tracking.ViolaJones.detect(pixels, width, height, this.getInitialScale(), this.getScaleFactor(), this.getStepSize(), this.getEdgesDensity(), data);
     if (payload.length) {
       if (this.onFound) {
         this.onFound.call(this, payload);
@@ -1341,15 +1604,23 @@
    * Sets the tracker HAAR data.
    * @param {array} data
    */
-  tracking.Tracker.prototype.setData = function(data) {
+  tracking.HAARTracker.prototype.setData = function(data) {
     this.data = data;
+  };
+
+  /**
+   * Sets the edges density.
+   * @param {number} edgesDensity
+   */
+  tracking.HAARTracker.prototype.setEdgesDensity = function(edgesDensity) {
+    this.edgesDensity = edgesDensity;
   };
 
   /**
    * Sets the initial scale to start the block scaling.
    * @param {number} initialScale
    */
-  tracking.Tracker.prototype.setInitialScale = function(initialScale) {
+  tracking.HAARTracker.prototype.setInitialScale = function(initialScale) {
     this.initialScale = initialScale;
   };
 
@@ -1357,7 +1628,7 @@
    * Sets the scale factor to scale the feature block.
    * @param {number} scaleFactor
    */
-  tracking.Tracker.prototype.setScaleFactor = function(scaleFactor) {
+  tracking.HAARTracker.prototype.setScaleFactor = function(scaleFactor) {
     this.scaleFactor = scaleFactor;
   };
 
@@ -1365,7 +1636,7 @@
    * Sets the block step size.
    * @param {number} stepSize
    */
-  tracking.Tracker.prototype.setStepSize = function(stepSize) {
+  tracking.HAARTracker.prototype.setStepSize = function(stepSize) {
     this.stepSize = stepSize;
   };
 
