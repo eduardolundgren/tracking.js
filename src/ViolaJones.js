@@ -19,19 +19,34 @@
 
   /**
    * Detects through the HAAR cascade data rectangles matches.
-   * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
-   * @param {number} initialScale The initial scale to start the block scaling.
+   * @param {number} initialScale The initial scale to start the block
+   *     scaling.
    * @param {number} scaleFactor The scale factor to scale the feature block.
    * @param {number} stepSize The block step size.
+   * @param {number} edgesDensity Percentage density edges inside the
+   *     classifier block. Value from [0.0, 1.0], defaults to 0.2. If specified
+   *     edge detection will be applied to the image to prune dead areas of the
+   *     image, this can improve significantly performance.
    * @param {number} data The HAAR cascade data.
    * @return {array} Found rectangles.
+   * @static
    */
-  tracking.ViolaJones.detect = function(pixels, width, height, initialScale, scaleFactor, stepSize, data) {
+  tracking.ViolaJones.detect = function(pixels, width, height, initialScale, scaleFactor, stepSize, edgesDensity, data) {
     var total = 0;
     var rects = [];
-    var integralImages = tracking.Matrix.computeIntergralImage(pixels, width, height);
+    var integralImage = new Int32Array(width * height);
+    var integralImageSquare = new Int32Array(width * height);
+
+    var integralImageSobel;
+    if (edgesDensity > 0) {
+      integralImageSobel = new Int32Array(width * height);
+    }
+
+    tracking.Matrix.computeIntergralImage(pixels, width, height, integralImage, integralImageSquare, integralImageSobel);
+
     var minWidth = data[0];
     var minHeight = data[1];
     var scale = initialScale * scaleFactor;
@@ -42,7 +57,14 @@
       var step = (scale * stepSize + 0.5) | 0;
       for (var i = 0; i < (height - blockHeight); i += step) {
         for (var j = 0; j < (width - blockWidth); j += step) {
-          if (this.evalStages_(data, integralImages, i, j, width, blockWidth, blockHeight, scale)) {
+
+          if (edgesDensity > 0) {
+            if (this.isTriviallyExcluded(edgesDensity, integralImageSobel, i, j, width, blockWidth, blockHeight)) {
+              continue;
+            }
+          }
+
+          if (this.evalStages_(data, integralImage, integralImageSquare, i, j, width, blockWidth, blockHeight, scale)) {
             rects[total++] = {
               width: blockWidth,
               height: blockHeight,
@@ -61,12 +83,35 @@
   };
 
   /**
+   * Fast check to test whether the edges density inside the block is greater
+   * than a threshold, if true it tests the stages. This can improve
+   * significantly performance.
+   * @param {number} edgesDensity Percentage density edges inside the
+   *     classifier block.
+   * @param {array} integralImageSobel The integral image of a sobel image.
+   * @param {number} i Vertical position of the pixel to be evaluated.
+   * @param {number} j Horizontal position of the pixel to be evaluated.
+   * @param {number} width The image width.
+   * @return {boolean} True whether the block at position i,j can be skipped,
+   *     false otherwise.
+   * @static
+   */
+  tracking.ViolaJones.isTriviallyExcluded = function(edgesDensity, integralImageSobel, i, j, width, blockWidth, blockHeight) {
+    var wbA = i * width + j;
+    var wbB = wbA + blockWidth;
+    var wbD = wbA + blockHeight * width;
+    var wbC = wbD + blockWidth;
+    var blockEdgesDensity = (integralImageSobel[wbA] - integralImageSobel[wbB] - integralImageSobel[wbD] + integralImageSobel[wbC])/(blockWidth*blockHeight*255);
+    if (blockEdgesDensity < edgesDensity) {
+      return true;
+    }
+    return false;
+  };
+
+  /**
    * Evaluates if the block size on i,j position is a valid HAAR cascade
    * stage.
    * @param {number} data The HAAR cascade data.
-   * @param {Array.<Array.<number>>} integralImages Array containing in the
-   *     first position the integral image and in the second position the integral
-   *     image squared.
    * @param {number} i Vertical position of the pixel to be evaluated.
    * @param {number} j Horizontal position of the pixel to be evaluated.
    * @param {number} width The image width.
@@ -76,11 +121,10 @@
    * @param {number} inverseArea The inverse area of the block size.
    * @return {boolean} Whether the region passes all the stage tests.
    * @private
+   * @static
    */
-  tracking.ViolaJones.evalStages_ = function(data, integralImages, i, j, width, blockWidth, blockHeight, scale) {
+  tracking.ViolaJones.evalStages_ = function(data, integralImage, integralImageSquare, i, j, width, blockWidth, blockHeight, scale) {
     var inverseArea = 1.0 / (blockWidth * blockHeight);
-    var integralImage = integralImages[0];
-    var integralImageSquare = integralImages[1];
     var wbA = i * width + j;
     var wbB = wbA + blockWidth;
     var wbD = wbA + blockHeight * width;
@@ -102,6 +146,7 @@
 
       while (nodeLength--) {
         var rectsSum = 0;
+        var tilted = data[w++];
         var rectsLength = data[w++];
 
         for (var r = 0; r < rectsLength; r++) {
@@ -141,6 +186,7 @@
    * @param {array} rects
    * @return {array}
    * @private
+   * @static
    */
   tracking.ViolaJones.mergeRectangles_ = function(rects) {
     var disjointSet = new tracking.DisjointSet(rects.length);
