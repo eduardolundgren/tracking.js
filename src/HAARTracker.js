@@ -21,42 +21,58 @@
    * Specifies the tracker HAAR data for the instance.
    * @type {array}
    */
-  tracking.Tracker.prototype.data = null;
+  tracking.HAARTracker.prototype.data = null;
+
+  /**
+   * Specifies the edges density of a block in order to decide whether to skip
+   * it or not.
+   * @default 0.2
+   * @type {number}
+   */
+  tracking.HAARTracker.prototype.edgesDensity = 0.2;
 
   /**
    * Specifies the initial scale to start the feature block scaling.
    * @default 1.0
    * @type {number}
    */
-  tracking.Tracker.prototype.initialScale = 1.0;
+  tracking.HAARTracker.prototype.initialScale = 1.0;
 
   /**
    * Specifies the scale factor to scale the feature block.
    * @default 1.25
    * @type {number}
    */
-  tracking.Tracker.prototype.scaleFactor = 1.25;
+  tracking.HAARTracker.prototype.scaleFactor = 1.25;
 
   /**
    * Specifies the block step size.
    * @default 1.5
    * @type {number}
    */
-  tracking.Tracker.prototype.stepSize = 1.5;
+  tracking.HAARTracker.prototype.stepSize = 1.5;
 
   /**
    * Gets the tracker HAAR data.
    * @return {string}
    */
-  tracking.Tracker.prototype.getData = function() {
+  tracking.HAARTracker.prototype.getData = function() {
     return this.data;
+  };
+
+  /**
+   * Gets the edges density value.
+   * @return {number}
+   */
+  tracking.HAARTracker.prototype.getEdgesDensity = function() {
+    return this.edgesDensity;
   };
 
   /**
    * Gets the initial scale to start the feature block scaling.
    * @return {number}
    */
-  tracking.Tracker.prototype.getInitialScale = function() {
+  tracking.HAARTracker.prototype.getInitialScale = function() {
     return this.initialScale;
   };
 
@@ -64,7 +80,7 @@
    * Gets the scale factor to scale the feature block.
    * @return {number}
    */
-  tracking.Tracker.prototype.getScaleFactor = function() {
+  tracking.HAARTracker.prototype.getScaleFactor = function() {
     return this.scaleFactor;
   };
 
@@ -72,7 +88,7 @@
    * Gets the block step size.
    * @return {number}
    */
-  tracking.Tracker.prototype.getStepSize = function() {
+  tracking.HAARTracker.prototype.getStepSize = function() {
     return this.stepSize;
   };
 
@@ -88,7 +104,9 @@
     if (!data) {
       throw new Error('HAAR cascade data not set.');
     }
-    var payload = tracking.ViolaJones.detect(pixels, width, height, this.getInitialScale(), this.getScaleFactor(), this.getStepSize(), data);
+    var start = Date.now();
+    var payload = tracking.ViolaJones.detect(pixels, width, height, this.getInitialScale(), this.getScaleFactor(), this.getStepSize(), this.getEdgesDensity(), data);
+    console.log(Date.now() - start);
     if (payload.length) {
       if (this.onFound) {
         this.onFound.call(this, payload);
@@ -104,15 +122,23 @@
    * Sets the tracker HAAR data.
    * @param {array} data
    */
-  tracking.Tracker.prototype.setData = function(data) {
+  tracking.HAARTracker.prototype.setData = function(data) {
     this.data = data;
+  };
+
+  /**
+   * Sets the edges density.
+   * @param {number} edgesDensity
+   */
+  tracking.HAARTracker.prototype.setEdgesDensity = function(edgesDensity) {
+    this.edgesDensity = edgesDensity;
   };
 
   /**
    * Sets the initial scale to start the block scaling.
    * @param {number} initialScale
    */
-  tracking.Tracker.prototype.setInitialScale = function(initialScale) {
+  tracking.HAARTracker.prototype.setInitialScale = function(initialScale) {
     this.initialScale = initialScale;
   };
 
@@ -120,7 +146,7 @@
    * Sets the scale factor to scale the feature block.
    * @param {number} scaleFactor
    */
-  tracking.Tracker.prototype.setScaleFactor = function(scaleFactor) {
+  tracking.HAARTracker.prototype.setScaleFactor = function(scaleFactor) {
     this.scaleFactor = scaleFactor;
   };
 
@@ -128,7 +154,7 @@
    * Sets the block step size.
    * @param {number} stepSize
    */
-  tracking.Tracker.prototype.setStepSize = function(stepSize) {
+  tracking.HAARTracker.prototype.setStepSize = function(stepSize) {
     this.stepSize = stepSize;
   };
 
