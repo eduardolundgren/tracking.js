@@ -154,4 +154,38 @@
     var vertical = this.verticalConvolve(pixels, width, height, vertWeights, opaque);
     return this.horizontalConvolve(vertical, width, height, horizWeights, opaque);
   };
+
+  /**
+   * Compute image edges using Sobel operator. Computes the vertical and
+   * horizontal gradients of the image and combines the computed images to
+   * find edges in the image. The way we implement the Sobel filter here is by
+   * first grayscaling the image, then taking the horizontal and vertical
+   * gradients and finally combining the gradient images to make up the final
+   * image. Adpated from https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @return {array} The edge pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.sobel = function(pixels, width, height) {
+    var output = new Float32Array(width * height * 4);
+    pixels = this.grayscale(pixels, width, height);
+    var sobelSignVector = new Float32Array([-1, 0, 1]);
+    var sobelScaleVector = new Float32Array([1, 2, 1]);
+    var vertical = this.separableConvolve(pixels, width, height, sobelSignVector, sobelScaleVector);
+    var horizontal = this.separableConvolve(pixels, width, height, sobelScaleVector, sobelSignVector);
+
+    for (var i = 0; i < output.length; i += 4) {
+      var v = vertical[i];
+      var h = horizontal[i];
+      var p = Math.sqrt(h * h + v * v);
+      output[i] = p;
+      output[i + 1] = p;
+      output[i + 2] = p;
+      output[i + 3] = 255;
+    }
+
+    return output;
+  };
+
 }());
