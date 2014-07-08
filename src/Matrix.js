@@ -73,7 +73,7 @@
           this.integralImageSquare_(pixels, width, opt_integralImageSquare, i, j, pixel);
         }
         if (opt_integralImageSobel) {
-          this.integralImageSquare_(pixels, width, opt_integralImageSobel, i, j, pixelsSobel[w]);
+          this.integralImageSum_(pixels, width, opt_integralImageSobel, i, j, pixelsSobel[w]);
         }
       }
     }
