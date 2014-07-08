@@ -40,7 +40,7 @@
    * image for sobel for the input pixels. The pixels are converted to
    * grayscale before compute integral image.
    * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
-   * through.
+   *     through.
    * @param {number} width The image width.
    * @param {number} height The image height.
    * @param {array} opt_integralImage Empty array of size `width * height` to
@@ -82,7 +82,7 @@
   /**
    * Helper method to compute the integral image squared.
    * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
-   * through.
+   *     through.
    * @param {number} width The image width.
    * @param {array} integralImage Empty array of size `width * height` to
    *     be filled with the integral image values. If not specified compute sum
@@ -110,7 +110,7 @@
   /**
    * Helper method to compute the integral image sum.
    * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
-   * through.
+   *     through.
    * @param {number} width The image width.
    * @param {array} integralImage Empty array of size `width * height` to
    *     be filled with the integral image values. If not specified compute sum

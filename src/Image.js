@@ -47,8 +47,8 @@
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
-   * @param  {array} weightsVector The weighting vector, e.g [-1,0,1].
-   * @param  {number} opaque
+   * @param {array} weightsVector The weighting vector, e.g [-1,0,1].
+   * @param {number} opaque
    * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
    */
   tracking.Image.horizontalConvolve = function(pixels, width, height, weightsVector, opaque) {
@@ -96,8 +96,8 @@
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
-   * @param  {array} weightsVector The weighting vector, e.g [-1,0,1].
-   * @param  {number} opaque
+   * @param {array} weightsVector The weighting vector, e.g [-1,0,1].
+   * @param {number} opaque
    * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
    */
   tracking.Image.verticalConvolve = function(pixels, width, height, weightsVector, opaque) {
@@ -145,9 +145,9 @@
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
-   * @param  {array} horizWeights The horizontal weighting vector, e.g [-1,0,1].
-   * @param  {array} vertWeights The vertical vector, e.g [-1,0,1].
-   * @param  {number} opaque
+   * @param {array} horizWeights The horizontal weighting vector, e.g [-1,0,1].
+   * @param {array} vertWeights The vertical vector, e.g [-1,0,1].
+   * @param {number} opaque
    * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
    */
   tracking.Image.separableConvolve = function(pixels, width, height, horizWeights, vertWeights, opaque) {
@@ -168,8 +168,8 @@
    * @return {array} The edge pixels in a linear [r,g,b,a,...] array.
    */
   tracking.Image.sobel = function(pixels, width, height) {
-    var output = new Float32Array(width * height * 4);
     pixels = this.grayscale(pixels, width, height);
+    var output = new Float32Array(width * height * 4);
     var sobelSignVector = new Float32Array([-1, 0, 1]);
     var sobelScaleVector = new Float32Array([1, 2, 1]);
     var vertical = this.separableConvolve(pixels, width, height, sobelSignVector, sobelScaleVector);
