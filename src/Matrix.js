@@ -36,58 +36,103 @@
   };
 
   /**
-   * Computes the integral image and the integral image squared of the input
-   * pixels. The input pixels will be converted to grayscale using the
-   * following transformation, `~~(r * 0.299 + b * 0.587 + g * 0.114)`. A
-   * summed area table is a data structure and algorithm for quickly and
-   * efficiently generating the sum of values in a rectangular subset of a
-   * grid. In the image processing domain, it is also known as an integral
-   * image.
+   * Computes the integral image, the integral image squared and the integral
+   * image for sobel for the input pixels. The pixels are converted to
+   * grayscale before compute integral image.
    * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
-   *     through.
+   * through.
    * @param {number} width The image width.
    * @param {number} height The image height.
-   * @return {Array.<Array.<number>>} Array containing in the first position
-   *     the integral image and in the second position the integral image
-   *     squared.
+   * @param {array} opt_integralImage Empty array of size `width * height` to
+   *     be filled with the integral image values. If not specified compute sum
+   *     values will be skipped.
+   * @param {array} opt_integralImageSquare Empty array of size `width *
+   *     height` to be filled with the integral image squared values. If not
+   *     specified compute squared values will be skipped.
+   * @param {array} opt_integralImageSobel Empty array of size `width *
+   *     height` to be filled with the integral image of sobel values. If not
+   *     specified compute sobel filtering will be skipped.
    * @static
    */
-  tracking.Matrix.computeIntergralImage = function(pixels, width, height) {
-    var integralImage = new Int32Array(width * height),
-      integralImageSquare = new Int32Array(width * height),
-      position = 0,
-      pixelSum = 0,
-      pixelSumSquare = 0;
-
+  tracking.Matrix.computeIntergralImage = function(pixels, width, height, opt_integralImage, opt_integralImageSquare, opt_integralImageSobel) {
+    if (arguments.length < 4) {
+      throw new Error('You should specify at least one output array in the order: sum, square, sobel.');
+    }
+    var pixelsSobel;
+    if (opt_integralImageSobel) {
+      pixelsSobel = tracking.Image.sobel(pixels, width, height);
+    }
     for (var i = 0; i < height; i++) {
       for (var j = 0; j < width; j++) {
         var w = i * width * 4 + j * 4;
-        var pixel = ~~(pixels[w] * 0.299 + pixels[w+1] * 0.587 + pixels[w+2] * 0.114);
-
-        if (i === 0 && j === 0) {
-          pixelSum = pixel;
-          pixelSumSquare = pixel * pixel;
-        } else if (i === 0) {
-          pixelSum = pixel + integralImage[i * width + (j - 1)];
-          pixelSumSquare = pixel * pixel + integralImageSquare[i * width + (j - 1)];
-        } else if (j === 0) {
-          pixelSum = pixel + integralImage[(i - 1) * width + j];
-          pixelSumSquare = pixel * pixel + integralImageSquare[(i - 1) * width + j];
-        } else {
-          pixelSum = pixel + integralImage[i * width + (j - 1)] + integralImage[(i - 1) * width + j] - integralImage[(i - 1) * width + (j - 1)];
-          pixelSumSquare = pixel * pixel + integralImageSquare[i * width + (j - 1)] + integralImageSquare[(i - 1) * width + j] - integralImageSquare[(i - 1) * width + (j - 1)];
+        var pixel = ~~(pixels[w] * 0.299 + pixels[w + 1] * 0.587 + pixels[w + 2] * 0.114);
+        if (opt_integralImage) {
+          this.integralImageSum_(pixels, width, opt_integralImage, i, j, pixel);
         }
-
-        integralImage[position] = pixelSum;
-        integralImageSquare[position] = pixelSumSquare;
-        position++;
+        if (opt_integralImageSquare) {
+          this.integralImageSquare_(pixels, width, opt_integralImageSquare, i, j, pixel);
+        }
+        if (opt_integralImageSobel) {
+          this.integralImageSquare_(pixels, width, opt_integralImageSobel, i, j, pixelsSobel[w]);
+        }
       }
     }
+  };
 
-    return [
-      integralImage,
-      integralImageSquare
-    ];
+  /**
+   * Helper method to compute the integral image squared.
+   * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
+   * through.
+   * @param {number} width The image width.
+   * @param {array} integralImage Empty array of size `width * height` to
+   *     be filled with the integral image values. If not specified compute sum
+   *     values will be skipped.
+   * @param {number} i Vertical position of the pixel to be evaluated.
+   * @param {number} j Horizontal position of the pixel to be evaluated.
+   * @param {number} pixel Pixel value to be added to the integral image.
+   * @static
+   * @private
+   */
+  tracking.Matrix.integralImageSquare_ = function(pixels, width, integralImageSquare, i, j, pixel) {
+    var value = 0;
+    if (i === 0 && j === 0) {
+      value = pixel * pixel;
+    } else if (i === 0) {
+      value = pixel * pixel + integralImageSquare[i * width + (j - 1)];
+    } else if (j === 0) {
+      value = pixel * pixel + integralImageSquare[(i - 1) * width + j];
+    } else {
+      value = pixel * pixel + integralImageSquare[i * width + (j - 1)] + integralImageSquare[(i - 1) * width + j] - integralImageSquare[(i - 1) * width + (j - 1)];
+    }
+    integralImageSquare[i * width + j] = value;
+  };
+
+  /**
+   * Helper method to compute the integral image sum.
+   * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
+   * through.
+   * @param {number} width The image width.
+   * @param {array} integralImage Empty array of size `width * height` to
+   *     be filled with the integral image values. If not specified compute sum
+   *     values will be skipped.
+   * @param {number} i Vertical position of the pixel to be evaluated.
+   * @param {number} j Horizontal position of the pixel to be evaluated.
+   * @param {number} pixel Pixel value to be added to the integral image.
+   * @static
+   * @private
+   */
+  tracking.Matrix.integralImageSum_ = function(pixels, width, integralImage, i, j, pixel) {
+    var value = 0;
+    if (i === 0 && j === 0) {
+      value = pixel;
+    } else if (i === 0) {
+      value = pixel + integralImage[i * width + (j - 1)];
+    } else if (j === 0) {
+      value = pixel + integralImage[(i - 1) * width + j];
+    } else {
+      value = pixel + integralImage[i * width + (j - 1)] + integralImage[(i - 1) * width + j] - integralImage[(i - 1) * width + (j - 1)];
+    }
+    integralImage[i * width + j] = value;
   };
 
 }());
