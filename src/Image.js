@@ -35,4 +35,123 @@
     }
     return gray;
   };
+
+  /**
+   * Fast horizontal separable convolution. A point spread function (PSF) is
+   * said to be separable if it can be broken into two one-dimensional
+   * signals: a vertical and a horizontal projection. The convolution is
+   * performed by sliding the kernel over the image, generally starting at the
+   * top left corner, so as to move the kernel through all the positions where
+   * the kernel fits entirely within the boundaries of the image. Adpated from
+   * https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param  {array} weightsVector The weighting vector, e.g [-1,0,1].
+   * @param  {number} opaque
+   * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.horizontalConvolve = function(pixels, width, height, weightsVector, opaque) {
+    var side = weightsVector.length;
+    var halfSide = Math.floor(side / 2);
+    var output = new Float32Array(width * height * 4);
+    var alphaFac = opaque ? 1 : 0;
+
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        var sy = y;
+        var sx = x;
+        var offset = (y * width + x) * 4;
+        var r = 0;
+        var g = 0;
+        var b = 0;
+        var a = 0;
+        for (var cx = 0; cx < side; cx++) {
+          var scy = sy;
+          var scx = Math.min(width - 1, Math.max(0, sx + cx - halfSide));
+          var poffset = (scy * width + scx) * 4;
+          var wt = weightsVector[cx];
+          r += pixels[poffset] * wt;
+          g += pixels[poffset + 1] * wt;
+          b += pixels[poffset + 2] * wt;
+          a += pixels[poffset + 3] * wt;
+        }
+        output[offset] = r;
+        output[offset + 1] = g;
+        output[offset + 2] = b;
+        output[offset + 3] = a + alphaFac * (255 - a);
+      }
+    }
+    return output;
+  };
+
+  /**
+   * Fast vertical separable convolution. A point spread function (PSF) is
+   * said to be separable if it can be broken into two one-dimensional
+   * signals: a vertical and a horizontal projection. The convolution is
+   * performed by sliding the kernel over the image, generally starting at the
+   * top left corner, so as to move the kernel through all the positions where
+   * the kernel fits entirely within the boundaries of the image. Adpated from
+   * https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param  {array} weightsVector The weighting vector, e.g [-1,0,1].
+   * @param  {number} opaque
+   * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.verticalConvolve = function(pixels, width, height, weightsVector, opaque) {
+    var side = weightsVector.length;
+    var halfSide = Math.floor(side / 2);
+    var output = new Float32Array(width * height * 4);
+    var alphaFac = opaque ? 1 : 0;
+
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        var sy = y;
+        var sx = x;
+        var offset = (y * width + x) * 4;
+        var r = 0;
+        var g = 0;
+        var b = 0;
+        var a = 0;
+        for (var cy = 0; cy < side; cy++) {
+          var scy = Math.min(height - 1, Math.max(0, sy + cy - halfSide));
+          var scx = sx;
+          var poffset = (scy * width + scx) * 4;
+          var wt = weightsVector[cy];
+          r += pixels[poffset] * wt;
+          g += pixels[poffset + 1] * wt;
+          b += pixels[poffset + 2] * wt;
+          a += pixels[poffset + 3] * wt;
+        }
+        output[offset] = r;
+        output[offset + 1] = g;
+        output[offset + 2] = b;
+        output[offset + 3] = a + alphaFac * (255 - a);
+      }
+    }
+    return output;
+  };
+
+  /**
+   * Fast separable convolution. A point spread function (PSF) is said to be
+   * separable if it can be broken into two one-dimensional signals: a
+   * vertical and a horizontal projection. The convolution is performed by
+   * sliding the kernel over the image, generally starting at the top left
+   * corner, so as to move the kernel through all the positions where the
+   * kernel fits entirely within the boundaries of the image. Adpated from
+   * https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param  {array} horizWeights The horizontal weighting vector, e.g [-1,0,1].
+   * @param  {array} vertWeights The vertical vector, e.g [-1,0,1].
+   * @param  {number} opaque
+   * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.separableConvolve = function(pixels, width, height, horizWeights, vertWeights, opaque) {
+    var vertical = this.verticalConvolve(pixels, width, height, vertWeights, opaque);
+    return this.horizontalConvolve(vertical, width, height, horizWeights, opaque);
+  };
 }());
