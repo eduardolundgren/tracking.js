@@ -104,9 +104,7 @@
     if (!data) {
       throw new Error('HAAR cascade data not set.');
     }
-    var start = Date.now();
     var payload = tracking.ViolaJones.detect(pixels, width, height, this.getInitialScale(), this.getScaleFactor(), this.getStepSize(), this.getEdgesDensity(), data);
-    console.log(Date.now() - start);
     if (payload.length) {
       if (this.onFound) {
         this.onFound.call(this, payload);
