@@ -22,17 +22,17 @@
     "test": "gulp test"
   },
   "license": "BSD",
-  "dependencies": {},
   "devDependencies": {
     "gulp": "^3.8.1",
     "gulp-concat": "^2.2.0",
     "gulp-header": "^1.0.2",
+    "gulp-jsdoc": "^0.1.4",
     "gulp-jshint": "^1.6.3",
     "gulp-nodeunit": "0.0.5",
     "gulp-rename": "^1.2.0",
     "gulp-rimraf": "^0.1.0",
     "gulp-uglify": "^0.3.1",
-    "jshint-stylish": "^0.2.0",
+    "jshint-stylish": "^0.3.0",
     "nodeunit": "0.9.0"
   }
 }
