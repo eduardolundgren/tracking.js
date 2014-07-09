@@ -9,6 +9,7 @@
   <script src="../build/tracking.js"></script>
   <script src="../build/data/face.js"></script>
   <script src="../build/data/eye.js"></script>
+  <script src="../build/data/mouth.js"></script>
 
   <style>
   .rect {
@@ -27,13 +28,17 @@
       var img = tracking.one('#img');
 
       var faceTracker = new tracking.FaceTracker();
-      faceTracker.setInitialScale(2);
+      faceTracker.setInitialScale(1);
 
       var eyeTracker = new tracking.EyeTracker();
       eyeTracker.setStepSize(1.7);
 
+      var mouthTracker = new tracking.MouthTracker();
+      mouthTracker.setStepSize(2);
+
       tracking.track('#img', faceTracker);
       tracking.track('#img', eyeTracker);
+      tracking.track('#img', mouthTracker);
 
       faceTracker.onFound = function(payload) {
         payload.forEach(function(rect) {
@@ -41,6 +46,7 @@
         });
       };
       eyeTracker.onFound = faceTracker.onFound;
+      mouthTracker.onFound = faceTracker.onFound;
 
       window.plot = function(x, y, w, h) {
         var rect = document.createElement('div');
