@@ -217,7 +217,7 @@
       var rep = disjointSet.find(k);
       if (!map[rep]) {
         map[rep] = {
-          count: 1,
+          total: 1,
           width: rects[k].width,
           height: rects[k].height,
           x: rects[k].x,
@@ -225,7 +225,7 @@
         };
         continue;
       }
-      map[rep].count++;
+      map[rep].total++;
       map[rep].width += rects[k].width;
       map[rep].height += rects[k].height;
       map[rep].x += rects[k].x;
@@ -236,10 +236,11 @@
     Object.keys(map).forEach(function(key) {
       var rect = map[key];
       result.push({
-        width: (rect.width / rect.count + 0.5) | 0,
-        height: (rect.height / rect.count + 0.5) | 0,
-        x: (rect.x / rect.count + 0.5) | 0,
-        y: (rect.y / rect.count + 0.5) | 0
+        total: rect.total,
+        width: (rect.width / rect.total + 0.5) | 0,
+        height: (rect.height / rect.total + 0.5) | 0,
+        x: (rect.x / rect.total + 0.5) | 0,
+        y: (rect.y / rect.total + 0.5) | 0
       });
     });
 
