@@ -7,6 +7,97 @@
   tracking.Image = {};
 
   /**
+   * Computes the integral image for summed, squared, rotated and sobel pixels.
+   * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
+   *     through.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {array} opt_integralImage Empty array of size `width * height` to
+   *     be filled with the integral image values. If not specified compute sum
+   *     values will be skipped.
+   * @param {array} opt_integralImageSquare Empty array of size `width *
+   *     height` to be filled with the integral image squared values. If not
+   *     specified compute squared values will be skipped.
+   * @param {array} opt_tiltedIntegralImage Empty array of size `width *
+   *     height` to be filled with the rotated integral image values. If not
+   *     specified compute sum values will be skipped.
+   * @param {array} opt_integralImageSobel Empty array of size `width *
+   *     height` to be filled with the integral image of sobel values. If not
+   *     specified compute sobel filtering will be skipped.
+   * @static
+   */
+  tracking.Image.computeIntegralImage = function(pixels, width, height, opt_integralImage, opt_integralImageSquare, opt_tiltedIntegralImage, opt_integralImageSobel) {
+    if (arguments.length < 4) {
+      throw new Error('You should specify at least one output array in the order: sum, square, tilted, sobel.');
+    }
+    var pixelsSobel;
+    if (opt_integralImageSobel) {
+      pixelsSobel = tracking.Image.sobel(pixels, width, height);
+    }
+    for (var i = 0; i < height; i++) {
+      for (var j = 0; j < width; j++) {
+        var w = i * width * 4 + j * 4;
+        var pixel = ~~(pixels[w] * 0.299 + pixels[w + 1] * 0.587 + pixels[w + 2] * 0.114);
+        if (opt_integralImage) {
+          this.computePixelValueSAT_(opt_integralImage, width, i, j, pixel);
+        }
+        if (opt_integralImageSquare) {
+          this.computePixelValueSAT_(opt_integralImageSquare, width, i, j, pixel * pixel);
+        }
+        if (opt_tiltedIntegralImage) {
+          var w1 = w - width * 4;
+          var pixelAbove = ~~(pixels[w1] * 0.299 + pixels[w1 + 1] * 0.587 + pixels[w1 + 2] * 0.114);
+          this.computePixelValueRSAT_(opt_tiltedIntegralImage, width, i, j, pixel, pixelAbove || 0);
+        }
+        if (opt_integralImageSobel) {
+          this.computePixelValueSAT_(opt_integralImageSobel, width, i, j, pixelsSobel[w]);
+        }
+      }
+    }
+  };
+
+  /**
+   * Helper method to compute the rotated summed area table (RSAT) by the
+   * formula:
+   *
+   * RSAT(x, y) = RSAT(x-1, y-1) + RSAT(x+1, y-1) - RSAT(x, y-2) + I(x, y) + I(x, y-1)
+   *
+   * @param {number} width The image width.
+   * @param {array} RSAT Empty array of size `width * height` to be filled with
+   *     the integral image values. If not specified compute sum values will be
+   *     skipped.
+   * @param {number} i Vertical position of the pixel to be evaluated.
+   * @param {number} j Horizontal position of the pixel to be evaluated.
+   * @param {number} pixel Pixel value to be added to the integral image.
+   * @static
+   * @private
+   */
+  tracking.Image.computePixelValueRSAT_ = function(RSAT, width, i, j, pixel, pixelAbove) {
+    var w = i * width + j;
+    RSAT[w] = (RSAT[w - width - 1] || 0) + (RSAT[w - width + 1] || 0) - (RSAT[w - width - width] || 0) + pixel + pixelAbove;
+  };
+
+  /**
+   * Helper method to compute the summed area table (SAT) by the formula:
+   *
+   * SAT(x, y) = SAT(x, y-1) + SAT(x-1, y) + I(x, y) - SAT(x-1, y-1)
+   *
+   * @param {number} width The image width.
+   * @param {array} SAT Empty array of size `width * height` to be filled with
+   *     the integral image values. If not specified compute sum values will be
+   *     skipped.
+   * @param {number} i Vertical position of the pixel to be evaluated.
+   * @param {number} j Horizontal position of the pixel to be evaluated.
+   * @param {number} pixel Pixel value to be added to the integral image.
+   * @static
+   * @private
+   */
+  tracking.Image.computePixelValueSAT_ = function(SAT, width, i, j, pixel) {
+    var w = i * width + j;
+    SAT[w] = (SAT[w - width] || 0) + (SAT[w - 1] || 0) + pixel - (SAT[w - width - 1] || 0);
+  };
+
+  /**
    * Converts a color from a colorspace based on an RGB color model to a
    * grayscale representation of its luminance. The coefficients represent the
    * measured intensity perception of typical trichromat humans, in
