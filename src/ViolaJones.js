@@ -39,13 +39,14 @@
     var rects = [];
     var integralImage = new Int32Array(width * height);
     var integralImageSquare = new Int32Array(width * height);
+    var tiltedIntegralImage = new Int32Array(width * height);
 
     var integralImageSobel;
     if (edgesDensity > 0) {
       integralImageSobel = new Int32Array(width * height);
     }
 
-    tracking.Matrix.computeIntergralImage(pixels, width, height, integralImage, integralImageSquare, integralImageSobel);
+    tracking.Image.computeIntegralImage(pixels, width, height, integralImage, integralImageSquare, tiltedIntegralImage, integralImageSobel);
 
     var minWidth = data[0];
     var minHeight = data[1];
@@ -64,7 +65,7 @@
             }
           }
 
-          if (this.evalStages_(data, integralImage, integralImageSquare, i, j, width, blockWidth, blockHeight, scale)) {
+          if (this.evalStages_(data, integralImage, integralImageSquare, tiltedIntegralImage, i, j, width, blockWidth, blockHeight, scale)) {
             rects[total++] = {
               width: blockWidth,
               height: blockHeight,
@@ -101,7 +102,7 @@
     var wbB = wbA + blockWidth;
     var wbD = wbA + blockHeight * width;
     var wbC = wbD + blockWidth;
-    var blockEdgesDensity = (integralImageSobel[wbA] - integralImageSobel[wbB] - integralImageSobel[wbD] + integralImageSobel[wbC])/(blockWidth*blockHeight*255);
+    var blockEdgesDensity = (integralImageSobel[wbA] - integralImageSobel[wbB] - integralImageSobel[wbD] + integralImageSobel[wbC]) / (blockWidth * blockHeight * 255);
     if (blockEdgesDensity < edgesDensity) {
       return true;
     }
@@ -123,7 +124,7 @@
    * @private
    * @static
    */
-  tracking.ViolaJones.evalStages_ = function(data, integralImage, integralImageSquare, i, j, width, blockWidth, blockHeight, scale) {
+  tracking.ViolaJones.evalStages_ = function(data, integralImage, integralImageSquare, tiltedIntegralImage, i, j, width, blockWidth, blockHeight, scale) {
     var inverseArea = 1.0 / (blockWidth * blockHeight);
     var wbA = i * width + j;
     var wbB = wbA + blockWidth;
@@ -155,11 +156,32 @@
           var rectWidth = (data[w++] * scale + 0.5) | 0;
           var rectHeight = (data[w++] * scale + 0.5) | 0;
           var rectWeight = data[w++];
-          var wA = rectTop * width + rectLeft;
-          var wB = wA + rectWidth;
-          var wD = wA + rectHeight * width;
-          var wC = wD + rectWidth;
-          rectsSum += (integralImage[wA] - integralImage[wB] - integralImage[wD] + integralImage[wC]) * rectWeight;
+
+          var w1;
+          var w2;
+          var w3;
+          var w4;
+          if (tilted) {
+            // RectSum(r) = RSAT(x-h+w, y+w+h-1) + RSAT(x, y-1) - RSAT(x-h, y+h-1) - RSAT(x+w, y+w-1)
+            w1 = (rectLeft - rectHeight + rectWidth) + (rectTop + rectWidth + rectHeight - 1) * width;
+            w2 = rectLeft + (rectTop - 1) * width;
+            w3 = (rectLeft - rectHeight) + (rectTop + rectHeight - 1) * width;
+            w4 = (rectLeft + rectWidth) + (rectTop + rectWidth - 1) * width;
+            rectsSum += (tiltedIntegralImage[w1] + tiltedIntegralImage[w2] - tiltedIntegralImage[w3] - tiltedIntegralImage[w4]) * rectWeight;
+          } else {
+            // RectSum(r) = SAT(x-1, y-1) + SAT(x+w-1, y+h-1) - SAT(x-1, y+h-1) - SAT(x+w-1, y-1)
+            w1 = rectTop * width + rectLeft;
+            w2 = w1 + rectWidth;
+            w3 = w1 + rectHeight * width;
+            w4 = w3 + rectWidth;
+            rectsSum += (integralImage[w1] - integralImage[w2] - integralImage[w3] + integralImage[w4]) * rectWeight;
+            // TODO: Review the code below to analyze performance when using it instead.
+            // w1 = (rectLeft - 1) + (rectTop - 1) * width;
+            // w2 = (rectLeft + rectWidth - 1) + (rectTop + rectHeight - 1) * width;
+            // w3 = (rectLeft - 1) + (rectTop + rectHeight - 1) * width;
+            // w4 = (rectLeft + rectWidth - 1) + (rectTop - 1) * width;
+            // rectsSum += (integralImage[w1] + integralImage[w2] - integralImage[w3] - integralImage[w4]) * rectWeight;
+          }
         }
 
         var nodeThreshold = data[w++];
