@@ -96,8 +96,15 @@
       }
 
       function onColorMove(track) {
-        mouseX = (((320 - track[0].x) / 320) * window.innerWidth) - windowHalfX;
-        mouseY = (((240 - track[0].y) / 240) * window.innerHeight) - windowHalfY;
+        if (!track.length || !track[0].length) {
+          return;
+        }
+
+        var x = track[0][0].x + (track[0][0].width >> 1);
+        var y = track[0][0].y + (track[0][0].height >> 1);
+
+        mouseX = (((320 - x) / 320) * window.innerWidth) - windowHalfX;
+        mouseY = (((240 - y) / 240) * window.innerHeight) - windowHalfY;
       }
 
       function animate() {

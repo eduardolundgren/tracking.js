@@ -18,6 +18,6 @@
     "bower_components"
   ],
   "dependencies": {
-    "threejs": "~0.0.67"
+    "threejs": "r67"
   }
 }
