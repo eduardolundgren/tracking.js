@@ -39,10 +39,10 @@
   tracking.Brief.getDescriptors = function(pixels, width, keypoints) {
     // Optimizing divide by four operation using binary shift
     // (this.N >> 5) === this.N/4.
-    var descriptors = new Int32Array(keypoints.length * (this.N >> 5)),
-      descriptorWord = 0,
-      offsets = this.getRandomOffsets_(width),
-      position = 0;
+    var descriptors = new Int32Array(keypoints.length * (this.N >> 5));
+    var descriptorWord = 0;
+    var offsets = this.getRandomOffsets_(width);
+    var position = 0;
 
     for (var i = 0; i < keypoints.length; i += 2) {
       var w = width * keypoints[i + 1] + keypoints[i];

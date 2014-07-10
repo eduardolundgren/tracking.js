@@ -262,7 +262,9 @@
       canvas.width = width;
       canvas.height = height;
     };
+
     resizeCanvas_();
+
     element.addEventListener('resize', resizeCanvas_);
 
     var requestFrame_ = function() {

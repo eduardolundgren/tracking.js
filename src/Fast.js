@@ -49,9 +49,9 @@
    *     e.g. [x0,y0,x1,y1,...], where P(x0,y0) represents a corner coordinate.
    */
   tracking.Fast.findCorners = function(pixels, width, height) {
-    var circleOffsets = this.getCircleOffsets_(width),
-      circlePixels = new Int32Array(16),
-      corners = [];
+    var circleOffsets = this.getCircleOffsets_(width);
+    var circlePixels = new Int32Array(16);
+    var corners = [];
 
     // When looping through the image pixels, skips the first three lines from
     // the image boundaries to constrain the surrounding circle inside the image
@@ -94,20 +94,16 @@
   };
 
   tracking.Fast.isCorner = function(p, circlePixels, threshold) {
-    var brighter,
-      circlePixel,
-      darker;
-
     if (this.isTriviallyExcluded(circlePixels, p, threshold)) {
       return false;
     }
 
     for (var x = 0; x < 16; x++) {
-      darker = true;
-      brighter = true;
+      var darker = true;
+      var brighter = true;
 
       for (var y = 0; y < 9; y++) {
-        circlePixel = circlePixels[(x + y) & 15];
+        var circlePixel = circlePixels[(x + y) & 15];
 
         if (!this.isBrighter(p, circlePixel, threshold)) {
           brighter = false;
