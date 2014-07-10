@@ -269,7 +269,9 @@
       canvas.width = width;
       canvas.height = height;
     };
+
     resizeCanvas_();
+
     element.addEventListener('resize', resizeCanvas_);
 
     var requestFrame_ = function() {
@@ -343,10 +345,10 @@
   tracking.Brief.getDescriptors = function(pixels, width, keypoints) {
     // Optimizing divide by four operation using binary shift
     // (this.N >> 5) === this.N/4.
-    var descriptors = new Int32Array(keypoints.length * (this.N >> 5)),
-      descriptorWord = 0,
-      offsets = this.getRandomOffsets_(width),
-      position = 0;
+    var descriptors = new Int32Array(keypoints.length * (this.N >> 5));
+    var descriptorWord = 0;
+    var offsets = this.getRandomOffsets_(width);
+    var position = 0;
 
     for (var i = 0; i < keypoints.length; i += 2) {
       var w = width * keypoints[i + 1] + keypoints[i];
@@ -814,9 +816,9 @@
    *     e.g. [x0,y0,x1,y1,...], where P(x0,y0) represents a corner coordinate.
    */
   tracking.Fast.findCorners = function(pixels, width, height) {
-    var circleOffsets = this.getCircleOffsets_(width),
-      circlePixels = new Int32Array(16),
-      corners = [];
+    var circleOffsets = this.getCircleOffsets_(width);
+    var circlePixels = new Int32Array(16);
+    var corners = [];
 
     // When looping through the image pixels, skips the first three lines from
     // the image boundaries to constrain the surrounding circle inside the image
@@ -859,20 +861,16 @@
   };
 
   tracking.Fast.isCorner = function(p, circlePixels, threshold) {
-    var brighter,
-      circlePixel,
-      darker;
-
     if (this.isTriviallyExcluded(circlePixels, p, threshold)) {
       return false;
     }
 
     for (var x = 0; x < 16; x++) {
-      darker = true;
-      brighter = true;
+      var darker = true;
+      var brighter = true;
 
       for (var y = 0; y < 9; y++) {
-        circlePixel = circlePixels[(x + y) & 15];
+        var circlePixel = circlePixels[(x + y) & 15];
 
         if (!this.isBrighter(p, circlePixel, threshold)) {
           brighter = false;
@@ -1297,8 +1295,8 @@
    * @return {number} The euclidean distance.
    */
   tracking.Math.distance = function(x0, y0, x1, y1) {
-    var dx = x1 - x0,
-      dy = y1 - y0;
+    var dx = x1 - x0;
+    var dy = y1 - y0;
 
     return Math.sqrt(dx * dx + dy * dy);
   };
@@ -1382,14 +1380,10 @@
    * @static
    */
   tracking.Matrix.forEach = function(pixels, width, height, fn, opt_jump) {
-    var jump = opt_jump || 1,
-      i = 0,
-      j = 0,
-      w;
-
-    for (i = 0; i < height; i += jump) {
-      for (j = 0; j < width; j += jump) {
-        w = i * width * 4 + j * 4;
+    opt_jump = opt_jump || 1;
+    for (var i = 0; i < height; i += opt_jump) {
+      for (var j = 0; j < width; j += opt_jump) {
+        var w = i * width * 4 + j * 4;
         fn.call(this, pixels[w], pixels[w + 1], pixels[w + 2], pixels[w + 3], w, i, j);
       }
     }
