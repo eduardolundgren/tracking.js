@@ -36,7 +36,8 @@ gulp.task('build', function() {
     'src/ColorTracker.js',
     'src/EyeTracker.js',
     'src/FaceTracker.js',
-    'src/MouthTracker.js'
+    'src/MouthTracker.js',
+    'src/KeypointTracker.js'
   ];
 
   return gulp.src(files)

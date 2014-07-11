@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+<head>
+
+  <title>tracking.js - hello world</title>
+
+  <meta charset="utf-8">
+
+  <script src="../build/tracking.js"></script>
+  <script src="assets/hartley.js"></script>
+  <script src="assets/numeric.js"></script>
+
+  <style>
+  #rect {
+    border: 2px solid magenta;
+    height: 80px;
+    left: -1000px;
+    position: absolute;
+    top: -1000px;
+    width: 120px;
+  }
+  </style>
+</head>
+<body>
+  <div id="rect"></div>
+  <img id="img" src="assets/psmove.png" />
+  <script>
+    var objectPoints = [];
+    var imagePoints = [];
+    for (var i = 0; i < 50; i++) {
+      var keypoint = keypoints[2 * i];
+      objectPoints[i] = {
+        x: keypoint[0],
+        y: keypoint[1],
+        z: keypoint[2]
+      };
+      keypoint = keypoints[2 * i + 1];
+      imagePoints[i] = {
+        x: keypoint[0],
+        y: keypoint[1]
+      };
+    }
+
+    var pose = tracking.EPnP.solve(objectPoints, imagePoints, cameraMatrix);
+    console.log(pose);
+  </script>
+</body>
+</html>
