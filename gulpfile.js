@@ -31,12 +31,14 @@ gulp.task('build', function() {
     'src/Math.js',
     'src/Matrix.js',
     'src/DisjointSet.js',
+    'src/Vector.js',
     'src/Tracker.js',
     'src/HAARTracker.js',
     'src/ColorTracker.js',
     'src/EyeTracker.js',
     'src/FaceTracker.js',
-    'src/MouthTracker.js'
+    'src/MouthTracker.js',
+    'src/KeypointTracker.js'
   ];
 
   return gulp.src(files)
