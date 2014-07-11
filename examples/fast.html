@@ -1,0 +1,31 @@
+<!doctype html>
+
+<html>
+<head>
+  <title>tracking.js - fast algorithm</title>
+
+  <meta charset="utf-8">
+
+  <script src="../build/tracking.js"></script>
+</head>
+<body>
+  <canvas id="canvas"></canvas>
+  <script>
+    var width = 320;
+    var height = 240;
+    var canvas = tracking.one('#canvas');
+    var context = canvas.getContext('2d');
+
+    tracking.Canvas.loadImage(canvas, 'assets/book1.png', 0, 0, width, height, function() {
+      var imageData = context.getImageData(0, 0, width, height);
+      var gray = tracking.Image.calculateLumaGrayscale(imageData.data, width, height);
+      var corners = tracking.Fast.findCorners(gray, width, height);
+
+      for (var i = 0; i < corners.length; i += 2) {
+        context.fillStyle = '#f00';
+        context.fillRect(corners[i], corners[i + 1], 1, 1);
+      }
+    });
+  </script>
+</body>
+</html>

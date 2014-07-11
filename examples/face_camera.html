@@ -1,0 +1,52 @@
+<!doctype html>
+<html>
+<head>
+
+  <title>tracking.js - face with camera</title>
+
+  <meta charset="utf-8">
+
+  <script src="../build/tracking.js"></script>
+  <script src="../build/data/face.js"></script>
+
+  <style>
+  #rect {
+    border: 2px solid green;
+    left: -1000px;
+    position: absolute;
+    top: -1000px;
+  }
+  </style>
+</head>
+<body>
+  <video id="video" width="320" height="240" preload autoplay loop muted controls>
+  </video>
+  <canvas id="canvas" width="320" height="240"></canvas>
+
+  <script>
+    window.onload = function() {
+      var video = tracking.one('#video');
+      var canvas = tracking.one('#canvas');
+      var context = canvas.getContext('2d');
+
+      var tracker = new tracking.FaceTracker();
+      tracker.setInitialScale(2);
+
+      tracking.track('#video', tracker, { camera: true });
+
+      tracker.onFound = function(payload) {
+        context.drawImage(video, 0, 0, 320, 240);
+        payload.forEach(function(rect) {
+          context.strokeStyle = 'magenta';
+          context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+        });
+      };
+
+      tracker.onNotFound = function() {
+        context.drawImage(video, 0, 0, 320, 240);
+      };
+    };
+  </script>
+
+</body>
+</html>
