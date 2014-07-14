@@ -25,8 +25,8 @@
           var imageData1 = context1.getImageData(0, 0, width, height);
           var imageData2 = context2.getImageData(0, 0, width, height);
 
-          var gray1 = tracking.Image.calculateLumaGrayscale(imageData1.data, width, height);
-          var gray2 = tracking.Image.calculateLumaGrayscale(imageData2.data, width, height);
+          var gray1 = tracking.Image.grayscale(imageData1.data, width, height);
+          var gray2 = tracking.Image.grayscale(imageData2.data, width, height);
 
           var corners1 = tracking.Fast.findCorners(gray1, width, height);
           var corners2 = tracking.Fast.findCorners(gray2, width, height);

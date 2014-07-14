@@ -18,7 +18,7 @@
 
     tracking.Canvas.loadImage(canvas, 'assets/book1.png', 0, 0, width, height, function() {
       var imageData = context.getImageData(0, 0, width, height);
-      var gray = tracking.Image.calculateLumaGrayscale(imageData.data, width, height);
+      var gray = tracking.Image.grayscale(imageData.data, width, height);
       var corners = tracking.Fast.findCorners(gray, width, height);
 
       for (var i = 0; i < corners.length; i += 2) {
