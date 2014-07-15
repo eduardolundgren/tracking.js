@@ -82,14 +82,15 @@
       video: true,
       audio: opt_options.audio
     }, function(stream) {
-      try {
-        element.src = window.URL.createObjectURL(stream);
-      } catch (err) {
-        element.src = stream;
+        try {
+          element.src = window.URL.createObjectURL(stream);
+        } catch (err) {
+          element.src = stream;
+        }
+      }, function() {
+        throw Error('Cannot capture user camera.');
       }
-    }, function() {
-      throw Error('Cannot capture user camera.');
-    });
+    );
   };
 
   /**
@@ -275,7 +276,7 @@
           // hence keep trying to read it until resolved.
           try {
             context.drawImage(element, 0, 0, width, height);
-          } catch(err) {}
+          } catch (err) {}
           tracking.trackCanvas_(canvas, tracker);
         }
         requestFrame_();
