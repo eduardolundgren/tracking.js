@@ -9,6 +9,7 @@ var rename = require('gulp-rename');
 var rimraf = require('gulp-rimraf');
 var stylish = require('jshint-stylish');
 var uglify = require('gulp-uglify');
+var esformatter = require('gulp-esformatter');
 
 gulp.task('all', ['clean', 'build', 'build-data']);
 
@@ -61,6 +62,12 @@ gulp.task('build-data', function() {
     .pipe(uglify())
     .pipe(banner())
     .pipe(gulp.dest('build/data'));
+});
+
+gulp.task('format', function() {
+  return gulp.src(['src/**/*.js', '!src/data/*.js'])
+    .pipe(esformatter())
+    .pipe(gulp.dest('src'));
 });
 
 gulp.task('lint', function() {
