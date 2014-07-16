@@ -306,194 +306,6 @@
 }(window));
 
 (function() {
-  /**
-   * Brief intends for "Binary Robust Independent Elementary Features".This
-   * method generates a binary string for each keypoint found by an extractor
-   * method.
-   * @static
-   * @constructor
-   */
-  tracking.Brief = {};
-
-  /**
-   * The set of binary tests is defined by the nd (x,y)-location pairs
-   * uniquely chosen during the initialization. Values could vary between N =
-   * 128,256,512. N=128 yield good compromises between speed, storage
-   * efficiency, and recognition rate.
-   * @type {number}
-   */
-  tracking.Brief.N = 128;
-
-  /**
-   * Caches coordinates values of (x,y)-location pairs uniquely chosen during
-   * the initialization.
-   * @type {Object.<number, Int32Array>}
-   * @private
-   * @static
-   */
-  tracking.Brief.randomOffsets_ = {};
-
-  /**
-   * Generates a brinary string for each found keypoints extracted using an
-   * extractor method.
-   * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
-   * @param {number} width The image width.
-   * @param {array} keypoints
-   * @return {Int32Array} Returns an array where for each four sequence int
-   *     values represent the descriptor binary string (128 bits) necessary
-   *     to describe the corner, e.g. [0,0,0,0, 0,0,0,0, ...].
-   */
-  tracking.Brief.getDescriptors = function(pixels, width, keypoints) {
-    // Optimizing divide by four operation using binary shift
-    // (this.N >> 5) === this.N/4.
-    var descriptors = new Int32Array(keypoints.length * (this.N >> 5));
-    var descriptorWord = 0;
-    var offsets = this.getRandomOffsets_(width);
-    var position = 0;
-
-    for (var i = 0; i < keypoints.length; i += 2) {
-      var w = width * keypoints[i + 1] + keypoints[i];
-
-      for (var j = 0, n = this.N; j < n; j++) {
-        if (pixels[offsets[j + j] + w] < pixels[offsets[j + j + 1] + w]) {
-          // TODO: Add comment.
-          descriptorWord |= 1 << (j & 31);
-        }
-
-        // TODO: Add comment.
-        if (!((j + 1) & 31)) {
-          descriptors[position++] = descriptorWord;
-          descriptorWord = 0;
-        }
-      }
-    }
-
-    return descriptors;
-  };
-
-  /**
-   * Matches sets of features {mi} and {m′j} extracted from two images taken
-   * from similar, and often successive, viewpoints. A classical procedure
-   * runs as follows. For each point {mi} in the first image, search in a
-   * region of the second image around location {mi} for point {m′j}. The
-   * search is based on the similarity of the local image windows, also known
-   * as kernel windows, centered on the points, which strongly characterizes
-   * the points when the images are sufficiently close. Once each keypoint is
-   * described with its binary string, they need to be compared with the
-   * closest matching point. Distance metric is critical to the performance of
-   * in- trusion detection systems. Thus using binary strings reduces the size
-   * of the descriptor and provides an interesting data structure that is fast
-   * to operate whose similarity can be measured by the Hamming distance.
-   * @param {array} keypoints1
-   * @param {array} descriptors1
-   * @param {array} keypoints2
-   * @param {array} descriptors2
-   * @return {Int32Array} Returns an array where the index is the corner1
-   *     index coordinate, and the value is the corresponding match index of
-   *     corner2, e.g. keypoints1=[x0,y0,x1,y1,...] and
-   *     keypoints2=[x'0,y'0,x'1,y'1,...], if x0 matches x'1 and x1 matches x'0,
-   *     the return array would be [3,0].
-   */
-  tracking.Brief.match = function(keypoints1, descriptors1, keypoints2, descriptors2) {
-    var len1 = keypoints1.length >> 1;
-    var len2 = keypoints2.length >> 1;
-    var matches = new Int32Array(len1);
-
-    for (var i = 0; i < len1; i++) {
-      var min = Infinity;
-      var minj = 0;
-      for (var j = 0; j < len2; j++) {
-        var dist = 0;
-        // Optimizing divide by four operation using binary shift
-        // (this.N >> 5) === this.N/4.
-        for (var k = 0, n = this.N >> 5; k < n; k++) {
-          dist += tracking.Math.hammingWeight(descriptors1[i * n + k] ^ descriptors2[j * n + k]);
-        }
-        if (dist < min) {
-          min = dist;
-          minj = j;
-        }
-      }
-      matches[i] = minj;
-    }
-
-    return matches;
-  };
-
-  /**
-   * Gets the coordinates values of (x,y)-location pairs uniquely chosen
-   * during the initialization.
-   * @param {number} width The image width.
-   * @return {array} Array with the random offset values.
-   */
-  tracking.Brief.getRandomOffsets_ = function(width) {
-    if (this.randomOffsets_[width]) {
-      return this.randomOffsets_[width];
-    }
-
-    var offsets = new Int32Array(2 * this.N),
-      position = 0;
-
-    for (var i = 0; i < this.N; i++) {
-      offsets[position++] = tracking.Math.uniformRandom(-15, 16) * width + tracking.Math.uniformRandom(-15, 16);
-      offsets[position++] = tracking.Math.uniformRandom(-15, 16) * width + tracking.Math.uniformRandom(-15, 16);
-    }
-
-    this.randomOffsets_[width] = offsets;
-    return this.randomOffsets_[width];
-  };
-}());
-
-(function() {
-  /**
-   * Canvas utility.
-   * @static
-   * @constructor
-   */
-  tracking.Canvas = {};
-
-  /**
-   * Loads an image source into the canvas.
-   * @param {HTMLCanvasElement} canvas The canvas dom element.
-   * @param {string} src The image source.
-   * @param {number} x The canvas horizontal coordinate to load the image.
-   * @param {number} y The canvas vertical coordinate to load the image.
-   * @param {number} width The image width.
-   * @param {number} height The image height.
-   * @param {function} opt_callback Callback that fires when the image is loaded
-   *     into the canvas.
-   * @static
-   */
-  tracking.Canvas.loadImage = function(canvas, src, x, y, width, height, opt_callback) {
-    var instance = this;
-    var img = new window.Image();
-
-    img.onload = function() {
-      var context = canvas.getContext('2d');
-      canvas.width = width;
-      canvas.height = height;
-      context.drawImage(img, x, y, width, height);
-      if (opt_callback) {
-        opt_callback.call(instance);
-      }
-      img = null;
-    };
-    img.src = src;
-  };
-}());
-
-(function() {
-  /**
-   * EPnp utility.
-   * @static
-   * @constructor
-   */
-  tracking.EPnP = {};
-
-  tracking.EPnP.solve = function(objectPoints, imagePoints, cameraMatrix) {};
-}());
-
-(function() {
   /*
    * ViolaJones utility.
    * @static
@@ -767,6 +579,145 @@
 }());
 
 (function() {
+  /**
+   * Brief intends for "Binary Robust Independent Elementary Features".This
+   * method generates a binary string for each keypoint found by an extractor
+   * method.
+   * @static
+   * @constructor
+   */
+  tracking.Brief = {};
+
+  /**
+   * The set of binary tests is defined by the nd (x,y)-location pairs
+   * uniquely chosen during the initialization. Values could vary between N =
+   * 128,256,512. N=128 yield good compromises between speed, storage
+   * efficiency, and recognition rate.
+   * @type {number}
+   */
+  tracking.Brief.N = 128;
+
+  /**
+   * Caches coordinates values of (x,y)-location pairs uniquely chosen during
+   * the initialization.
+   * @type {Object.<number, Int32Array>}
+   * @private
+   * @static
+   */
+  tracking.Brief.randomOffsets_ = {};
+
+  /**
+   * Generates a brinary string for each found keypoints extracted using an
+   * extractor method.
+   * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
+   * @param {number} width The image width.
+   * @param {array} keypoints
+   * @return {Int32Array} Returns an array where for each four sequence int
+   *     values represent the descriptor binary string (128 bits) necessary
+   *     to describe the corner, e.g. [0,0,0,0, 0,0,0,0, ...].
+   */
+  tracking.Brief.getDescriptors = function(pixels, width, keypoints) {
+    // Optimizing divide by four operation using binary shift
+    // (this.N >> 5) === this.N/4.
+    var descriptors = new Int32Array(keypoints.length * (this.N >> 5));
+    var descriptorWord = 0;
+    var offsets = this.getRandomOffsets_(width);
+    var position = 0;
+
+    for (var i = 0; i < keypoints.length; i += 2) {
+      var w = width * keypoints[i + 1] + keypoints[i];
+
+      for (var j = 0, n = this.N; j < n; j++) {
+        if (pixels[offsets[j + j] + w] < pixels[offsets[j + j + 1] + w]) {
+          // TODO: Add comment.
+          descriptorWord |= 1 << (j & 31);
+        }
+
+        // TODO: Add comment.
+        if (!((j + 1) & 31)) {
+          descriptors[position++] = descriptorWord;
+          descriptorWord = 0;
+        }
+      }
+    }
+
+    return descriptors;
+  };
+
+  /**
+   * Matches sets of features {mi} and {m′j} extracted from two images taken
+   * from similar, and often successive, viewpoints. A classical procedure
+   * runs as follows. For each point {mi} in the first image, search in a
+   * region of the second image around location {mi} for point {m′j}. The
+   * search is based on the similarity of the local image windows, also known
+   * as kernel windows, centered on the points, which strongly characterizes
+   * the points when the images are sufficiently close. Once each keypoint is
+   * described with its binary string, they need to be compared with the
+   * closest matching point. Distance metric is critical to the performance of
+   * in- trusion detection systems. Thus using binary strings reduces the size
+   * of the descriptor and provides an interesting data structure that is fast
+   * to operate whose similarity can be measured by the Hamming distance.
+   * @param {array} keypoints1
+   * @param {array} descriptors1
+   * @param {array} keypoints2
+   * @param {array} descriptors2
+   * @return {Int32Array} Returns an array where the index is the corner1
+   *     index coordinate, and the value is the corresponding match index of
+   *     corner2, e.g. keypoints1=[x0,y0,x1,y1,...] and
+   *     keypoints2=[x'0,y'0,x'1,y'1,...], if x0 matches x'1 and x1 matches x'0,
+   *     the return array would be [3,0].
+   */
+  tracking.Brief.match = function(keypoints1, descriptors1, keypoints2, descriptors2) {
+    var len1 = keypoints1.length >> 1;
+    var len2 = keypoints2.length >> 1;
+    var matches = new Int32Array(len1);
+
+    for (var i = 0; i < len1; i++) {
+      var min = Infinity;
+      var minj = 0;
+      for (var j = 0; j < len2; j++) {
+        var dist = 0;
+        // Optimizing divide by four operation using binary shift
+        // (this.N >> 5) === this.N/4.
+        for (var k = 0, n = this.N >> 5; k < n; k++) {
+          dist += tracking.Math.hammingWeight(descriptors1[i * n + k] ^ descriptors2[j * n + k]);
+        }
+        if (dist < min) {
+          min = dist;
+          minj = j;
+        }
+      }
+      matches[i] = minj;
+    }
+
+    return matches;
+  };
+
+  /**
+   * Gets the coordinates values of (x,y)-location pairs uniquely chosen
+   * during the initialization.
+   * @param {number} width The image width.
+   * @return {array} Array with the random offset values.
+   */
+  tracking.Brief.getRandomOffsets_ = function(width) {
+    if (this.randomOffsets_[width]) {
+      return this.randomOffsets_[width];
+    }
+
+    var offsets = new Int32Array(2 * this.N),
+      position = 0;
+
+    for (var i = 0; i < this.N; i++) {
+      offsets[position++] = tracking.Math.uniformRandom(-15, 16) * width + tracking.Math.uniformRandom(-15, 16);
+      offsets[position++] = tracking.Math.uniformRandom(-15, 16) * width + tracking.Math.uniformRandom(-15, 16);
+    }
+
+    this.randomOffsets_[width] = offsets;
+    return this.randomOffsets_[width];
+  };
+}());
+
+(function() {
   /*
    * FAST intends for "Features from Accelerated Segment Test". This method
    * performs a point segment test corner detection. The segment test
@@ -998,289 +949,6 @@
 
 (function() {
   /**
-   * Image utility.
-   * @static
-   * @constructor
-   */
-  tracking.Image = {};
-
-  /**
-   * Computes the integral image for summed, squared, rotated and sobel pixels.
-   * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
-   *     through.
-   * @param {number} width The image width.
-   * @param {number} height The image height.
-   * @param {array} opt_integralImage Empty array of size `width * height` to
-   *     be filled with the integral image values. If not specified compute sum
-   *     values will be skipped.
-   * @param {array} opt_integralImageSquare Empty array of size `width *
-   *     height` to be filled with the integral image squared values. If not
-   *     specified compute squared values will be skipped.
-   * @param {array} opt_tiltedIntegralImage Empty array of size `width *
-   *     height` to be filled with the rotated integral image values. If not
-   *     specified compute sum values will be skipped.
-   * @param {array} opt_integralImageSobel Empty array of size `width *
-   *     height` to be filled with the integral image of sobel values. If not
-   *     specified compute sobel filtering will be skipped.
-   * @static
-   */
-  tracking.Image.computeIntegralImage = function(pixels, width, height, opt_integralImage, opt_integralImageSquare, opt_tiltedIntegralImage, opt_integralImageSobel) {
-    if (arguments.length < 4) {
-      throw new Error('You should specify at least one output array in the order: sum, square, tilted, sobel.');
-    }
-    var pixelsSobel;
-    if (opt_integralImageSobel) {
-      pixelsSobel = tracking.Image.sobel(pixels, width, height);
-    }
-    for (var i = 0; i < height; i++) {
-      for (var j = 0; j < width; j++) {
-        var w = i * width * 4 + j * 4;
-        var pixel = ~~(pixels[w] * 0.299 + pixels[w + 1] * 0.587 + pixels[w + 2] * 0.114);
-        if (opt_integralImage) {
-          this.computePixelValueSAT_(opt_integralImage, width, i, j, pixel);
-        }
-        if (opt_integralImageSquare) {
-          this.computePixelValueSAT_(opt_integralImageSquare, width, i, j, pixel * pixel);
-        }
-        if (opt_tiltedIntegralImage) {
-          var w1 = w - width * 4;
-          var pixelAbove = ~~(pixels[w1] * 0.299 + pixels[w1 + 1] * 0.587 + pixels[w1 + 2] * 0.114);
-          this.computePixelValueRSAT_(opt_tiltedIntegralImage, width, i, j, pixel, pixelAbove || 0);
-        }
-        if (opt_integralImageSobel) {
-          this.computePixelValueSAT_(opt_integralImageSobel, width, i, j, pixelsSobel[w]);
-        }
-      }
-    }
-  };
-
-  /**
-   * Helper method to compute the rotated summed area table (RSAT) by the
-   * formula:
-   *
-   * RSAT(x, y) = RSAT(x-1, y-1) + RSAT(x+1, y-1) - RSAT(x, y-2) + I(x, y) + I(x, y-1)
-   *
-   * @param {number} width The image width.
-   * @param {array} RSAT Empty array of size `width * height` to be filled with
-   *     the integral image values. If not specified compute sum values will be
-   *     skipped.
-   * @param {number} i Vertical position of the pixel to be evaluated.
-   * @param {number} j Horizontal position of the pixel to be evaluated.
-   * @param {number} pixel Pixel value to be added to the integral image.
-   * @static
-   * @private
-   */
-  tracking.Image.computePixelValueRSAT_ = function(RSAT, width, i, j, pixel, pixelAbove) {
-    var w = i * width + j;
-    RSAT[w] = (RSAT[w - width - 1] || 0) + (RSAT[w - width + 1] || 0) - (RSAT[w - width - width] || 0) + pixel + pixelAbove;
-  };
-
-  /**
-   * Helper method to compute the summed area table (SAT) by the formula:
-   *
-   * SAT(x, y) = SAT(x, y-1) + SAT(x-1, y) + I(x, y) - SAT(x-1, y-1)
-   *
-   * @param {number} width The image width.
-   * @param {array} SAT Empty array of size `width * height` to be filled with
-   *     the integral image values. If not specified compute sum values will be
-   *     skipped.
-   * @param {number} i Vertical position of the pixel to be evaluated.
-   * @param {number} j Horizontal position of the pixel to be evaluated.
-   * @param {number} pixel Pixel value to be added to the integral image.
-   * @static
-   * @private
-   */
-  tracking.Image.computePixelValueSAT_ = function(SAT, width, i, j, pixel) {
-    var w = i * width + j;
-    SAT[w] = (SAT[w - width] || 0) + (SAT[w - 1] || 0) + pixel - (SAT[w - width - 1] || 0);
-  };
-
-  /**
-   * Converts a color from a colorspace based on an RGB color model to a
-   * grayscale representation of its luminance. The coefficients represent the
-   * measured intensity perception of typical trichromat humans, in
-   * particular, human vision is most sensitive to green and least sensitive
-   * to blue.
-   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
-   * @param {number} width The image width.
-   * @param {number} height The image height.
-   * @param {Uint8ClampedArray} The grayscale pixels in a linear [p,p,p,a,...]
-   *     array.
-   * @static
-   */
-  tracking.Image.grayscale = function(pixels, width, height) {
-    var gray = new Uint8ClampedArray(width * height * 4);
-    var p = 0;
-    var w = 0;
-    for (var i = 0; i < height; i++) {
-      for (var j = 0; j < width; j++) {
-        var value = pixels[w] * 0.299 + pixels[w + 1] * 0.587 + pixels[w + 2] * 0.114;
-        gray[p++] = value;
-        gray[p++] = value;
-        gray[p++] = value;
-        gray[p++] = pixels[w + 3];
-        w += 4;
-      }
-    }
-    return gray;
-  };
-
-  /**
-   * Fast horizontal separable convolution. A point spread function (PSF) is
-   * said to be separable if it can be broken into two one-dimensional
-   * signals: a vertical and a horizontal projection. The convolution is
-   * performed by sliding the kernel over the image, generally starting at the
-   * top left corner, so as to move the kernel through all the positions where
-   * the kernel fits entirely within the boundaries of the image. Adpated from
-   * https://github.com/kig/canvasfilters.
-   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
-   * @param {number} width The image width.
-   * @param {number} height The image height.
-   * @param {array} weightsVector The weighting vector, e.g [-1,0,1].
-   * @param {number} opaque
-   * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
-   */
-  tracking.Image.horizontalConvolve = function(pixels, width, height, weightsVector, opaque) {
-    var side = weightsVector.length;
-    var halfSide = Math.floor(side / 2);
-    var output = new Float32Array(width * height * 4);
-    var alphaFac = opaque ? 1 : 0;
-
-    for (var y = 0; y < height; y++) {
-      for (var x = 0; x < width; x++) {
-        var sy = y;
-        var sx = x;
-        var offset = (y * width + x) * 4;
-        var r = 0;
-        var g = 0;
-        var b = 0;
-        var a = 0;
-        for (var cx = 0; cx < side; cx++) {
-          var scy = sy;
-          var scx = Math.min(width - 1, Math.max(0, sx + cx - halfSide));
-          var poffset = (scy * width + scx) * 4;
-          var wt = weightsVector[cx];
-          r += pixels[poffset] * wt;
-          g += pixels[poffset + 1] * wt;
-          b += pixels[poffset + 2] * wt;
-          a += pixels[poffset + 3] * wt;
-        }
-        output[offset] = r;
-        output[offset + 1] = g;
-        output[offset + 2] = b;
-        output[offset + 3] = a + alphaFac * (255 - a);
-      }
-    }
-    return output;
-  };
-
-  /**
-   * Fast vertical separable convolution. A point spread function (PSF) is
-   * said to be separable if it can be broken into two one-dimensional
-   * signals: a vertical and a horizontal projection. The convolution is
-   * performed by sliding the kernel over the image, generally starting at the
-   * top left corner, so as to move the kernel through all the positions where
-   * the kernel fits entirely within the boundaries of the image. Adpated from
-   * https://github.com/kig/canvasfilters.
-   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
-   * @param {number} width The image width.
-   * @param {number} height The image height.
-   * @param {array} weightsVector The weighting vector, e.g [-1,0,1].
-   * @param {number} opaque
-   * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
-   */
-  tracking.Image.verticalConvolve = function(pixels, width, height, weightsVector, opaque) {
-    var side = weightsVector.length;
-    var halfSide = Math.floor(side / 2);
-    var output = new Float32Array(width * height * 4);
-    var alphaFac = opaque ? 1 : 0;
-
-    for (var y = 0; y < height; y++) {
-      for (var x = 0; x < width; x++) {
-        var sy = y;
-        var sx = x;
-        var offset = (y * width + x) * 4;
-        var r = 0;
-        var g = 0;
-        var b = 0;
-        var a = 0;
-        for (var cy = 0; cy < side; cy++) {
-          var scy = Math.min(height - 1, Math.max(0, sy + cy - halfSide));
-          var scx = sx;
-          var poffset = (scy * width + scx) * 4;
-          var wt = weightsVector[cy];
-          r += pixels[poffset] * wt;
-          g += pixels[poffset + 1] * wt;
-          b += pixels[poffset + 2] * wt;
-          a += pixels[poffset + 3] * wt;
-        }
-        output[offset] = r;
-        output[offset + 1] = g;
-        output[offset + 2] = b;
-        output[offset + 3] = a + alphaFac * (255 - a);
-      }
-    }
-    return output;
-  };
-
-  /**
-   * Fast separable convolution. A point spread function (PSF) is said to be
-   * separable if it can be broken into two one-dimensional signals: a
-   * vertical and a horizontal projection. The convolution is performed by
-   * sliding the kernel over the image, generally starting at the top left
-   * corner, so as to move the kernel through all the positions where the
-   * kernel fits entirely within the boundaries of the image. Adpated from
-   * https://github.com/kig/canvasfilters.
-   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
-   * @param {number} width The image width.
-   * @param {number} height The image height.
-   * @param {array} horizWeights The horizontal weighting vector, e.g [-1,0,1].
-   * @param {array} vertWeights The vertical vector, e.g [-1,0,1].
-   * @param {number} opaque
-   * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
-   */
-  tracking.Image.separableConvolve = function(pixels, width, height, horizWeights, vertWeights, opaque) {
-    var vertical = this.verticalConvolve(pixels, width, height, vertWeights, opaque);
-    return this.horizontalConvolve(vertical, width, height, horizWeights, opaque);
-  };
-
-  /**
-   * Compute image edges using Sobel operator. Computes the vertical and
-   * horizontal gradients of the image and combines the computed images to
-   * find edges in the image. The way we implement the Sobel filter here is by
-   * first grayscaling the image, then taking the horizontal and vertical
-   * gradients and finally combining the gradient images to make up the final
-   * image. Adpated from https://github.com/kig/canvasfilters.
-   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
-   * @param {number} width The image width.
-   * @param {number} height The image height.
-   * @return {array} The edge pixels in a linear [r,g,b,a,...] array.
-   */
-  tracking.Image.sobel = function(pixels, width, height) {
-    pixels = this.grayscale(pixels, width, height);
-    var output = new Float32Array(width * height * 4);
-    var sobelSignVector = new Float32Array([-1, 0, 1]);
-    var sobelScaleVector = new Float32Array([1, 2, 1]);
-    var vertical = this.separableConvolve(pixels, width, height, sobelSignVector, sobelScaleVector);
-    var horizontal = this.separableConvolve(pixels, width, height, sobelScaleVector, sobelSignVector);
-
-    for (var i = 0; i < output.length; i += 4) {
-      var v = vertical[i];
-      var h = horizontal[i];
-      var p = Math.sqrt(h * h + v * v);
-      output[i] = p;
-      output[i + 1] = p;
-      output[i + 2] = p;
-      output[i + 3] = 255;
-    }
-
-    return output;
-  };
-
-}());
-
-(function() {
-  /**
    * Math utility.
    * @static
    * @constructor
@@ -1394,63 +1062,13 @@
 
 (function() {
   /**
-   * DisjointSet utility with path compression. Some applications involve
-   * grouping n distinct objects into a collection of disjoint sets. Two
-   * important operations are then finding which set a given object belongs to
-   * and uniting the two sets. A disjoint set data structure maintains a
-   * collection S={ S1 , S2 ,..., Sk } of disjoint dynamic sets. Each set is
-   * identified by a representative, which usually is a member in the set.
+   * EPnp utility.
    * @static
    * @constructor
    */
-  tracking.DisjointSet = function(length) {
-    if (length === undefined) {
-      throw new Error('DisjointSet length not specified.');
-    }
-    this.length = length;
-    this.parent = new Uint32Array(length);
-    for (var i = 0; i < length; i++) {
-      this.parent[i] = i;
-    }
-  };
+  tracking.EPnP = {};
 
-  /**
-   * Holds the length of the internal set.
-   * @type {number}
-   */
-  tracking.DisjointSet.prototype.length = null;
-
-  /**
-   * Holds the set containing the representative values.
-   * @type {Array.<number>}
-   */
-  tracking.DisjointSet.prototype.parent = null;
-
-  /**
-   * Finds a pointer to the representative of the set containing i.
-   * @param {number} i
-   * @return {number} The representative set of i.
-   */
-  tracking.DisjointSet.prototype.find = function(i) {
-    if (this.parent[i] === i) {
-      return i;
-    } else {
-      return (this.parent[i] = this.find(this.parent[i]));
-    }
-  };
-
-  /**
-   * Unites two dynamic sets containing objects i and j, say Si and Sj, into
-   * a new set that Si ∪ Sj, assuming that Si ∩ Sj = ∅;
-   * @param {number} i
-   * @param {number} j
-   */
-  tracking.DisjointSet.prototype.union = function(i, j) {
-    var iRepresentative = this.find(i);
-    var jRepresentative = this.find(j);
-    this.parent[iRepresentative] = jRepresentative;
-  };
-
+  tracking.EPnP.solve = function(objectPoints, imagePoints, cameraMatrix) {};
 }());
 
 (function() {
@@ -2087,4 +1705,386 @@
   };
 
   tracking.inherits(tracking.MouthTracker, tracking.HAARTracker);
+}());
+
+(function() {
+  /**
+   * Canvas utility.
+   * @static
+   * @constructor
+   */
+  tracking.Canvas = {};
+
+  /**
+   * Loads an image source into the canvas.
+   * @param {HTMLCanvasElement} canvas The canvas dom element.
+   * @param {string} src The image source.
+   * @param {number} x The canvas horizontal coordinate to load the image.
+   * @param {number} y The canvas vertical coordinate to load the image.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {function} opt_callback Callback that fires when the image is loaded
+   *     into the canvas.
+   * @static
+   */
+  tracking.Canvas.loadImage = function(canvas, src, x, y, width, height, opt_callback) {
+    var instance = this;
+    var img = new window.Image();
+
+    img.onload = function() {
+      var context = canvas.getContext('2d');
+      canvas.width = width;
+      canvas.height = height;
+      context.drawImage(img, x, y, width, height);
+      if (opt_callback) {
+        opt_callback.call(instance);
+      }
+      img = null;
+    };
+    img.src = src;
+  };
+}());
+
+(function() {
+  /**
+   * DisjointSet utility with path compression. Some applications involve
+   * grouping n distinct objects into a collection of disjoint sets. Two
+   * important operations are then finding which set a given object belongs to
+   * and uniting the two sets. A disjoint set data structure maintains a
+   * collection S={ S1 , S2 ,..., Sk } of disjoint dynamic sets. Each set is
+   * identified by a representative, which usually is a member in the set.
+   * @static
+   * @constructor
+   */
+  tracking.DisjointSet = function(length) {
+    if (length === undefined) {
+      throw new Error('DisjointSet length not specified.');
+    }
+    this.length = length;
+    this.parent = new Uint32Array(length);
+    for (var i = 0; i < length; i++) {
+      this.parent[i] = i;
+    }
+  };
+
+  /**
+   * Holds the length of the internal set.
+   * @type {number}
+   */
+  tracking.DisjointSet.prototype.length = null;
+
+  /**
+   * Holds the set containing the representative values.
+   * @type {Array.<number>}
+   */
+  tracking.DisjointSet.prototype.parent = null;
+
+  /**
+   * Finds a pointer to the representative of the set containing i.
+   * @param {number} i
+   * @return {number} The representative set of i.
+   */
+  tracking.DisjointSet.prototype.find = function(i) {
+    if (this.parent[i] === i) {
+      return i;
+    } else {
+      return (this.parent[i] = this.find(this.parent[i]));
+    }
+  };
+
+  /**
+   * Unites two dynamic sets containing objects i and j, say Si and Sj, into
+   * a new set that Si ∪ Sj, assuming that Si ∩ Sj = ∅;
+   * @param {number} i
+   * @param {number} j
+   */
+  tracking.DisjointSet.prototype.union = function(i, j) {
+    var iRepresentative = this.find(i);
+    var jRepresentative = this.find(j);
+    this.parent[iRepresentative] = jRepresentative;
+  };
+
+}());
+
+(function() {
+  /**
+   * Image utility.
+   * @static
+   * @constructor
+   */
+  tracking.Image = {};
+
+  /**
+   * Computes the integral image for summed, squared, rotated and sobel pixels.
+   * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
+   *     through.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {array} opt_integralImage Empty array of size `width * height` to
+   *     be filled with the integral image values. If not specified compute sum
+   *     values will be skipped.
+   * @param {array} opt_integralImageSquare Empty array of size `width *
+   *     height` to be filled with the integral image squared values. If not
+   *     specified compute squared values will be skipped.
+   * @param {array} opt_tiltedIntegralImage Empty array of size `width *
+   *     height` to be filled with the rotated integral image values. If not
+   *     specified compute sum values will be skipped.
+   * @param {array} opt_integralImageSobel Empty array of size `width *
+   *     height` to be filled with the integral image of sobel values. If not
+   *     specified compute sobel filtering will be skipped.
+   * @static
+   */
+  tracking.Image.computeIntegralImage = function(pixels, width, height, opt_integralImage, opt_integralImageSquare, opt_tiltedIntegralImage, opt_integralImageSobel) {
+    if (arguments.length < 4) {
+      throw new Error('You should specify at least one output array in the order: sum, square, tilted, sobel.');
+    }
+    var pixelsSobel;
+    if (opt_integralImageSobel) {
+      pixelsSobel = tracking.Image.sobel(pixels, width, height);
+    }
+    for (var i = 0; i < height; i++) {
+      for (var j = 0; j < width; j++) {
+        var w = i * width * 4 + j * 4;
+        var pixel = ~~(pixels[w] * 0.299 + pixels[w + 1] * 0.587 + pixels[w + 2] * 0.114);
+        if (opt_integralImage) {
+          this.computePixelValueSAT_(opt_integralImage, width, i, j, pixel);
+        }
+        if (opt_integralImageSquare) {
+          this.computePixelValueSAT_(opt_integralImageSquare, width, i, j, pixel * pixel);
+        }
+        if (opt_tiltedIntegralImage) {
+          var w1 = w - width * 4;
+          var pixelAbove = ~~(pixels[w1] * 0.299 + pixels[w1 + 1] * 0.587 + pixels[w1 + 2] * 0.114);
+          this.computePixelValueRSAT_(opt_tiltedIntegralImage, width, i, j, pixel, pixelAbove || 0);
+        }
+        if (opt_integralImageSobel) {
+          this.computePixelValueSAT_(opt_integralImageSobel, width, i, j, pixelsSobel[w]);
+        }
+      }
+    }
+  };
+
+  /**
+   * Helper method to compute the rotated summed area table (RSAT) by the
+   * formula:
+   *
+   * RSAT(x, y) = RSAT(x-1, y-1) + RSAT(x+1, y-1) - RSAT(x, y-2) + I(x, y) + I(x, y-1)
+   *
+   * @param {number} width The image width.
+   * @param {array} RSAT Empty array of size `width * height` to be filled with
+   *     the integral image values. If not specified compute sum values will be
+   *     skipped.
+   * @param {number} i Vertical position of the pixel to be evaluated.
+   * @param {number} j Horizontal position of the pixel to be evaluated.
+   * @param {number} pixel Pixel value to be added to the integral image.
+   * @static
+   * @private
+   */
+  tracking.Image.computePixelValueRSAT_ = function(RSAT, width, i, j, pixel, pixelAbove) {
+    var w = i * width + j;
+    RSAT[w] = (RSAT[w - width - 1] || 0) + (RSAT[w - width + 1] || 0) - (RSAT[w - width - width] || 0) + pixel + pixelAbove;
+  };
+
+  /**
+   * Helper method to compute the summed area table (SAT) by the formula:
+   *
+   * SAT(x, y) = SAT(x, y-1) + SAT(x-1, y) + I(x, y) - SAT(x-1, y-1)
+   *
+   * @param {number} width The image width.
+   * @param {array} SAT Empty array of size `width * height` to be filled with
+   *     the integral image values. If not specified compute sum values will be
+   *     skipped.
+   * @param {number} i Vertical position of the pixel to be evaluated.
+   * @param {number} j Horizontal position of the pixel to be evaluated.
+   * @param {number} pixel Pixel value to be added to the integral image.
+   * @static
+   * @private
+   */
+  tracking.Image.computePixelValueSAT_ = function(SAT, width, i, j, pixel) {
+    var w = i * width + j;
+    SAT[w] = (SAT[w - width] || 0) + (SAT[w - 1] || 0) + pixel - (SAT[w - width - 1] || 0);
+  };
+
+  /**
+   * Converts a color from a colorspace based on an RGB color model to a
+   * grayscale representation of its luminance. The coefficients represent the
+   * measured intensity perception of typical trichromat humans, in
+   * particular, human vision is most sensitive to green and least sensitive
+   * to blue.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {Uint8ClampedArray} The grayscale pixels in a linear [p,p,p,a,...]
+   *     array.
+   * @static
+   */
+  tracking.Image.grayscale = function(pixels, width, height) {
+    var gray = new Uint8ClampedArray(width * height * 4);
+    var p = 0;
+    var w = 0;
+    for (var i = 0; i < height; i++) {
+      for (var j = 0; j < width; j++) {
+        var value = pixels[w] * 0.299 + pixels[w + 1] * 0.587 + pixels[w + 2] * 0.114;
+        gray[p++] = value;
+        gray[p++] = value;
+        gray[p++] = value;
+        gray[p++] = pixels[w + 3];
+        w += 4;
+      }
+    }
+    return gray;
+  };
+
+  /**
+   * Fast horizontal separable convolution. A point spread function (PSF) is
+   * said to be separable if it can be broken into two one-dimensional
+   * signals: a vertical and a horizontal projection. The convolution is
+   * performed by sliding the kernel over the image, generally starting at the
+   * top left corner, so as to move the kernel through all the positions where
+   * the kernel fits entirely within the boundaries of the image. Adpated from
+   * https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {array} weightsVector The weighting vector, e.g [-1,0,1].
+   * @param {number} opaque
+   * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.horizontalConvolve = function(pixels, width, height, weightsVector, opaque) {
+    var side = weightsVector.length;
+    var halfSide = Math.floor(side / 2);
+    var output = new Float32Array(width * height * 4);
+    var alphaFac = opaque ? 1 : 0;
+
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        var sy = y;
+        var sx = x;
+        var offset = (y * width + x) * 4;
+        var r = 0;
+        var g = 0;
+        var b = 0;
+        var a = 0;
+        for (var cx = 0; cx < side; cx++) {
+          var scy = sy;
+          var scx = Math.min(width - 1, Math.max(0, sx + cx - halfSide));
+          var poffset = (scy * width + scx) * 4;
+          var wt = weightsVector[cx];
+          r += pixels[poffset] * wt;
+          g += pixels[poffset + 1] * wt;
+          b += pixels[poffset + 2] * wt;
+          a += pixels[poffset + 3] * wt;
+        }
+        output[offset] = r;
+        output[offset + 1] = g;
+        output[offset + 2] = b;
+        output[offset + 3] = a + alphaFac * (255 - a);
+      }
+    }
+    return output;
+  };
+
+  /**
+   * Fast vertical separable convolution. A point spread function (PSF) is
+   * said to be separable if it can be broken into two one-dimensional
+   * signals: a vertical and a horizontal projection. The convolution is
+   * performed by sliding the kernel over the image, generally starting at the
+   * top left corner, so as to move the kernel through all the positions where
+   * the kernel fits entirely within the boundaries of the image. Adpated from
+   * https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {array} weightsVector The weighting vector, e.g [-1,0,1].
+   * @param {number} opaque
+   * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.verticalConvolve = function(pixels, width, height, weightsVector, opaque) {
+    var side = weightsVector.length;
+    var halfSide = Math.floor(side / 2);
+    var output = new Float32Array(width * height * 4);
+    var alphaFac = opaque ? 1 : 0;
+
+    for (var y = 0; y < height; y++) {
+      for (var x = 0; x < width; x++) {
+        var sy = y;
+        var sx = x;
+        var offset = (y * width + x) * 4;
+        var r = 0;
+        var g = 0;
+        var b = 0;
+        var a = 0;
+        for (var cy = 0; cy < side; cy++) {
+          var scy = Math.min(height - 1, Math.max(0, sy + cy - halfSide));
+          var scx = sx;
+          var poffset = (scy * width + scx) * 4;
+          var wt = weightsVector[cy];
+          r += pixels[poffset] * wt;
+          g += pixels[poffset + 1] * wt;
+          b += pixels[poffset + 2] * wt;
+          a += pixels[poffset + 3] * wt;
+        }
+        output[offset] = r;
+        output[offset + 1] = g;
+        output[offset + 2] = b;
+        output[offset + 3] = a + alphaFac * (255 - a);
+      }
+    }
+    return output;
+  };
+
+  /**
+   * Fast separable convolution. A point spread function (PSF) is said to be
+   * separable if it can be broken into two one-dimensional signals: a
+   * vertical and a horizontal projection. The convolution is performed by
+   * sliding the kernel over the image, generally starting at the top left
+   * corner, so as to move the kernel through all the positions where the
+   * kernel fits entirely within the boundaries of the image. Adpated from
+   * https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {array} horizWeights The horizontal weighting vector, e.g [-1,0,1].
+   * @param {array} vertWeights The vertical vector, e.g [-1,0,1].
+   * @param {number} opaque
+   * @return {array} The convoluted pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.separableConvolve = function(pixels, width, height, horizWeights, vertWeights, opaque) {
+    var vertical = this.verticalConvolve(pixels, width, height, vertWeights, opaque);
+    return this.horizontalConvolve(vertical, width, height, horizWeights, opaque);
+  };
+
+  /**
+   * Compute image edges using Sobel operator. Computes the vertical and
+   * horizontal gradients of the image and combines the computed images to
+   * find edges in the image. The way we implement the Sobel filter here is by
+   * first grayscaling the image, then taking the horizontal and vertical
+   * gradients and finally combining the gradient images to make up the final
+   * image. Adpated from https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @return {array} The edge pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.sobel = function(pixels, width, height) {
+    pixels = this.grayscale(pixels, width, height);
+    var output = new Float32Array(width * height * 4);
+    var sobelSignVector = new Float32Array([-1, 0, 1]);
+    var sobelScaleVector = new Float32Array([1, 2, 1]);
+    var vertical = this.separableConvolve(pixels, width, height, sobelSignVector, sobelScaleVector);
+    var horizontal = this.separableConvolve(pixels, width, height, sobelScaleVector, sobelSignVector);
+
+    for (var i = 0; i < output.length; i += 4) {
+      var v = vertical[i];
+      var h = horizontal[i];
+      var p = Math.sqrt(h * h + v * v);
+      output[i] = p;
+      output[i + 1] = p;
+      output[i + 2] = p;
+      output[i + 3] = 255;
+    }
+
+    return output;
+  };
+
 }());
