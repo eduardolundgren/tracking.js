@@ -834,6 +834,13 @@
   tracking.ViolaJones.REGIONS_OVERLAP = 0.5;
 
   /**
+   * Holds the HAAR cascade classifiers converted from OpenCV training.
+   * @type {array}
+   * @static
+   */
+  tracking.ViolaJones.classifiers = {};
+
+  /**
    * Detects through the HAAR cascade data rectangles matches.
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
@@ -1604,169 +1611,22 @@
 
 (function() {
   /**
-   * HAARTracker utility.
-   * @constructor
-   * @extends {tracking.Tracker}
-   */
-  tracking.HAARTracker = function() {
-    tracking.HAARTracker.base(this, 'constructor');
-  };
-
-  tracking.inherits(tracking.HAARTracker, tracking.Tracker);
-
-  /**
-   * Holds the HAAR cascade data converted from OpenCV training.
-   * @type {array}
-   * @static
-   */
-  tracking.HAARTracker.data = {};
-
-  /**
-   * Specifies the tracker HAAR data for the instance.
-   * @type {array}
-   */
-  tracking.HAARTracker.prototype.data = null;
-
-  /**
-   * Specifies the edges density of a block in order to decide whether to skip
-   * it or not.
-   * @default 0.2
-   * @type {number}
-   */
-  tracking.HAARTracker.prototype.edgesDensity = 0.2;
-
-  /**
-   * Specifies the initial scale to start the feature block scaling.
-   * @default 1.0
-   * @type {number}
-   */
-  tracking.HAARTracker.prototype.initialScale = 1.0;
-
-  /**
-   * Specifies the scale factor to scale the feature block.
-   * @default 1.25
-   * @type {number}
-   */
-  tracking.HAARTracker.prototype.scaleFactor = 1.25;
-
-  /**
-   * Specifies the block step size.
-   * @default 1.5
-   * @type {number}
-   */
-  tracking.HAARTracker.prototype.stepSize = 1.5;
-
-  /**
-   * Gets the tracker HAAR data.
-   * @return {string}
-   */
-  tracking.HAARTracker.prototype.getData = function() {
-    return this.data;
-  };
-
-  /**
-   * Gets the edges density value.
-   * @return {number}
-   */
-  tracking.HAARTracker.prototype.getEdgesDensity = function() {
-    return this.edgesDensity;
-  };
-
-  /**
-   * Gets the initial scale to start the feature block scaling.
-   * @return {number}
-   */
-  tracking.HAARTracker.prototype.getInitialScale = function() {
-    return this.initialScale;
-  };
-
-  /**
-   * Gets the scale factor to scale the feature block.
-   * @return {number}
-   */
-  tracking.HAARTracker.prototype.getScaleFactor = function() {
-    return this.scaleFactor;
-  };
-
-  /**
-   * Gets the block step size.
-   * @return {number}
-   */
-  tracking.HAARTracker.prototype.getStepSize = function() {
-    return this.stepSize;
-  };
-
-  /**
-   * Tracks the `Video` frames. This method is called for each video frame in
-   * order to emit `track` event.
-   * @param {Uint8ClampedArray} pixels The pixels data to track.
-   * @param {number} width The pixels canvas width.
-   * @param {number} height The pixels canvas height.
-   */
-  tracking.HAARTracker.prototype.track = function(pixels, width, height) {
-    var data = this.getData();
-    if (!data) {
-      throw new Error('HAAR cascade data not set.');
-    }
-    var results = tracking.ViolaJones.detect(pixels, width, height, this.getInitialScale(), this.getScaleFactor(), this.getStepSize(), this.getEdgesDensity(), data);
-    this.emit('track', {
-      data: results
-    });
-  };
-
-  /**
-   * Sets the tracker HAAR data.
-   * @param {array} data
-   */
-  tracking.HAARTracker.prototype.setData = function(data) {
-    this.data = data;
-  };
-
-  /**
-   * Sets the edges density.
-   * @param {number} edgesDensity
-   */
-  tracking.HAARTracker.prototype.setEdgesDensity = function(edgesDensity) {
-    this.edgesDensity = edgesDensity;
-  };
-
-  /**
-   * Sets the initial scale to start the block scaling.
-   * @param {number} initialScale
-   */
-  tracking.HAARTracker.prototype.setInitialScale = function(initialScale) {
-    this.initialScale = initialScale;
-  };
-
-  /**
-   * Sets the scale factor to scale the feature block.
-   * @param {number} scaleFactor
-   */
-  tracking.HAARTracker.prototype.setScaleFactor = function(scaleFactor) {
-    this.scaleFactor = scaleFactor;
-  };
-
-  /**
-   * Sets the block step size.
-   * @param {number} stepSize
-   */
-  tracking.HAARTracker.prototype.setStepSize = function(stepSize) {
-    this.stepSize = stepSize;
-  };
-
-}());
-
-(function() {
-  /**
    * ColorTracker utility to track colored blobs in a frrame using color
    * difference evaluation.
    * @constructor
+   * @param {string|Array.<string>} opt_colors Optional colors to track.
    * @extends {tracking.Tracker}
    */
-  tracking.ColorTracker = function() {
+  tracking.ColorTracker = function(opt_colors) {
     tracking.ColorTracker.base(this, 'constructor');
 
-    this.setColors(['magenta']);
+    if (typeof opt_colors === 'string') {
+      opt_colors = [opt_colors];
+    }
+
+    if (opt_colors) {
+      this.setColors(opt_colors);
+    }
   };
 
   tracking.inherits(tracking.ColorTracker, tracking.Tracker);
@@ -1814,7 +1674,7 @@
    * @default ['magenta']
    * @type {Array.<string>}
    */
-  tracking.ColorTracker.prototype.colors = null;
+  tracking.ColorTracker.prototype.colors = ['magenta'];
 
   /**
    * Holds the minimum dimension to classify a rectangle.
@@ -1990,15 +1850,18 @@
    * @param {number} height The pixels canvas height.
    */
   tracking.ColorTracker.prototype.track = function(pixels, width, height) {
+    var self = this;
     var colors = this.getColors();
+
+    if (!colors) {
+      throw new Error('Colors not specified, try `new tracking.ColorTracker("magenta")`.');
+    }
+
     var results = [];
 
-    for (var colorIndex = 0; colorIndex < colors.length; colorIndex++) {
-      var blob = this.trackColor_(pixels, width, height, colors[colorIndex]);
-      if (blob.length) {
-        results = results.concat(blob);
-      }
-    }
+    colors.forEach(function(color) {
+      results = results.concat(self.trackColor_(pixels, width, height, color));
+    });
 
     this.emit('track', {
       data: results
@@ -2136,54 +1999,168 @@
 
 (function() {
   /**
-   * EyeTracker utility.
+   * ObjectTracker utility.
    * @constructor
-   * @extends {tracking.HAARTracker}
+   * @param {string|Array.<string|Array.<number>>} opt_classifiers Optional
+   *     object classifiers to track.
+   * @extends {tracking.Tracker}
    */
-  tracking.EyeTracker = function() {
-    tracking.EyeTracker.base(this, 'constructor');
+  tracking.ObjectTracker = function(opt_classifiers) {
+    tracking.ObjectTracker.base(this, 'constructor');
 
-    var data = tracking.HAARTracker.data.eye;
-    if (data) {
-      this.setData(new Float64Array(data));
+    if (opt_classifiers) {
+      if (!Array.isArray(opt_classifiers)) {
+        opt_classifiers = [opt_classifiers];
+      } else {
+        opt_classifiers.forEach(function(classifier, i) {
+          if (typeof classifier === 'string') {
+            opt_classifiers[i] = tracking.ViolaJones.classifiers[classifier];
+            if (!opt_classifiers[i]) {
+              throw new Error('Object classifier not valid, try `new tracking.ObjectTracker("face")`.');
+            }
+          }
+        });
+      }
     }
+
+    this.setClassifiers(opt_classifiers);
   };
 
-  tracking.inherits(tracking.EyeTracker, tracking.HAARTracker);
-}());
+  tracking.inherits(tracking.ObjectTracker, tracking.Tracker);
 
-(function() {
   /**
-   * FaceTracker utility.
-   * @constructor
-   * @extends {tracking.HAARTracker}
+   * Specifies the edges density of a block in order to decide whether to skip
+   * it or not.
+   * @default 0.2
+   * @type {number}
    */
-  tracking.FaceTracker = function() {
-    tracking.FaceTracker.base(this, 'constructor');
+  tracking.ObjectTracker.prototype.edgesDensity = 0.2;
 
-    var data = tracking.HAARTracker.data.face;
-    if (data) {
-      this.setData(new Float64Array(data));
-    }
-  };
-
-  tracking.inherits(tracking.FaceTracker, tracking.HAARTracker);
-}());
-
-(function() {
   /**
-   * MouthTracker utility.
-   * @constructor
-   * @extends {tracking.HAARTracker}
+   * Specifies the initial scale to start the feature block scaling.
+   * @default 1.0
+   * @type {number}
    */
-  tracking.MouthTracker = function() {
-    tracking.MouthTracker.base(this, 'constructor');
+  tracking.ObjectTracker.prototype.initialScale = 1.0;
 
-    var data = tracking.HAARTracker.data.mouth;
-    if (data) {
-      this.setData(new Float64Array(data));
-    }
+  /**
+   * Specifies the scale factor to scale the feature block.
+   * @default 1.25
+   * @type {number}
+   */
+  tracking.ObjectTracker.prototype.scaleFactor = 1.25;
+
+  /**
+   * Specifies the block step size.
+   * @default 1.5
+   * @type {number}
+   */
+  tracking.ObjectTracker.prototype.stepSize = 1.5;
+
+  /**
+   * Gets the tracker HAAR classifiers.
+   * @return {TypedArray.<number>}
+   */
+  tracking.ObjectTracker.prototype.getClassifiers = function() {
+    return this.classifiers;
   };
 
-  tracking.inherits(tracking.MouthTracker, tracking.HAARTracker);
+  /**
+   * Gets the edges density value.
+   * @return {number}
+   */
+  tracking.ObjectTracker.prototype.getEdgesDensity = function() {
+    return this.edgesDensity;
+  };
+
+  /**
+   * Gets the initial scale to start the feature block scaling.
+   * @return {number}
+   */
+  tracking.ObjectTracker.prototype.getInitialScale = function() {
+    return this.initialScale;
+  };
+
+  /**
+   * Gets the scale factor to scale the feature block.
+   * @return {number}
+   */
+  tracking.ObjectTracker.prototype.getScaleFactor = function() {
+    return this.scaleFactor;
+  };
+
+  /**
+   * Gets the block step size.
+   * @return {number}
+   */
+  tracking.ObjectTracker.prototype.getStepSize = function() {
+    return this.stepSize;
+  };
+
+  /**
+   * Tracks the `Video` frames. This method is called for each video frame in
+   * order to emit `track` event.
+   * @param {Uint8ClampedArray} pixels The pixels data to track.
+   * @param {number} width The pixels canvas width.
+   * @param {number} height The pixels canvas height.
+   */
+  tracking.ObjectTracker.prototype.track = function(pixels, width, height) {
+    var self = this;
+    var classifiers = this.getClassifiers();
+
+    if (!classifiers) {
+      throw new Error('Object classifier not specified, try `new tracking.ObjectTracker("face")`.');
+    }
+
+    var results = [];
+
+    classifiers.forEach(function(classifier) {
+      results = results.concat(tracking.ViolaJones.detect(pixels, width, height, self.getInitialScale(), self.getScaleFactor(), self.getStepSize(), self.getEdgesDensity(), classifier));
+    });
+
+    this.emit('track', {
+      data: results
+    });
+  };
+
+  /**
+   * Sets the tracker HAAR classifiers.
+   * @param {TypedArray.<number>} classifiers
+   */
+  tracking.ObjectTracker.prototype.setClassifiers = function(classifiers) {
+    this.classifiers = classifiers;
+  };
+
+  /**
+   * Sets the edges density.
+   * @param {number} edgesDensity
+   */
+  tracking.ObjectTracker.prototype.setEdgesDensity = function(edgesDensity) {
+    this.edgesDensity = edgesDensity;
+  };
+
+  /**
+   * Sets the initial scale to start the block scaling.
+   * @param {number} initialScale
+   */
+  tracking.ObjectTracker.prototype.setInitialScale = function(initialScale) {
+    this.initialScale = initialScale;
+  };
+
+  /**
+   * Sets the scale factor to scale the feature block.
+   * @param {number} scaleFactor
+   */
+  tracking.ObjectTracker.prototype.setScaleFactor = function(scaleFactor) {
+    this.scaleFactor = scaleFactor;
+  };
+
+  /**
+   * Sets the block step size.
+   * @param {number} stepSize
+   */
+  tracking.ObjectTracker.prototype.setStepSize = function(stepSize) {
+    this.stepSize = stepSize;
+  };
+
 }());
