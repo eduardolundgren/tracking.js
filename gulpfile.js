@@ -14,10 +14,7 @@ var esformatter = require('gulp-esformatter');
 gulp.task('all', ['clean', 'build', 'build-data']);
 
 gulp.task('clean', function() {
-  return gulp.src('build', {
-    read: false
-  })
-  .pipe(rimraf());
+  return gulp.src('build').pipe(rimraf());
 });
 
 gulp.task('build', function() {
