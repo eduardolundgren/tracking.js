@@ -89,14 +89,15 @@
       video: true,
       audio: opt_options.audio
     }, function(stream) {
-      try {
-        element.src = window.URL.createObjectURL(stream);
-      } catch (err) {
-        element.src = stream;
+        try {
+          element.src = window.URL.createObjectURL(stream);
+        } catch (err) {
+          element.src = stream;
+        }
+      }, function() {
+        throw Error('Cannot capture user camera.');
       }
-    }, function() {
-      throw Error('Cannot capture user camera.');
-    });
+    );
   };
 
   /**
@@ -282,7 +283,7 @@
           // hence keep trying to read it until resolved.
           try {
             context.drawImage(element, 0, 0, width, height);
-          } catch(err) {}
+          } catch (err) {}
           tracking.trackCanvas_(canvas, tracker);
         }
         requestFrame_();
@@ -1666,14 +1667,6 @@
   tracking.inherits(tracking.ColorTracker, tracking.Tracker);
 
   /**
-   * Holds the minimum number of found pixels to represent a blob.
-   * @type {number}
-   * @default 30
-   * @static
-   */
-  tracking.ColorTracker.MIN_PIXELS = 30;
-
-  /**
    * Holds the known colors.
    * @type {Object.<string, function>}
    * @private
@@ -1692,8 +1685,8 @@
   /**
    * Registers a color as known color.
    * @param {string} name The color name.
-   * @param {function} fn The color function to test if the passed (r,g,b) is the
-   *     desired color.
+   * @param {function} fn The color function to test if the passed (r,g,b) is
+   *     the desired color.
    * @static
    */
   tracking.ColorTracker.registerColor = function(name, fn) {
@@ -1717,6 +1710,20 @@
    * @type {Array.<string>}
    */
   tracking.ColorTracker.prototype.colors = null;
+
+  /**
+   * Holds the minimum dimension to classify a rectangle.
+   * @default 20
+   * @type {number}
+   */
+  tracking.ColorTracker.prototype.minDimension = 20;
+
+  /**
+   * Holds the minimum group size to be classified as a rectangle.
+   * @default 30
+   * @type {number}
+   */
+  tracking.ColorTracker.prototype.minGroupSize = 30;
 
   /**
    * Calculates the central coordinate from the cloud points. The cloud points
@@ -1753,10 +1760,10 @@
     }
 
     return {
-      maxx: maxx,
-      maxy: maxy,
-      minx: minx,
-      miny: miny
+      width: maxx - minx,
+      height: maxy - miny,
+      x: minx,
+      y: miny
     };
   };
 
@@ -1769,8 +1776,24 @@
   };
 
   /**
+   * Sets the minimum dimension to classify a rectangle.
+   * @param {number} minDimension
+   */
+  tracking.ColorTracker.prototype.getMinDimension = function() {
+    return this.minDimension;
+  };
+
+  /**
+   * Gets the minimum group size to be classified as a rectangle.
+   * @return {number}
+   */
+  tracking.ColorTracker.prototype.getMinGroupSize = function() {
+    return this.minGroupSize;
+  };
+
+  /**
    * Gets the eight offset values of the neighbours surrounding a pixel.
-   * @param {number} width The image width
+   * @param {number} width The image width.
    * @return {array} Array with the eight offset values of the neighbours
    *     surrounding a pixel.
    */
@@ -1797,46 +1820,37 @@
 
   /**
    * Unites groups whose bounding box intersect with each other.
-   * @param {Array.<Object>} results
+   * @param {Array.<Object>} rects
    */
-  tracking.ColorTracker.prototype.regroupResults_ = function(results) {
-    var newResults = [];
-    var going;
-
-    for (var r = 0; r < results.length; r++) {
-      going = true;
-
-      for (var s = r + 1; s < results.length; s++) {
-        if ((results[r].minx >= results[s].minx && results[r].minx <= results[s].maxx) ||
-            (results[r].maxx >= results[s].minx && results[r].maxx <= results[s].maxx)) {
-          if ((results[r].miny >= results[s].miny && results[r].miny <= results[s].maxy) ||
-            (results[r].maxy >= results[s].miny && results[r].maxy <= results[s].maxy)) {
-
-            going = false;
-
-            results[s].minx = Math.min(results[r].minx, results[s].minx);
-            results[s].maxx = Math.max(results[r].maxx, results[s].maxx);
-            results[s].miny = Math.min(results[r].miny, results[s].miny);
-            results[s].maxy = Math.max(results[r].maxy, results[s].maxy);
-            results[s].z = 60 - ((results[s].maxx - results[s].minx) + (results[s].maxy - results[s].miny)) / 2;
-
-            break;
-          }
+  tracking.ColorTracker.prototype.mergeRectangles_ = function(rects) {
+    var intersects;
+    var results = [];
+    var minDimension = this.getMinDimension();
+    for (var r = 0; r < rects.length; r++) {
+      var r1 = rects[r];
+      intersects = true;
+      for (var s = r + 1; s < rects.length; s++) {
+        var r2 = rects[s];
+        if (tracking.Math.intersectRect(r1.x, r1.y, r1.x + r1.width, r1.y + r1.height, r2.x, r2.y, r2.x + r2.width, r2.y + r2.height)) {
+          intersects = false;
+          var x1 = Math.min(r1.x, r2.x);
+          var y1 = Math.min(r1.y, r2.y);
+          var x2 = Math.max(r1.x + r1.width, r2.x + r2.width);
+          var y2 = Math.max(r1.y + r1.height, r2.y + r2.height);
+          r2.height = y2 - y1;
+          r2.width = x2 - x1;
+          r2.x = x1;
+          r2.y = y1;
+          break;
         }
       }
-
-      if (going) {
-        newResults.push({
-          color: results[r].color,
-          height: results[r].maxy - results[r].miny,
-          width: results[r].maxx - results[r].minx,
-          x: results[r].minx,
-          y: results[r].miny
-        });
+      if (intersects) {
+        if (r1.width >= minDimension && r1.height >= minDimension) {
+          results.push(r1);
+        }
       }
     }
-
-    return newResults;
+    return results;
   };
 
   /**
@@ -1845,6 +1859,22 @@
    */
   tracking.ColorTracker.prototype.setColors = function(colors) {
     this.colors = colors;
+  };
+
+  /**
+   * Gets the minimum dimension to classify a rectangle.
+   * @return {number}
+   */
+  tracking.ColorTracker.prototype.setMinDimension = function(minDimension) {
+    this.minDimension = minDimension;
+  };
+
+  /**
+   * Sets the minimum group size to be classified as a rectangle.
+   * @param {number} minGroupSize
+   */
+  tracking.ColorTracker.prototype.setMinGroupSize = function(minGroupSize) {
+    this.minGroupSize = minGroupSize;
   };
 
   /**
@@ -1859,15 +1889,17 @@
     var payload = [];
 
     for (var colorIndex = 0; colorIndex < colors.length; colorIndex++) {
-      payload.push(this.trackColor_(pixels, width, height, colors[colorIndex]));
+      var blob = this.trackColor_(pixels, width, height, colors[colorIndex]);
+      if (blob.length) {
+        payload = payload.concat(blob);
+      }
     }
 
     if (payload.length) {
       if (this.onFound) {
         this.onFound.call(this, payload);
       }
-    }
-    else {
+    } else {
       if (this.onNotFound) {
         this.onNotFound.call(this, payload);
       }
@@ -1875,7 +1907,9 @@
   };
 
   /**
-   * Find the given color in the given matrix of pixels.
+   * Find the given color in the given matrix of pixels using Flood fill
+   * algorithm to determines the area connected to a given node in a
+   * multi-dimensional array.
    * @param {Uint8ClampedArray} pixels The pixels data to track.
    * @param {number} width The pixels canvas width.
    * @param {number} height The pixels canvas height.
@@ -1889,7 +1923,7 @@
     var currJ;
     var currW;
     var marked = new Int8Array(pixels.length);
-    var minPixels = tracking.ColorTracker.MIN_PIXELS;
+    var minGroupSize = this.getMinGroupSize();
     var neighboursW = this.getNeighboursForWidth_(width);
     var queue = new Int32Array(pixels.length);
     var queuePosition;
@@ -1922,7 +1956,7 @@
           currI = queue[queuePosition--];
           currW = queue[queuePosition--];
 
-          if (colorFn.call(this, pixels[currW], pixels[currW + 1], pixels[currW + 2], pixels[currW + 3], currW, currI, currJ)) {
+          if (colorFn(pixels[currW], pixels[currW + 1], pixels[currW + 2], pixels[currW + 3], currW, currI, currJ)) {
             currGroup[currGroupSize++] = currJ;
             currGroup[currGroupSize++] = currI;
 
@@ -1941,7 +1975,7 @@
           }
         }
 
-        if (currGroupSize >= minPixels) {
+        if (currGroupSize >= minGroupSize) {
           var data = this.calculateDimensions_(currGroup, currGroupSize);
           if (data) {
             data.color = color;
@@ -1951,8 +1985,8 @@
       }
     }
 
-    return this.regroupResults_(results);
-  }
+    return this.mergeRectangles_(results);
+  };
 
   // Default colors
   //===================
@@ -1996,28 +2030,9 @@
 
 
   // Caching neighbour i/j offset values.
-  //===================
-
-  var neighboursI = new Int32Array(8);
-  var neighboursJ = new Int32Array(8);
-
-  neighboursI[0] = -1;
-  neighboursI[1] = -1;
-  neighboursI[2] = 0;
-  neighboursI[3] = 1;
-  neighboursI[4] = 1;
-  neighboursI[5] = 1;
-  neighboursI[6] = 0;
-  neighboursI[7] = -1;
-
-  neighboursJ[0] = 0;
-  neighboursJ[1] = 1;
-  neighboursJ[2] = 1;
-  neighboursJ[3] = 1;
-  neighboursJ[4] = 0;
-  neighboursJ[5] = -1;
-  neighboursJ[6] = -1;
-  neighboursJ[7] = -1;
+  //=====================================
+  var neighboursI = new Int32Array([-1, -1, 0, 1, 1, 1, 0, -1]);
+  var neighboursJ = new Int32Array([0, 1, 1, 1, 0, -1, -1, -1]);
 }());
 
 (function() {
