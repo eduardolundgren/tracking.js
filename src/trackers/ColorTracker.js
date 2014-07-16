@@ -3,12 +3,19 @@
    * ColorTracker utility to track colored blobs in a frrame using color
    * difference evaluation.
    * @constructor
+   * @param {string|Array.<string>} opt_colors Optional colors to track.
    * @extends {tracking.Tracker}
    */
-  tracking.ColorTracker = function() {
+  tracking.ColorTracker = function(opt_colors) {
     tracking.ColorTracker.base(this, 'constructor');
 
-    this.setColors(['magenta']);
+    if (typeof opt_colors === 'string') {
+      opt_colors = [opt_colors];
+    }
+
+    if (opt_colors) {
+      this.setColors(opt_colors);
+    }
   };
 
   tracking.inherits(tracking.ColorTracker, tracking.Tracker);
@@ -56,7 +63,7 @@
    * @default ['magenta']
    * @type {Array.<string>}
    */
-  tracking.ColorTracker.prototype.colors = null;
+  tracking.ColorTracker.prototype.colors = ['magenta'];
 
   /**
    * Holds the minimum dimension to classify a rectangle.
@@ -232,15 +239,18 @@
    * @param {number} height The pixels canvas height.
    */
   tracking.ColorTracker.prototype.track = function(pixels, width, height) {
+    var self = this;
     var colors = this.getColors();
+
+    if (!colors) {
+      throw new Error('Colors not specified, try `new tracking.ColorTracker("magenta")`.');
+    }
+
     var results = [];
 
-    for (var colorIndex = 0; colorIndex < colors.length; colorIndex++) {
-      var blob = this.trackColor_(pixels, width, height, colors[colorIndex]);
-      if (blob.length) {
-        results = results.concat(blob);
-      }
-    }
+    colors.forEach(function(color) {
+      results = results.concat(self.trackColor_(pixels, width, height, color));
+    });
 
     this.emit('track', {
       data: results
