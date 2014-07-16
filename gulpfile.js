@@ -20,6 +20,10 @@ gulp.task('clean', function() {
 gulp.task('build', function() {
   var files = [
     'src/tracking.js',
+    'src/utils/EventEmitter.js',
+    'src/utils/Canvas.js',
+    'src/utils/DisjointSet.js',
+    'src/utils/Image.js',
     'src/detection/ViolaJones.js',
     'src/features/Brief.js',
     'src/features/Fast.js',
@@ -31,10 +35,7 @@ gulp.task('build', function() {
     'src/trackers/ColorTracker.js',
     'src/trackers/EyeTracker.js',
     'src/trackers/FaceTracker.js',
-    'src/trackers/MouthTracker.js',
-    'src/utils/Canvas.js',
-    'src/utils/DisjointSet.js',
-    'src/utils/Image.js'
+    'src/trackers/MouthTracker.js'
   ];
 
   return gulp.src(files)
