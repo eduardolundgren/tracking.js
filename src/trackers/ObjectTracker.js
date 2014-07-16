@@ -12,7 +12,9 @@
     if (opt_classifiers) {
       if (!Array.isArray(opt_classifiers)) {
         opt_classifiers = [opt_classifiers];
-      } else {
+      }
+
+      if (Array.isArray(opt_classifiers)) {
         opt_classifiers.forEach(function(classifier, i) {
           if (typeof classifier === 'string') {
             opt_classifiers[i] = tracking.ViolaJones.classifiers[classifier];
