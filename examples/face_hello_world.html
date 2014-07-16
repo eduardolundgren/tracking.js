@@ -40,13 +40,15 @@
       tracking.track('#img', eyeTracker);
       tracking.track('#img', mouthTracker);
 
-      faceTracker.onFound = function(payload) {
-        payload.forEach(function(rect) {
+      var onTrack = function(event) {
+        event.data.forEach(function(rect) {
           window.plot(rect.x, rect.y, rect.width, rect.height);
         });
       };
-      eyeTracker.onFound = faceTracker.onFound;
-      mouthTracker.onFound = faceTracker.onFound;
+
+      faceTracker.on('track', onTrack);
+      eyeTracker.on('track', onTrack);
+      mouthTracker.on('track', onTrack);
 
       window.plot = function(x, y, w, h) {
         var rect = document.createElement('div');

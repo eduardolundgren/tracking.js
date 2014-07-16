@@ -35,19 +35,19 @@
 
       tracking.track('#video', tracker);
 
-      tracker.onFound = function(payload) {
-        payload.forEach(function(rect) {
+      tracker.on('track', function(event) {
+        if (event.data.length === 0) {
+          rectangle.style.top = '-1000px';
+          return;
+        }
+        event.data.forEach(function(rect) {
           rectangle.style.border = '2px solid ' + rect.color;
           rectangle.style.width = rect.width + 'px';
           rectangle.style.height = rect.height + 'px';
           rectangle.style.left = (video.offsetLeft + rect.x) + 'px';
           rectangle.style.top = (video.offsetTop + rect.y) + 'px';
         });
-      };
-
-      tracker.onNotFound = function() {
-        rectangle.style.top = '-1000px';
-      };
+      });
     };
   </script>
 

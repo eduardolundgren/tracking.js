@@ -33,17 +33,13 @@
 
       tracking.track('#video', tracker, { camera: true });
 
-      tracker.onFound = function(payload) {
+      tracker.on('track', function(event) {
         context.drawImage(video, 0, 0, 640, 480);
-        payload.forEach(function(rect) {
+        event.data.forEach(function(rect) {
           context.strokeStyle = rect.color;
           context.strokeRect(rect.x, rect.y, rect.width, rect.height);
         });
-      };
-
-      tracker.onNotFound = function() {
-        context.drawImage(video, 0, 0, 640, 480);
-      };
+      });
     };
   </script>
 

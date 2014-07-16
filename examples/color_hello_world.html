@@ -28,13 +28,13 @@
       var tracker = new tracking.ColorTracker();
       tracker.setColors(['magenta', 'cyan', 'yellow']);
 
-      tracking.track('#img', tracker);
-
-      tracker.onFound = function(payload) {
-        payload.forEach(function(rect) {
+      tracker.on('track', function foo(event) {
+        event.data.forEach(function(rect) {
           window.plot(rect.x, rect.y, rect.width, rect.height, rect.color);
         });
-      };
+      });
+
+      tracking.track('#img', tracker);
 
       window.plot = function(x, y, w, h, color) {
         var rect = document.createElement('div');

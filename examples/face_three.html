@@ -40,11 +40,10 @@
       animate();
 
       window.onload = function() {
-        var video = document.querySelector('#video');
         var tracker = new tracking.FaceTracker();
 
         tracking.track('#video', tracker, { camera: true });
-        tracker.onFound = onFaceMove;
+        tracker.on('track', onFaceMove);
       };
 
       function init() {
@@ -142,9 +141,12 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
       }
 
-      function onFaceMove(track) {
-        mouseX = ((((320 - track[0].x) / 320) * window.innerWidth) - windowHalfX) * 10;
-        mouseY = ((((240 - track[0].y) / 240) * window.innerHeight) - windowHalfY) * 10;
+      function onFaceMove(event) {
+        if (event.data.length === 0) {
+          return;
+        }
+        mouseX = ((((320 - event.data[0].x) / 320) * window.innerWidth) - windowHalfX) * 10;
+        mouseY = ((((240 - event.data[0].y) / 240) * window.innerHeight) - windowHalfY) * 10;
       }
 
       function animate() {

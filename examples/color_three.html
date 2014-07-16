@@ -51,10 +51,8 @@
         var tracker = new tracking.ColorTracker();
 
         tracking.track('#video', tracker, { camera: true });
-        tracker.onFound = onColorMove;
-        tracker.onNotFound = function() {
-          rectangle.style.top = '-1000px';
-        };
+
+        tracker.on('track', onColorMove);
       };
 
       function init() {
@@ -108,8 +106,13 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
       }
 
-      function onColorMove(payload) {
-        var rect = payload[0];
+      function onColorMove(event) {
+        if (event.data.length === 0) {
+          rectangle.style.top = '-1000px';
+          return;
+        }
+
+        var rect = event.data[0];
 
         rectangle.style.border = '2px solid ' + rect.color;
         rectangle.style.width = rect.width + 'px';
