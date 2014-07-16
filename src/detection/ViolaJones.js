@@ -18,6 +18,13 @@
   tracking.ViolaJones.REGIONS_OVERLAP = 0.5;
 
   /**
+   * Holds the HAAR cascade classifiers converted from OpenCV training.
+   * @type {array}
+   * @static
+   */
+  tracking.ViolaJones.classifiers = {};
+
+  /**
    * Detects through the HAAR cascade data rectangles matches.
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
