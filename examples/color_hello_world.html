@@ -25,8 +25,7 @@
     window.onload = function() {
       var img = tracking.one('#img');
 
-      var tracker = new tracking.ColorTracker();
-      tracker.setColors(['magenta', 'cyan', 'yellow']);
+      var tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
 
       tracker.on('track', function foo(event) {
         event.data.forEach(function(rect) {

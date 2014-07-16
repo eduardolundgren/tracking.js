@@ -28,8 +28,7 @@
       var canvas = tracking.one('#canvas');
       var context = canvas.getContext('2d');
 
-      var tracker = new tracking.ColorTracker();
-      tracker.setColors(['magenta', 'cyan', 'yellow']);
+      var tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
 
       tracking.track('#video', tracker, { camera: true });
 

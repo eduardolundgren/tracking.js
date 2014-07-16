@@ -27,28 +27,16 @@
     window.onload = function() {
       var img = tracking.one('#img');
 
-      var faceTracker = new tracking.FaceTracker();
-      faceTracker.setInitialScale(1);
+      var tracker = new tracking.ObjectTracker(['face', 'eye', 'mouth']);
+      tracker.setStepSize(2);
 
-      var eyeTracker = new tracking.EyeTracker();
-      eyeTracker.setStepSize(1.7);
+      tracking.track('#img', tracker);
 
-      var mouthTracker = new tracking.MouthTracker();
-      mouthTracker.setStepSize(2);
-
-      tracking.track('#img', faceTracker);
-      tracking.track('#img', eyeTracker);
-      tracking.track('#img', mouthTracker);
-
-      var onTrack = function(event) {
+      tracker.on('track', function(event) {
         event.data.forEach(function(rect) {
           window.plot(rect.x, rect.y, rect.width, rect.height);
         });
-      };
-
-      faceTracker.on('track', onTrack);
-      eyeTracker.on('track', onTrack);
-      mouthTracker.on('track', onTrack);
+      });
 
       window.plot = function(x, y, w, h) {
         var rect = document.createElement('div');

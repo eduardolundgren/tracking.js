@@ -28,7 +28,7 @@
       var canvas = tracking.one('#canvas');
       var context = canvas.getContext('2d');
 
-      var tracker = new tracking.FaceTracker();
+      var tracker = new tracking.ObjectTracker('face');
       tracker.setInitialScale(2);
 
       tracking.track('#video', tracker, { camera: true });
