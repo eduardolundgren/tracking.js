@@ -9,29 +9,6 @@
   window.tracking = window.tracking || {};
 
   /**
-   * Loops through an array or object.
-   * @param {array | object} o Array or object to loops through.
-   * @param {function} fn Callback
-   * @param {object} opt_context Callback execution scope.
-   * @return {object} The array or object that was iterated.
-   */
-  tracking.forEach = function(o, fn, opt_context) {
-    var key;
-    if (Array.isArray(o)) {
-      o.forEach(function() {
-        fn.apply(opt_context, arguments);
-      });
-    } else {
-      for (key in o) {
-        if (o.hasOwnProperty(key)) {
-          fn.call(opt_context, o[key], key, o);
-        }
-      }
-    }
-    return o;
-  };
-
-  /**
    * Inherit the prototype methods from one constructor into another.
    *
    * Usage:
