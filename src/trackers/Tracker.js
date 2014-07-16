@@ -2,33 +2,17 @@
   /**
    * Tracker utility.
    * @constructor
+   * @extends {tracking.EventEmitter}
    */
-  tracking.Tracker = function() {};
+  tracking.Tracker = function() {
+    tracking.Tracker.base(this, 'constructor');
+  };
 
-  /**
-   * Fires when the tracker founds a target into the video frame.
-   * @param {Video} video The `Video` instance being tracked.
-   * @param {object} payload The payload of the tracker, e.g. this can be an
-   *     array of x, y coodinates of the target element, or an array of
-   *     rectangles, specifically, any relevant information that worth exposing to
-   * the implementer.
-   */
-  tracking.Tracker.prototype.onFound = function() {};
-
-  /**
-   * Fires when the tracker doesn't found a target into the video frame. Be
-   * aware of how to use this method since for most of the processed frames
-   * nothing is found, hence this can potentially be called much often than
-   * you would expect.
-   * @param {Video} video The `Video` instance being tracked.
-   * @param {object} payload The payload of the tracker.
-   */
-  tracking.Tracker.prototype.onNotFound = function() {};
+  tracking.inherits(tracking.Tracker, tracking.EventEmitter);
 
   /**
    * Tracks the pixels on the array. This method is called for each video
-   * frame in order to decide whether `onFound` or `onNotFound` callback will
-   * be fired.
+   * frame in order to emit `track` event.
    * @param {Uint8ClampedArray} pixels The pixels data to track.
    * @param {number} width The pixels canvas width.
    * @param {number} height The pixels canvas height.

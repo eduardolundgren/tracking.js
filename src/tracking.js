@@ -140,9 +140,9 @@
    * or
    * tracking.track('#video', tracker, { camera: true });
    *
-   * tracker.onFound = function(payload) {
-   *   // console.log(payload[0].x, payload[0].y)
-   * };
+   * tracker.on('track', function(event) {
+   *   // console.log(event.data[0].x, event.data[0].y)
+   * });
    *
    * @param {HTMLElement} element The element to track, canvas, image or
    *     video.

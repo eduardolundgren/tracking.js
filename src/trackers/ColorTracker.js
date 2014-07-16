@@ -226,31 +226,25 @@
 
   /**
    * Tracks the `Video` frames. This method is called for each video frame in
-   * order to decide whether `onFound` or `onNotFound` callback will be fired.
+   * order to emit `track` event.
    * @param {Uint8ClampedArray} pixels The pixels data to track.
    * @param {number} width The pixels canvas width.
    * @param {number} height The pixels canvas height.
    */
   tracking.ColorTracker.prototype.track = function(pixels, width, height) {
     var colors = this.getColors();
-    var payload = [];
+    var results = [];
 
     for (var colorIndex = 0; colorIndex < colors.length; colorIndex++) {
       var blob = this.trackColor_(pixels, width, height, colors[colorIndex]);
       if (blob.length) {
-        payload = payload.concat(blob);
+        results = results.concat(blob);
       }
     }
 
-    if (payload.length) {
-      if (this.onFound) {
-        this.onFound.call(this, payload);
-      }
-    } else {
-      if (this.onNotFound) {
-        this.onNotFound.call(this, payload);
-      }
-    }
+    this.emit('track', {
+      data: results
+    });
   };
 
   /**
