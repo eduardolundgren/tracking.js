@@ -17,9 +17,18 @@
         right: 0;
         position: absolute;
       }
+      #rectangle {
+        height: 80px;
+        left: -1000px;
+        position: absolute;
+        top: -1000px;
+        width: 120px;
+        z-index: 1;
+      }
     </style>
   </head>
   <body>
+    <div id="rectangle"></div>
     <!-- <audio src="http://cl.ly/WPV8/jungle-busy-earnin.mp3" loop autoplay></audio> -->
     <video id="video" width="320" height="240" preload autoplay loop muted>
 
@@ -29,6 +38,8 @@
       var container;
       var camera, scene, renderer, group, particle;
       var mouseX = 0, mouseY = 0;
+      var rectangle = tracking.one('#rectangle');
+      var video = document.querySelector('#video');
 
       var windowHalfX = window.innerWidth / 2;
       var windowHalfY = window.innerHeight / 2;
@@ -37,11 +48,13 @@
       animate();
 
       window.onload = function() {
-        var video = document.querySelector('#video');
         var tracker = new tracking.ColorTracker();
 
         tracking.track('#video', tracker, { camera: true });
         tracker.onFound = onColorMove;
+        tracker.onNotFound = function() {
+          rectangle.style.top = '-1000px';
+        };
       };
 
       function init() {
@@ -95,13 +108,17 @@
         renderer.setSize(window.innerWidth, window.innerHeight);
       }
 
-      function onColorMove(track) {
-        if (!track.length || !track[0].length) {
-          return;
-        }
+      function onColorMove(payload) {
+        var rect = payload[0];
 
-        var x = track[0][0].x + (track[0][0].width >> 1);
-        var y = track[0][0].y + (track[0][0].height >> 1);
+        rectangle.style.border = '2px solid ' + rect.color;
+        rectangle.style.width = rect.width + 'px';
+        rectangle.style.height = rect.height + 'px';
+        rectangle.style.left = (video.offsetLeft + rect.x) + 'px';
+        rectangle.style.top = (video.offsetTop + rect.y) + 'px';
+
+        var x = rect.x + (rect.width >> 1);
+        var y = rect.y + (rect.height >> 1);
 
         mouseX = (((320 - x) / 320) * window.innerWidth) - windowHalfX;
         mouseY = (((240 - y) / 240) * window.innerHeight) - windowHalfY;

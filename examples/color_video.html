@@ -9,7 +9,7 @@
   <script src="../build/tracking.js"></script>
 
   <style>
-  .rect {
+  #rectangle {
     height: 80px;
     left: -1000px;
     position: absolute;
@@ -19,6 +19,7 @@
   </style>
 </head>
 <body>
+  <div id="rectangle"></div>
   <video id="video" width="640" height="360" preload autoplay loop muted controls>
     <source src="assets/color.mp4"  type="video/mp4">
     <source src="assets/color.webm" type="video/webm">
@@ -26,36 +27,26 @@
 
   <script>
     window.onload = function() {
+      var rectangle = tracking.one('#rectangle');
       var video = tracking.one('#video');
 
       var tracker = new tracking.ColorTracker();
-      var lastRects = [];
+      tracker.setMinDimension(5);
 
-      //tracker.setColors(['magenta', 'cyan', 'yellow']);
       tracking.track('#video', tracker);
-        console.log('video', video.offsetLeft, video.offsetTop);
 
       tracker.onFound = function(payload) {
-        for (var i = 0; i < lastRects.length; i++) {
-          document.body.removeChild(lastRects[i]);
-        }
-        lastRects = [];
+        payload.forEach(function(rect) {
+          rectangle.style.border = '2px solid ' + rect.color;
+          rectangle.style.width = rect.width + 'px';
+          rectangle.style.height = rect.height + 'px';
+          rectangle.style.left = (video.offsetLeft + rect.x) + 'px';
+          rectangle.style.top = (video.offsetTop + rect.y) + 'px';
+        });
+      };
 
-        for (var i = 0; i < payload.length; i++) {
-          for (var j = 0; j < payload[i].length; j++) {
-            var rect = document.createElement('div');
-            rect.className = 'rect';
-            document.body.appendChild(rect);
-
-            rect.style.border = '2px solid ' + payload[i][j].color;
-            rect.style.left = (video.offsetLeft + payload[i][j].x) + 'px';
-            rect.style.top = (video.offsetTop + payload[i][j].y) + 'px';
-            rect.style.width = payload[i][j].width + 'px';
-            rect.style.height = payload[i][j].height + 'px';
-
-            lastRects.push(rect);
-          }
-        }
+      tracker.onNotFound = function() {
+        rectangle.style.top = '-1000px';
       };
     };
   </script>

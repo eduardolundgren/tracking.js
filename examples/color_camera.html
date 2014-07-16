@@ -19,40 +19,30 @@
   </style>
 </head>
 <body>
-  <video id="video" width="640" height="480" preload autoplay loop muted controls>
-  </video>
+  <video id="video" width="640" height="480" preload autoplay loop muted controls></video>
+  <canvas id="canvas" width="640" height="480"></canvas>
 
   <script>
     window.onload = function() {
       var video = tracking.one('#video');
+      var canvas = tracking.one('#canvas');
+      var context = canvas.getContext('2d');
 
       var tracker = new tracking.ColorTracker();
-      var lastRects = [];
-
       tracker.setColors(['magenta', 'cyan', 'yellow']);
+
       tracking.track('#video', tracker, { camera: true });
 
       tracker.onFound = function(payload) {
-        for (var i = 0; i < lastRects.length; i++) {
-          document.body.removeChild(lastRects[i]);
-        }
-        lastRects = [];
+        context.drawImage(video, 0, 0, 640, 480);
+        payload.forEach(function(rect) {
+          context.strokeStyle = rect.color;
+          context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+        });
+      };
 
-        for (var i = 0; i < payload.length; i++) {
-          for (var j = 0; j < payload[i].length; j++) {
-            var rect = document.createElement('div');
-            rect.className = 'rect';
-            document.body.appendChild(rect);
-
-            rect.style.border = '2px solid ' + payload[i][j].color;
-            rect.style.left = (video.offsetLeft + payload[i][j].x) + 'px';
-            rect.style.top = (video.offsetTop + payload[i][j].y) + 'px';
-            rect.style.width = payload[i][j].width + 'px';
-            rect.style.height = payload[i][j].height + 'px';
-
-            lastRects.push(rect);
-          }
-        }
+      tracker.onNotFound = function() {
+        context.drawImage(video, 0, 0, 640, 480);
       };
     };
   </script>

@@ -24,32 +24,27 @@
   <script>
     window.onload = function() {
       var img = tracking.one('#img');
-      var tracker = new tracking.ColorTracker();
 
+      var tracker = new tracking.ColorTracker();
       tracker.setColors(['magenta', 'cyan', 'yellow']);
 
-      var timeNow = new Date().getTime();
       tracking.track('#img', tracker);
 
       tracker.onFound = function(payload) {
-        console.log(new Date().getTime() - timeNow, payload);
-        for (var i = 0; i < payload.length; i++) {
-          for (var j = 0; j < payload[i].length; j++) {
-            var rect = document.createElement('div');
-            rect.className = 'rect';
-            document.body.appendChild(rect);
-
-            rect.style.border = '2px solid ' + payload[i][j].color;
-            rect.style.left = (img.offsetLeft + payload[i][j].x) + 'px';
-            rect.style.top = (img.offsetTop + payload[i][j].y) + 'px';
-            rect.style.width = payload[i][j].width + 'px';
-            rect.style.height = payload[i][j].height + 'px';
-          }
-        }
+        payload.forEach(function(rect) {
+          window.plot(rect.x, rect.y, rect.width, rect.height, rect.color);
+        });
       };
 
-      tracker.onNotFound = function() {
-        console.log('Colors not found');
+      window.plot = function(x, y, w, h, color) {
+        var rect = document.createElement('div');
+        document.body.appendChild(rect);
+        rect.classList.add('rect');
+        rect.style.border = '2px solid ' + color;
+        rect.style.width = w + 'px';
+        rect.style.height = h + 'px';
+        rect.style.left = (img.offsetLeft + x) + 'px';
+        rect.style.top = (img.offsetTop + y) + 'px';
       };
     };
   </script>
