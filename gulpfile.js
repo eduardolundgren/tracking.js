@@ -23,21 +23,21 @@ gulp.task('clean', function() {
 gulp.task('build', function() {
   var files = [
     'src/tracking.js',
-    'src/Brief.js',
-    'src/Canvas.js',
-    'src/EPnP.js',
-    'src/ViolaJones.js',
-    'src/Fast.js',
-    'src/Image.js',
-    'src/Math.js',
-    'src/Matrix.js',
-    'src/DisjointSet.js',
-    'src/Tracker.js',
-    'src/HAARTracker.js',
-    'src/ColorTracker.js',
-    'src/EyeTracker.js',
-    'src/FaceTracker.js',
-    'src/MouthTracker.js'
+    'src/detection/ViolaJones.js',
+    'src/features/Brief.js',
+    'src/features/Fast.js',
+    'src/math/Math.js',
+    'src/math/Matrix.js',
+    'src/pose/EPnP.js',
+    'src/trackers/Tracker.js',
+    'src/trackers/HAARTracker.js',
+    'src/trackers/ColorTracker.js',
+    'src/trackers/EyeTracker.js',
+    'src/trackers/FaceTracker.js',
+    'src/trackers/MouthTracker.js',
+    'src/utils/Canvas.js',
+    'src/utils/DisjointSet.js',
+    'src/utils/Image.js'
   ];
 
   return gulp.src(files)
@@ -53,7 +53,7 @@ gulp.task('build', function() {
 });
 
 gulp.task('build-data', function() {
-  return gulp.src('src/data/**.js')
+  return gulp.src('src/detection/training/haar/**.js')
     .pipe(banner())
     .pipe(gulp.dest('build/data'))
     .pipe(rename(function(filepath) {

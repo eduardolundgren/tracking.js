@@ -1,7 +1,7 @@
 'use strict';
 
 var sandbox = require('nodeunit').utils.sandbox;
-var context = sandbox('src/Fast.js', {tracking: {}, Int32Array: Int32Array});
+var context = sandbox('src/features/Fast.js', {tracking: {}, Int32Array: Int32Array});
 var Fast = context.tracking.Fast;
 
 module.exports = {
