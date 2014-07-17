@@ -10,8 +10,11 @@ var rimraf = require('gulp-rimraf');
 var stylish = require('jshint-stylish');
 var uglify = require('gulp-uglify');
 var esformatter = require('gulp-esformatter');
+var runSequence = require('run-sequence');
 
-gulp.task('all', ['clean', 'build', 'build-data']);
+gulp.task('all', ['clean'], function() {
+  return runSequence(['build', 'build-data']);
+});
 
 gulp.task('clean', function() {
   return gulp.src('build').pipe(rimraf());
