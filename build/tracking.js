@@ -199,6 +199,8 @@
     var context = element.getContext('2d');
     var imageData = context.getImageData(0, 0, width, height);
     tracker.track(imageData.data, width, height);
+
+    return new tracking.TrackerTask(tracker);
   };
 
   /**
@@ -222,6 +224,8 @@
     tracking.Canvas.loadImage(canvas, element.src, 0, 0, width, height, function() {
       tracking.trackCanvas_(canvas, tracker);
     });
+
+    return new tracking.TrackerTask(tracker);
   };
 
   /**
@@ -247,18 +251,22 @@
       canvas.width = width;
       canvas.height = height;
     };
-
     resizeCanvas_();
-
     element.addEventListener('resize', resizeCanvas_);
 
+    var requestId;
+    var trackerTask = new tracking.TrackerTask(tracker);
+    trackerTask.on('stop', function() {
+      window.cancelAnimationFrame(requestId);
+    });
+
     var requestFrame_ = function() {
-      window.requestAnimationFrame(function() {
+      requestId = window.requestAnimationFrame(function() {
         if (element.readyState === element.HAVE_ENOUGH_DATA) {
-          // Firefox v~30.0 gets confused with the video readyState firing an
-          // erroneous HAVE_ENOUGH_DATA just before HAVE_CURRENT_DATA state,
-          // hence keep trying to read it until resolved.
           try {
+            // Firefox v~30.0 gets confused with the video readyState firing an
+            // erroneous HAVE_ENOUGH_DATA just before HAVE_CURRENT_DATA state,
+            // hence keep trying to read it until resolved.
             context.drawImage(element, 0, 0, width, height);
           } catch (err) {}
           tracking.trackCanvas_(canvas, tracker);
@@ -266,7 +274,10 @@
         requestFrame_();
       });
     };
+
     requestFrame_();
+
+    return trackerTask;
   };
 
   // Browser polyfills
@@ -1607,6 +1618,62 @@
    * @param {number} height The pixels canvas height.
    */
   tracking.Tracker.prototype.track = function() {};
+}());
+
+(function() {
+  /**
+   * TrackerTask utility.
+   * @constructor
+   * @extends {tracking.EventEmitter}
+   */
+  tracking.TrackerTask = function(tracker) {
+    tracking.TrackerTask.base(this, 'constructor');
+
+    if (!tracker) {
+      throw new Error('Tracker instance not specified.');
+    }
+
+    this.setTracker(tracker);
+
+    this.reemitTrackEvent_ = function(event) {
+      this.emit('track', event);
+    }.bind(this);
+    tracker.on('track', this.reemitTrackEvent_);
+  };
+
+  tracking.inherits(tracking.TrackerTask, tracking.EventEmitter);
+
+  /**
+   * Holds the tracker instance managed by this task.
+   * @type {tracking.Tracker}
+   * @private
+   */
+  tracking.TrackerTask.prototype.tracker_ = null;
+
+  /**
+   * Gets the tracker instance managed by this task.
+   * @return {tracking.Tracker}
+   */
+  tracking.TrackerTask.prototype.getTracker = function() {
+    return this.tracker_;
+  };
+
+  /**
+   * Sets the tracker instance managed by this task.
+   * @return {tracking.Tracker}
+   */
+  tracking.TrackerTask.prototype.setTracker = function(tracker) {
+    this.tracker_ = tracker;
+  };
+
+  /**
+   * Emits a `stop` event on the tracker task for the implementers to stop any
+   * child action being done, such as `requestAnimationFrame`.
+   */
+  tracking.TrackerTask.prototype.stop = function() {
+    this.emit('stop');
+    this.tracker_.removeListener('track', this.reemitTrackEvent_);
+  };
 }());
 
 (function() {
