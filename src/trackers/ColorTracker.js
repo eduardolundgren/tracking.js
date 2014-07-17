@@ -14,6 +14,11 @@
     }
 
     if (opt_colors) {
+      opt_colors.forEach(function(color) {
+        if (!tracking.ColorTracker.getColor(color)) {
+          throw new Error('Color not valid, try `new tracking.ColorTracker("magenta")`.');
+        }
+      });
       this.setColors(opt_colors);
     }
   };
