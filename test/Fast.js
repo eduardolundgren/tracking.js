@@ -1,8 +1,6 @@
 'use strict';
 
-var sandbox = require('nodeunit').utils.sandbox;
-var context = sandbox('src/features/Fast.js', {tracking: {}, Int32Array: Int32Array});
-var Fast = context.tracking.Fast;
+var tracking = require('./utils/sandbox.js');
 
 module.exports = {
   setUp: function(done) {
@@ -15,7 +13,7 @@ module.exports = {
 
   testCornerDetection: function(test) {
     test.ok(
-      Fast.isCorner(
+      tracking.Fast.isCorner(
         150,
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255],
         10
@@ -25,7 +23,7 @@ module.exports = {
 
     test.equal(
       false,
-      Fast.isCorner(
+      tracking.Fast.isCorner(
         150,
         [0, 0, 0, 0, 0, 0, 0, 0, 255, 255, 255, 255, 255, 255, 255, 255],
         10
@@ -49,7 +47,7 @@ module.exports = {
       }
     }
 
-    corners = Fast.findCorners(pixels, 8, 8);
+    corners = tracking.Fast.findCorners(pixels, 8, 8);
     test.equal(
       2,
       corners.length,
