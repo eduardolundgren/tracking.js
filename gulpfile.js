@@ -31,6 +31,7 @@ gulp.task('build', function() {
     'src/math/Matrix.js',
     'src/pose/EPnP.js',
     'src/trackers/Tracker.js',
+    'src/trackers/TrackerTask.js',
     'src/trackers/ColorTracker.js',
     'src/trackers/ObjectTracker.js'
   ];

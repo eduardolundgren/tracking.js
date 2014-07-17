@@ -192,6 +192,8 @@
     var context = element.getContext('2d');
     var imageData = context.getImageData(0, 0, width, height);
     tracker.track(imageData.data, width, height);
+
+    return new tracking.TrackerTask(tracker);
   };
 
   /**
@@ -215,6 +217,8 @@
     tracking.Canvas.loadImage(canvas, element.src, 0, 0, width, height, function() {
       tracking.trackCanvas_(canvas, tracker);
     });
+
+    return new tracking.TrackerTask(tracker);
   };
 
   /**
@@ -240,18 +244,22 @@
       canvas.width = width;
       canvas.height = height;
     };
-
     resizeCanvas_();
-
     element.addEventListener('resize', resizeCanvas_);
 
+    var requestId;
+    var trackerTask = new tracking.TrackerTask(tracker);
+    trackerTask.on('stop', function() {
+      window.cancelAnimationFrame(requestId);
+    });
+
     var requestFrame_ = function() {
-      window.requestAnimationFrame(function() {
+      requestId = window.requestAnimationFrame(function() {
         if (element.readyState === element.HAVE_ENOUGH_DATA) {
-          // Firefox v~30.0 gets confused with the video readyState firing an
-          // erroneous HAVE_ENOUGH_DATA just before HAVE_CURRENT_DATA state,
-          // hence keep trying to read it until resolved.
           try {
+            // Firefox v~30.0 gets confused with the video readyState firing an
+            // erroneous HAVE_ENOUGH_DATA just before HAVE_CURRENT_DATA state,
+            // hence keep trying to read it until resolved.
             context.drawImage(element, 0, 0, width, height);
           } catch (err) {}
           tracking.trackCanvas_(canvas, tracker);
@@ -259,7 +267,10 @@
         requestFrame_();
       });
     };
+
     requestFrame_();
+
+    return trackerTask;
   };
 
   // Browser polyfills
