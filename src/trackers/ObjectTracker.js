@@ -18,9 +18,9 @@
         opt_classifiers.forEach(function(classifier, i) {
           if (typeof classifier === 'string') {
             opt_classifiers[i] = tracking.ViolaJones.classifiers[classifier];
-            if (!opt_classifiers[i]) {
-              throw new Error('Object classifier not valid, try `new tracking.ObjectTracker("face")`.');
-            }
+          }
+          if (!opt_classifiers[i]) {
+            throw new Error('Object classifier not valid, try `new tracking.ObjectTracker("face")`.');
           }
         });
       }
