@@ -367,7 +367,7 @@
    * @return {boolean} Returns true if event had listeners, false otherwise.
    */
   tracking.EventEmitter.prototype.emit = function(event) {
-    var listeners = this.events_ && this.events_[event];
+    var listeners = this.listeners(event);
     if (listeners) {
       var args = Array.prototype.slice.call(arguments, 1);
       for (var i = 0; i < listeners.length; i++) {
@@ -437,7 +437,7 @@
       return this;
     }
 
-    var listeners = this.events_[event];
+    var listeners = this.listeners(event);
     if (Array.isArray(listeners)) {
       var i = listeners.indexOf(listener);
       if (i < 0) {
