@@ -184,6 +184,25 @@
   };
 
   /**
+   * Tracks a canvas element based on the specified `tracker` instance and
+   * returns a `TrackerTask` for this track.
+   * @param {HTMLCanvasElement} element Canvas element to track.
+   * @param {tracking.Tracker} tracker The tracker instance used to track the
+   *     element.
+   * @param {object} opt_options Optional configuration to the tracker.
+   * @return {tracking.TrackerTask}
+   * @private
+   */
+  tracking.trackCanvas_ = function(element, tracker) {
+    var self = this;
+    var task = new tracking.TrackerTask(tracker);
+    task.on('run', function() {
+      self.trackCanvasInternal_(element, tracker);
+    });
+    return task.run();
+  };
+
+  /**
    * Tracks a canvas element based on the specified `tracker` instance. This
    * method extract the pixel information of the input element to pass to the
    * `tracker` instance.
@@ -193,14 +212,12 @@
    * @param {object} opt_options Optional configuration to the tracker.
    * @private
    */
-  tracking.trackCanvas_ = function(element, tracker) {
+  tracking.trackCanvasInternal_ = function(element, tracker) {
     var width = element.width;
     var height = element.height;
     var context = element.getContext('2d');
     var imageData = context.getImageData(0, 0, width, height);
     tracker.track(imageData.data, width, height);
-
-    return new tracking.TrackerTask(tracker);
   };
 
   /**
@@ -221,11 +238,13 @@
     canvas.width = width;
     canvas.height = height;
 
-    tracking.Canvas.loadImage(canvas, element.src, 0, 0, width, height, function() {
-      tracking.trackCanvas_(canvas, tracker);
+    var task = new tracking.TrackerTask(tracker);
+    task.on('run', function() {
+      tracking.Canvas.loadImage(canvas, element.src, 0, 0, width, height, function() {
+        tracking.trackCanvasInternal_(canvas, tracker);
+      });
     });
-
-    return new tracking.TrackerTask(tracker);
+    return task.run();
   };
 
   /**
@@ -255,12 +274,7 @@
     element.addEventListener('resize', resizeCanvas_);
 
     var requestId;
-    var trackerTask = new tracking.TrackerTask(tracker);
-    trackerTask.on('stop', function() {
-      window.cancelAnimationFrame(requestId);
-    });
-
-    var requestFrame_ = function() {
+    var requestAnimationFrame_ = function() {
       requestId = window.requestAnimationFrame(function() {
         if (element.readyState === element.HAVE_ENOUGH_DATA) {
           try {
@@ -269,15 +283,20 @@
             // hence keep trying to read it until resolved.
             context.drawImage(element, 0, 0, width, height);
           } catch (err) {}
-          tracking.trackCanvas_(canvas, tracker);
+          tracking.trackCanvasInternal_(canvas, tracker);
         }
-        requestFrame_();
+        requestAnimationFrame_();
       });
     };
 
-    requestFrame_();
-
-    return trackerTask;
+    var task = new tracking.TrackerTask(tracker);
+    task.on('stop', function() {
+      window.cancelAnimationFrame(requestId);
+    });
+    task.on('run', function() {
+      requestAnimationFrame_();
+    });
+    return task.run();
   };
 
   // Browser polyfills
@@ -1634,11 +1653,6 @@
     }
 
     this.setTracker(tracker);
-
-    this.reemitTrackEvent_ = function(event) {
-      this.emit('track', event);
-    }.bind(this);
-    tracker.on('track', this.reemitTrackEvent_);
   };
 
   tracking.inherits(tracking.TrackerTask, tracking.EventEmitter);
@@ -1651,11 +1665,36 @@
   tracking.TrackerTask.prototype.tracker_ = null;
 
   /**
+   * Holds if the tracker task is in running.
+   * @type {boolean}
+   * @private
+   */
+  tracking.TrackerTask.prototype.running_ = false;
+
+  /**
    * Gets the tracker instance managed by this task.
    * @return {tracking.Tracker}
    */
   tracking.TrackerTask.prototype.getTracker = function() {
     return this.tracker_;
+  };
+
+  /**
+   * Returns true if the tracker task is in running, false otherwise.
+   * @return {boolean}
+   * @private
+   */
+  tracking.TrackerTask.prototype.inRunning = function() {
+    return this.running_;
+  };
+
+  /**
+   * Sets if the tracker task is in running.
+   * @param {boolean} running
+   * @private
+   */
+  tracking.TrackerTask.prototype.setRunning = function(running) {
+    this.running_ = running;
   };
 
   /**
@@ -1667,12 +1706,40 @@
   };
 
   /**
+   * Emits a `run` event on the tracker task for the implementers to run any
+   * child action, e.g. `requestAnimationFrame`.
+   * @return {object} Returns itself, so calls can be chained.
+   */
+  tracking.TrackerTask.prototype.run = function() {
+    var self = this;
+
+    if (this.inRunning()) {
+      return;
+    }
+
+    this.setRunning(true);
+    this.reemitTrackEvent_ = function(event) {
+      self.emit('track', event);
+    };
+    this.tracker_.on('track', this.reemitTrackEvent_);
+    this.emit('run');
+    return this;
+  };
+
+  /**
    * Emits a `stop` event on the tracker task for the implementers to stop any
-   * child action being done, such as `requestAnimationFrame`.
+   * child action being done, e.g. `requestAnimationFrame`.
+   * @return {object} Returns itself, so calls can be chained.
    */
   tracking.TrackerTask.prototype.stop = function() {
+    if (!this.inRunning()) {
+      return;
+    }
+
+    this.setRunning(false);
     this.emit('stop');
     this.tracker_.removeListener('track', this.reemitTrackEvent_);
+    return this;
   };
 }());
 
