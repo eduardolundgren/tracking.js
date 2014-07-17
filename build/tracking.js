@@ -1625,6 +1625,11 @@
     }
 
     if (opt_colors) {
+      opt_colors.forEach(function(color) {
+        if (!tracking.ColorTracker.getColor(color)) {
+          throw new Error('Color not valid, try `new tracking.ColorTracker("magenta")`.');
+        }
+      });
       this.setColors(opt_colors);
     }
   };
@@ -2017,9 +2022,9 @@
         opt_classifiers.forEach(function(classifier, i) {
           if (typeof classifier === 'string') {
             opt_classifiers[i] = tracking.ViolaJones.classifiers[classifier];
-            if (!opt_classifiers[i]) {
-              throw new Error('Object classifier not valid, try `new tracking.ObjectTracker("face")`.');
-            }
+          }
+          if (!opt_classifiers[i]) {
+            throw new Error('Object classifier not valid, try `new tracking.ObjectTracker("face")`.');
           }
         });
       }
