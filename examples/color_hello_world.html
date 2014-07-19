@@ -27,7 +27,7 @@
 
       var tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
 
-      tracker.on('track', function foo(event) {
+      tracker.on('track', function(event) {
         event.data.forEach(function(rect) {
           window.plot(rect.x, rect.y, rect.width, rect.height, rect.color);
         });
