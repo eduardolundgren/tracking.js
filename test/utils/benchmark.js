@@ -2,7 +2,7 @@ var fs = require('fs');
 var PNG = require('png-js');
 
 var BENCHMARK_FILENAME = 'benchmark.json';
-var PATH_PERF_TESTS = 'test/perf_test';
+var PATH_PERF_TESTS = 'test/perf';
 var PATH_BENCHMARK_FILE = 'test/assets/' + BENCHMARK_FILENAME;
 var TEST_TIMES_RUN = 5;
 var TIME_THRESHOLD = 30;
