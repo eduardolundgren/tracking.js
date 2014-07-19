@@ -1,7 +1,7 @@
 /**
  * tracking.js - Augmented Reality JavaScript Framework.
  * @author Eduardo Lundgren <edu@rdo.io>
- * @version v1.0.0-alpha
+ * @version v1.0.0
  * @link http://trackingjs.com
  * @license BSD
  */
