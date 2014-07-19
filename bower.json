@@ -1,6 +1,6 @@
 {
   "name": "tracking.js",
-  "version": "1.0.0-alpha",
+  "version": "1.0.0",
   "homepage": "http://trackingjs.com",
   "authors": [
     "Eduardo Lundgren <edu@rdo.io>"
@@ -17,7 +17,7 @@
     "node_modules",
     "bower_components"
   ],
-  "dependencies": {
+  "devDependencies": {
     "threejs": "r67"
   }
 }
