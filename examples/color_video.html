@@ -27,8 +27,8 @@
 
   <script>
     window.onload = function() {
-      var rectangle = tracking.one('#rectangle');
-      var video = tracking.one('#video');
+      var rectangle = document.getElementById('rectangle');
+      var video = document.getElementById('video');
 
       var tracker = new tracking.ColorTracker();
       tracker.setMinDimension(5);

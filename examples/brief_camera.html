@@ -66,9 +66,9 @@
       };
 
       // Track ===================================================================
-      var boundingBox = tracking.one('#boundingBox');
-      var video = tracking.one('#video');
-      var canvas = tracking.one('#canvas');
+      var boundingBox = document.getElementById('boundingBox');
+      var video = document.getElementById('video');
+      var canvas = document.getElementById('canvas');
       var context = canvas.getContext('2d');
       var templateImageData;
       var capturing = false;

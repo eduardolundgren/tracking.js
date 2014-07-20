@@ -13,7 +13,7 @@
   <script>
     var width = 320;
     var height = 240;
-    var canvas = tracking.one('#canvas');
+    var canvas = document.getElementById('canvas');
     var context = canvas.getContext('2d');
 
     tracking.Canvas.loadImage(canvas, 'assets/book1.png', 0, 0, width, height, function() {

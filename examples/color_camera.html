@@ -24,8 +24,8 @@
 
   <script>
     window.onload = function() {
-      var video = tracking.one('#video');
-      var canvas = tracking.one('#canvas');
+      var video = document.getElementById('video');
+      var canvas = document.getElementById('canvas');
       var context = canvas.getContext('2d');
 
       var tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
