@@ -1923,7 +1923,7 @@
     neighbours[6] = -4;
     neighbours[7] = -width * 4 - 4;
 
-    tracking.ColorTracker.neighbours_ = neighbours;
+    tracking.ColorTracker.neighbours_[width] = neighbours;
 
     return neighbours;
   };
