@@ -15,7 +15,7 @@
    * efficiency, and recognition rate.
    * @type {number}
    */
-  tracking.Brief.N = 128;
+  tracking.Brief.N = 512;
 
   /**
    * Caches coordinates values of (x,y)-location pairs uniquely chosen during
