@@ -98,7 +98,7 @@
   tracking.Brief.match = function(keypoints1, descriptors1, keypoints2, descriptors2) {
     var len1 = keypoints1.length >> 1;
     var len2 = keypoints2.length >> 1;
-    var matches = new Int32Array(len1);
+    var matches = new Array(len1);
 
     for (var i = 0; i < len1; i++) {
       var min = Infinity;
@@ -115,13 +115,42 @@
           minj = j;
         }
       }
-      matches[i] = minj;
+      matches[i] = {
+        index1: i,
+        index2: minj,
+        keypoint1: [keypoints1[2 * i], keypoints1[2 * i + 1]],
+        keypoint2: [keypoints2[2 * minj], keypoints2[2 * minj + 1]],
+        confidence: 1 - min / this.N
+      };
     }
 
     return matches;
   };
 
   /**
+   * Removes matches outliers by testing matches on both directions.
+   * @param {array} keypoints1
+   * @param {array} descriptors1
+   * @param {array} keypoints2
+   * @param {array} descriptors2
+   * @return {Int32Array} Returns an array where the index is the corner1
+   *     index coordinate, and the value is the corresponding match index of
+   *     corner2, e.g. keypoints1=[x0,y0,x1,y1,...] and
+   *     keypoints2=[x'0,y'0,x'1,y'1,...], if x0 matches x'1 and x1 matches x'0,
+   *     the return array would be [3,0].
+   */
+  tracking.Brief.reciprocalMatch = function(keypoints1, descriptors1, keypoints2, descriptors2) {
+    var matches1 = tracking.Brief.match(keypoints1, descriptors1, keypoints2, descriptors2);
+    var matches2 = tracking.Brief.match(keypoints2, descriptors2, keypoints1, descriptors1);
+    var matches = [];
+    for (var i = 0; i < matches1.length; i++) {
+      if (matches2[matches1[i].index2].index2 === i) {
+        matches.push(matches1[i]);
+      }
+    }
+    return matches;
+  };
+
   /**
    * Gets the coordinates values of (x,y)-location pairs uniquely chosen
    * during the initialization.
