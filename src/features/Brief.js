@@ -140,9 +140,13 @@
    *     the return array would be [3,0].
    */
   tracking.Brief.reciprocalMatch = function(keypoints1, descriptors1, keypoints2, descriptors2) {
+    var matches = [];
+    if (keypoints1.length === 0 || keypoints2.length === 0) {
+      return matches;
+    }
+
     var matches1 = tracking.Brief.match(keypoints1, descriptors1, keypoints2, descriptors2);
     var matches2 = tracking.Brief.match(keypoints2, descriptors2, keypoints1, descriptors1);
-    var matches = [];
     for (var i = 0; i < matches1.length; i++) {
       if (matches2[matches1[i].index2].index2 === i) {
         matches.push(matches1[i]);
