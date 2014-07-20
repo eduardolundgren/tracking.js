@@ -45,13 +45,19 @@
    * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
+   * @param {number} threshold to determine whether the tested pixel is brighter or
+   *     darker than the corner candidate p. Default value is 40.
    * @return {array} Array containing the coordinates of all found corners,
    *     e.g. [x0,y0,x1,y1,...], where P(x0,y0) represents a corner coordinate.
    */
-  tracking.Fast.findCorners = function(pixels, width, height) {
+  tracking.Fast.findCorners = function(pixels, width, height, opt_threshold) {
     var circleOffsets = this.getCircleOffsets_(width);
     var circlePixels = new Int32Array(16);
     var corners = [];
+
+    if (opt_threshold === undefined) {
+      opt_threshold = this.FAST_THRESHOLD;
+    }
 
     // When looping through the image pixels, skips the first three lines from
     // the image boundaries to constrain the surrounding circle inside the image
@@ -67,7 +73,7 @@
           circlePixels[k] = pixels[w + circleOffsets[k]];
         }
 
-        if (this.isCorner(p, circlePixels, this.FAST_THRESHOLD)) {
+        if (this.isCorner(p, circlePixels, opt_threshold)) {
           // The pixel p is classified as a corner, as optimization increment j
           // by the circle radius 3 to skip the neighbor pixels inside the
           // surrounding circle. This can be removed without compromising the
