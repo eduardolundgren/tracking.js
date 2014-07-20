@@ -11,6 +11,7 @@ module.exports = {
     done();
   },
 
+  // TODO: Update this test to generate randomWindowOffsets_ and randomImageOffsets_ instead.
   testGetDescriptors: function(test) {
     var descriptors;
     var grayScale = [
@@ -66,8 +67,8 @@ module.exports = {
     matchings = tracking.Brief.match(keypoints1, descriptors1, keypoints2, descriptors2);
 
     test.equal(2, matchings.length, 'There should be 2 matchings');
-    test.equal(1, matchings[0], 'Keypoint 0 from 1st array should match keypoint 1 from the 2nd');
-    test.equal(0, matchings[1], 'Keypoint 1 from 1st array should match keypoint 0 from the 2nd');
+    test.equal(1, matchings[0].index2, 'Keypoint 0 from 1st array should match keypoint 1 from the 2nd');
+    test.equal(0, matchings[1].index2, 'Keypoint 1 from 1st array should match keypoint 0 from the 2nd');
 
     test.done();
   }
