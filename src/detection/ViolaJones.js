@@ -1,5 +1,5 @@
 (function() {
-  /*
+  /**
    * ViolaJones utility.
    * @static
    * @constructor

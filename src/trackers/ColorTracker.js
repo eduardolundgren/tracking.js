@@ -155,6 +155,7 @@
    * @param {number} width The image width.
    * @return {array} Array with the eight offset values of the neighbours
    *     surrounding a pixel.
+   * @private
    */
   tracking.ColorTracker.prototype.getNeighboursForWidth_ = function(width) {
     if (tracking.ColorTracker.neighbours_[width]) {
@@ -180,6 +181,7 @@
   /**
    * Unites groups whose bounding box intersect with each other.
    * @param {Array.<Object>} rects
+   * @private
    */
   tracking.ColorTracker.prototype.mergeRectangles_ = function(rects) {
     var intersects;
@@ -270,6 +272,7 @@
    * @param {number} width The pixels canvas width.
    * @param {number} height The pixels canvas height.
    * @param {string} color The color to be found
+   * @private
    */
   tracking.ColorTracker.prototype.trackColor_ = function(pixels, width, height, color) {
     var colorFn = tracking.ColorTracker.knownColors_[color];

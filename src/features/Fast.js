@@ -1,5 +1,5 @@
 (function() {
-  /*
+  /**
    * FAST intends for "Features from Accelerated Segment Test". This method
    * performs a point segment test corner detection. The segment test
    * criterion operates by considering a circle of sixteen pixels around the
@@ -99,6 +99,14 @@
     return circlePixel - p > threshold;
   };
 
+  /**
+   * Checks if the circle pixel is within the corner of the candidate pixel p
+   * by a threshold.
+   * @param {number} p The value of the candidate pixel p.
+   * @param {number} circlePixel The circle pixel value.
+   * @param {number} threshold
+   * @return {Boolean}              [description]
+   */
   tracking.Fast.isCorner = function(p, circlePixels, threshold) {
     if (this.isTriviallyExcluded(circlePixels, p, threshold)) {
       return false;
