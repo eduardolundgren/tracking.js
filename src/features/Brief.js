@@ -24,7 +24,16 @@
    * @private
    * @static
    */
-  tracking.Brief.randomOffsets_ = {};
+  tracking.Brief.randomImageOffsets_ = {};
+
+  /**
+   * Caches delta values of (x,y)-location pairs uniquely chosen during
+   * the initialization.
+   * @type {Int32Array}
+   * @private
+   * @static
+   */
+  tracking.Brief.randomWindowOffsets_ = null;
 
   /**
    * Generates a brinary string for each found keypoints extracted using an
@@ -47,13 +56,12 @@
     for (var i = 0; i < keypoints.length; i += 2) {
       var w = width * keypoints[i + 1] + keypoints[i];
 
+      var offsetsPosition = 0;
       for (var j = 0, n = this.N; j < n; j++) {
-        if (pixels[offsets[j + j] + w] < pixels[offsets[j + j + 1] + w]) {
-          // TODO: Add comment.
+        if (pixels[offsets[offsetsPosition++] + w] < pixels[offsets[offsetsPosition++] + w]) {
           descriptorWord |= 1 << (j & 31);
         }
 
-        // TODO: Add comment.
         if (!((j + 1) & 31)) {
           descriptors[position++] = descriptorWord;
           descriptorWord = 0;
@@ -114,25 +122,34 @@
   };
 
   /**
+  /**
    * Gets the coordinates values of (x,y)-location pairs uniquely chosen
    * during the initialization.
-   * @param {number} width The image width.
    * @return {array} Array with the random offset values.
    */
   tracking.Brief.getRandomOffsets_ = function(width) {
-    if (this.randomOffsets_[width]) {
-      return this.randomOffsets_[width];
+    if (!this.randomWindowOffsets_) {
+      var windowPosition = 0;
+      var windowOffsets = new Int32Array(4 * this.N);
+      for (var i = 0; i < this.N; i++) {
+        windowOffsets[windowPosition++] = Math.round(tracking.Math.uniformRandom(-15, 16));
+        windowOffsets[windowPosition++] = Math.round(tracking.Math.uniformRandom(-15, 16));
+        windowOffsets[windowPosition++] = Math.round(tracking.Math.uniformRandom(-15, 16));
+        windowOffsets[windowPosition++] = Math.round(tracking.Math.uniformRandom(-15, 16));
+      }
+      this.randomWindowOffsets_ = windowOffsets;
     }
 
-    var offsets = new Int32Array(2 * this.N),
-      position = 0;
-
-    for (var i = 0; i < this.N; i++) {
-      offsets[position++] = tracking.Math.uniformRandom(-15, 16) * width + tracking.Math.uniformRandom(-15, 16);
-      offsets[position++] = tracking.Math.uniformRandom(-15, 16) * width + tracking.Math.uniformRandom(-15, 16);
+    if (!this.randomImageOffsets_[width]) {
+      var imagePosition = 0;
+      var imageOffsets = new Int32Array(2 * this.N);
+      for (var j = 0; j < this.N; j++) {
+        imageOffsets[imagePosition++] = this.randomWindowOffsets_[4 * j] * width + this.randomWindowOffsets_[4 * j + 1];
+        imageOffsets[imagePosition++] = this.randomWindowOffsets_[4 * j + 2] * width + this.randomWindowOffsets_[4 * j + 3];
+      }
+      this.randomImageOffsets_[width] = imageOffsets;
     }
 
-    this.randomOffsets_[width] = offsets;
-    return this.randomOffsets_[width];
+    return this.randomImageOffsets_[width];
   };
 }());
