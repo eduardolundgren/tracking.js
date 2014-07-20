@@ -33,11 +33,11 @@ module.exports = {
 
     test.equal(8, descriptors.length, 'There should be 8 descriptor words');
 
-    for (var i = 0; i < 4; i++) {
-      test.equal(858993459, descriptors[i], 'Descriptor should be 858993459');
+    for (var j = 0; j < 4; j++) {
+      test.equal(858993459, descriptors[j], 'Descriptor should be 858993459');
     }
-    for (var i = 5; i < 8; i++) {
-      test.equal(-286331154, descriptors[i], 'Descriptor should be -286331154');
+    for (var k = 5; k < 8; k++) {
+      test.equal(-286331154, descriptors[k], 'Descriptor should be -286331154');
     }
 
     test.done();
