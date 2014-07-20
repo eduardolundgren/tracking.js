@@ -300,7 +300,7 @@
    * @return {array} The edge pixels in a linear [r,g,b,a,...] array.
    */
   tracking.Image.sobel = function(pixels, width, height) {
-    pixels = this.grayscale(pixels, width, height);
+    pixels = this.grayscale(pixels, width, height, true);
     var output = new Float32Array(width * height * 4);
     var sobelSignVector = new Float32Array([-1, 0, 1]);
     var sobelScaleVector = new Float32Array([1, 2, 1]);
