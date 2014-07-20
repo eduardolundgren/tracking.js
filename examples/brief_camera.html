@@ -1,0 +1,159 @@
+<!doctype html>
+<html>
+<head>
+
+  <title>tracking.js - bounding box with camera</title>
+
+  <meta charset="utf-8">
+
+  <script src="../build/tracking.js"></script>
+
+  <style>
+  #boundingBox {
+    diplay: none;
+    position: absolute;
+    background: white;
+    border: 1px dashed;
+    opacity: .5;
+  }
+  #video {
+    position: absolute;
+    top: -1000px;
+  }
+  body {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+  }
+  </style>
+</head>
+<body>
+  Click and drag to select the area to be tracked.
+  <br>
+  <div id="boundingBox"></div>
+  <video id="video" width="640" height="480" preload autoplay loop muted controls></video>
+  <canvas id="canvas" width="640" height="480"></canvas>
+
+  <script>
+    (function() {
+      // BoundingBoxTracker ======================================================
+      var BoundingBoxTracker = function() {
+        BoundingBoxTracker.base(this, 'constructor');
+      };
+      tracking.inherits(BoundingBoxTracker, tracking.Tracker);
+
+      BoundingBoxTracker.prototype.templateDescriptors_ = null;
+      BoundingBoxTracker.prototype.templateKeypoints_ = null;
+
+      BoundingBoxTracker.prototype.setTemplate = function(pixels, width, height) {
+        var blur = tracking.Image.blur(pixels, width, height, 3);
+        var grayscale = tracking.Image.grayscale(blur, width, height);
+        this.templateKeypoints_ = tracking.Fast.findCorners(grayscale, width, height);
+        this.templateDescriptors_ = tracking.Brief.getDescriptors(grayscale, width, this.templateKeypoints_);
+      };
+
+      BoundingBoxTracker.prototype.track = function(pixels, width, height) {
+        var blur = tracking.Image.blur(pixels, width, height, 3);
+        var grayscale = tracking.Image.grayscale(blur, width, height);
+        var keypoints = tracking.Fast.findCorners(grayscale, width, height, 60);
+        var descriptors = tracking.Brief.getDescriptors(grayscale, width, keypoints);
+        this.emit('track', {
+          data: tracking.Brief.reciprocalMatch(this.templateKeypoints_, this.templateDescriptors_, keypoints, descriptors)
+        });
+      };
+
+      // Track ===================================================================
+      var boundingBox = tracking.one('#boundingBox');
+      var video = tracking.one('#video');
+      var canvas = tracking.one('#canvas');
+      var context = canvas.getContext('2d');
+      var templateImageData;
+      var capturing = false;
+
+      var tracker = new BoundingBoxTracker();
+
+      tracker.on('track', function(event) {
+        if (capturing) {
+          return;
+        }
+        // Sorts best matches by confidence.
+        event.data.sort(function(a, b) {
+          return b.confidence - a.confidence;
+        });
+        // Re-draws template on canvas.
+        context.putImageData(templateImageData, 640, 0);
+
+        // Plots lines connecting matches.
+        for (var i = 0; i < Math.min(10, event.data.length); i++) {
+          var template = event.data[i].keypoint1;
+          var frame = event.data[i].keypoint2;
+          context.beginPath();
+          context.strokeStyle = 'magenta';
+          context.moveTo(frame[0], frame[1]);
+          context.lineTo(640 + template[0], template[1]);
+          context.stroke();
+        }
+      });
+
+      var trackerTask = tracking.track(video, tracker, { camera: true });
+      // Waits for the user to accept the camera.
+      trackerTask.stop();
+
+      // Sync video ============================================================
+      function requestFrame() {
+        window.requestAnimationFrame(function() {
+          context.clearRect(0, 0, canvas.width, canvas.height);
+          if (video.readyState === video.HAVE_ENOUGH_DATA) {
+            try {
+              context.drawImage(video, 0, 0, 600, 480);
+            } catch (err) {}
+          }
+          requestFrame();
+        });
+      }
+      requestFrame();
+
+      // Bounding box drag =====================================================
+      var initialPoint;
+      var left;
+      var top;
+      var width;
+      var height;
+      canvas.addEventListener('mousedown', function(event) {
+        initialPoint = [event.pageX, event.pageY];
+        capturing = true;
+      });
+      canvas.addEventListener('mousemove', function(event) {
+        if (capturing) {
+          left = Math.min(initialPoint[0], event.pageX);
+          top = Math.min(initialPoint[1], event.pageY);
+          width = Math.max(initialPoint[0], event.pageX) - left;
+          height = Math.max(initialPoint[1], event.pageY) - top;
+          boundingBox.style.display = 'block';
+          boundingBox.style.left = left + 'px';
+          boundingBox.style.top = top + 'px';
+          boundingBox.style.width = width + 'px';
+          boundingBox.style.height = height + 'px';
+        }
+      });
+      document.addEventListener('mouseup', function() {
+        boundingBox.style.display = 'none';
+        setTackerTemplate(left, top, width, height);
+        capturing = false;
+      });
+      function setTackerTemplate(left, top, width, height) {
+        templateImageData = context.getImageData(left - canvas.offsetLeft, top - canvas.offsetTop, width, height);
+        canvas.width = 640 + width;
+        context.putImageData(templateImageData, 640, 0);
+        trackerTask.stop();
+        tracker.setTemplate(templateImageData.data, width, height);
+        trackerTask.run();
+      }
+    }());
+  </script>
+
+</body>
+</html>
