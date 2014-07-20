@@ -2,6 +2,7 @@
 var gulp = require('gulp');
 var concat = require('gulp-concat');
 var header = require('gulp-header');
+var jsdoc = require("gulp-jsdoc");
 var jshint = require('gulp-jshint');
 var nodeunit = require('gulp-nodeunit');
 var pkg = require('./package.json');
@@ -11,6 +12,16 @@ var stylish = require('jshint-stylish');
 var uglify = require('gulp-uglify');
 var esformatter = require('gulp-esformatter');
 var runSequence = require('run-sequence');
+
+gulp.task('api', function () {
+  var options = {
+    showPrivate: true,
+    private: true
+  };
+
+  return gulp.src(['src/**/*.js', 'README.md'])
+    .pipe(jsdoc('./docs', undefined, undefined, options));
+});
 
 gulp.task('all', ['clean'], function() {
   return runSequence(['build', 'build-data']);
