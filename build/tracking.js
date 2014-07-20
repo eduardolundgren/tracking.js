@@ -570,6 +570,41 @@
   tracking.Image = {};
 
   /**
+   * Computes gaussian blur. Adpated from
+   * https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {number} diameter Gaussian blur diameter, must be greater than 1.
+   * @return {array} The edge pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.blur = function(pixels, width, height, diameter) {
+    diameter = Math.abs(diameter);
+    if (diameter <= 1) {
+      throw new Error('Diameter should be greater than 1.');
+    }
+    var radius = diameter / 2;
+    var len = Math.ceil(diameter) + (1 - (Math.ceil(diameter) % 2));
+    var weights = new Float32Array(len);
+    var rho = (radius + 0.5) / 3;
+    var rhoSq = rho * rho;
+    var gaussianFactor = 1 / Math.sqrt(2 * Math.PI * rhoSq);
+    var rhoFactor = -1 / (2 * rho * rho);
+    var wsum = 0;
+    var middle = Math.floor(len / 2);
+    for (var i = 0; i < len; i++) {
+      var x = i - middle;
+      var gx = gaussianFactor * Math.exp(x * x * rhoFactor);
+      weights[i] = gx;
+      wsum += gx;
+    }
+    for (var j = 0; j < weights.length; j++) {
+      weights[j] /= wsum;
+    }
+    return this.separableConvolve(pixels, width, height, weights, weights, false);
+  };
+
+  /**
    * Computes the integral image for summed, squared, rotated and sobel pixels.
    * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
    *     through.
@@ -828,7 +863,7 @@
    * @return {array} The edge pixels in a linear [r,g,b,a,...] array.
    */
   tracking.Image.sobel = function(pixels, width, height) {
-    pixels = this.grayscale(pixels, width, height);
+    pixels = this.grayscale(pixels, width, height, true);
     var output = new Float32Array(width * height * 4);
     var sobelSignVector = new Float32Array([-1, 0, 1]);
     var sobelScaleVector = new Float32Array([1, 2, 1]);
@@ -1147,7 +1182,7 @@
    * efficiency, and recognition rate.
    * @type {number}
    */
-  tracking.Brief.N = 128;
+  tracking.Brief.N = 512;
 
   /**
    * Caches coordinates values of (x,y)-location pairs uniquely chosen during
@@ -1156,7 +1191,16 @@
    * @private
    * @static
    */
-  tracking.Brief.randomOffsets_ = {};
+  tracking.Brief.randomImageOffsets_ = {};
+
+  /**
+   * Caches delta values of (x,y)-location pairs uniquely chosen during
+   * the initialization.
+   * @type {Int32Array}
+   * @private
+   * @static
+   */
+  tracking.Brief.randomWindowOffsets_ = null;
 
   /**
    * Generates a brinary string for each found keypoints extracted using an
@@ -1179,13 +1223,12 @@
     for (var i = 0; i < keypoints.length; i += 2) {
       var w = width * keypoints[i + 1] + keypoints[i];
 
+      var offsetsPosition = 0;
       for (var j = 0, n = this.N; j < n; j++) {
-        if (pixels[offsets[j + j] + w] < pixels[offsets[j + j + 1] + w]) {
-          // TODO: Add comment.
+        if (pixels[offsets[offsetsPosition++] + w] < pixels[offsets[offsetsPosition++] + w]) {
           descriptorWord |= 1 << (j & 31);
         }
 
-        // TODO: Add comment.
         if (!((j + 1) & 31)) {
           descriptors[position++] = descriptorWord;
           descriptorWord = 0;
@@ -1222,7 +1265,7 @@
   tracking.Brief.match = function(keypoints1, descriptors1, keypoints2, descriptors2) {
     var len1 = keypoints1.length >> 1;
     var len2 = keypoints2.length >> 1;
-    var matches = new Int32Array(len1);
+    var matches = new Array(len1);
 
     for (var i = 0; i < len1; i++) {
       var min = Infinity;
@@ -1239,33 +1282,75 @@
           minj = j;
         }
       }
-      matches[i] = minj;
+      matches[i] = {
+        index1: i,
+        index2: minj,
+        keypoint1: [keypoints1[2 * i], keypoints1[2 * i + 1]],
+        keypoint2: [keypoints2[2 * minj], keypoints2[2 * minj + 1]],
+        confidence: 1 - min / this.N
+      };
     }
 
     return matches;
   };
 
   /**
+   * Removes matches outliers by testing matches on both directions.
+   * @param {array} keypoints1
+   * @param {array} descriptors1
+   * @param {array} keypoints2
+   * @param {array} descriptors2
+   * @return {Int32Array} Returns an array where the index is the corner1
+   *     index coordinate, and the value is the corresponding match index of
+   *     corner2, e.g. keypoints1=[x0,y0,x1,y1,...] and
+   *     keypoints2=[x'0,y'0,x'1,y'1,...], if x0 matches x'1 and x1 matches x'0,
+   *     the return array would be [3,0].
+   */
+  tracking.Brief.reciprocalMatch = function(keypoints1, descriptors1, keypoints2, descriptors2) {
+    var matches = [];
+    if (keypoints1.length === 0 || keypoints2.length === 0) {
+      return matches;
+    }
+
+    var matches1 = tracking.Brief.match(keypoints1, descriptors1, keypoints2, descriptors2);
+    var matches2 = tracking.Brief.match(keypoints2, descriptors2, keypoints1, descriptors1);
+    for (var i = 0; i < matches1.length; i++) {
+      if (matches2[matches1[i].index2].index2 === i) {
+        matches.push(matches1[i]);
+      }
+    }
+    return matches;
+  };
+
+  /**
    * Gets the coordinates values of (x,y)-location pairs uniquely chosen
    * during the initialization.
-   * @param {number} width The image width.
    * @return {array} Array with the random offset values.
    */
   tracking.Brief.getRandomOffsets_ = function(width) {
-    if (this.randomOffsets_[width]) {
-      return this.randomOffsets_[width];
+    if (!this.randomWindowOffsets_) {
+      var windowPosition = 0;
+      var windowOffsets = new Int32Array(4 * this.N);
+      for (var i = 0; i < this.N; i++) {
+        windowOffsets[windowPosition++] = Math.round(tracking.Math.uniformRandom(-15, 16));
+        windowOffsets[windowPosition++] = Math.round(tracking.Math.uniformRandom(-15, 16));
+        windowOffsets[windowPosition++] = Math.round(tracking.Math.uniformRandom(-15, 16));
+        windowOffsets[windowPosition++] = Math.round(tracking.Math.uniformRandom(-15, 16));
+      }
+      this.randomWindowOffsets_ = windowOffsets;
     }
 
-    var offsets = new Int32Array(2 * this.N),
-      position = 0;
-
-    for (var i = 0; i < this.N; i++) {
-      offsets[position++] = tracking.Math.uniformRandom(-15, 16) * width + tracking.Math.uniformRandom(-15, 16);
-      offsets[position++] = tracking.Math.uniformRandom(-15, 16) * width + tracking.Math.uniformRandom(-15, 16);
+    if (!this.randomImageOffsets_[width]) {
+      var imagePosition = 0;
+      var imageOffsets = new Int32Array(2 * this.N);
+      for (var j = 0; j < this.N; j++) {
+        imageOffsets[imagePosition++] = this.randomWindowOffsets_[4 * j] * width + this.randomWindowOffsets_[4 * j + 1];
+        imageOffsets[imagePosition++] = this.randomWindowOffsets_[4 * j + 2] * width + this.randomWindowOffsets_[4 * j + 3];
+      }
+      this.randomImageOffsets_[width] = imageOffsets;
     }
 
-    this.randomOffsets_[width] = offsets;
-    return this.randomOffsets_[width];
+    return this.randomImageOffsets_[width];
   };
 }());
 
@@ -1316,13 +1401,19 @@
    * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
+   * @param {number} threshold to determine whether the tested pixel is brighter or
+   *     darker than the corner candidate p. Default value is 40.
    * @return {array} Array containing the coordinates of all found corners,
    *     e.g. [x0,y0,x1,y1,...], where P(x0,y0) represents a corner coordinate.
    */
-  tracking.Fast.findCorners = function(pixels, width, height) {
+  tracking.Fast.findCorners = function(pixels, width, height, opt_threshold) {
     var circleOffsets = this.getCircleOffsets_(width);
     var circlePixels = new Int32Array(16);
     var corners = [];
+
+    if (opt_threshold === undefined) {
+      opt_threshold = this.FAST_THRESHOLD;
+    }
 
     // When looping through the image pixels, skips the first three lines from
     // the image boundaries to constrain the surrounding circle inside the image
@@ -1338,7 +1429,7 @@
           circlePixels[k] = pixels[w + circleOffsets[k]];
         }
 
-        if (this.isCorner(p, circlePixels, this.FAST_THRESHOLD)) {
+        if (this.isCorner(p, circlePixels, opt_threshold)) {
           // The pixel p is classified as a corner, as optimization increment j
           // by the circle radius 3 to skip the neighbor pixels inside the
           // surrounding circle. This can be removed without compromising the
