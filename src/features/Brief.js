@@ -46,9 +46,9 @@
    *     to describe the corner, e.g. [0,0,0,0, 0,0,0,0, ...].
    */
   tracking.Brief.getDescriptors = function(pixels, width, keypoints) {
-    // Optimizing divide by four operation using binary shift
-    // (this.N >> 5) === this.N/4.
-    var descriptors = new Int32Array(keypoints.length * (this.N >> 5));
+    // Optimizing divide by 32 operation using binary shift
+    // (this.N >> 5) === this.N/32.
+    var descriptors = new Int32Array((keypoints.length >> 1) * (this.N >> 5));
     var descriptorWord = 0;
     var offsets = this.getRandomOffsets_(width);
     var position = 0;
@@ -59,9 +59,15 @@
       var offsetsPosition = 0;
       for (var j = 0, n = this.N; j < n; j++) {
         if (pixels[offsets[offsetsPosition++] + w] < pixels[offsets[offsetsPosition++] + w]) {
+          // The bit in the position `j % 32` of descriptorWord should be set to 1. We do
+          // this by making an OR operation with a binary number that only has the bit
+          // in that position set to 1. That binary number is obtained by shifting 1 left by
+          // `j % 32` (which is the same as `j & 31` left) positions.
           descriptorWord |= 1 << (j & 31);
         }
 
+        // If the next j is a multiple of 32, we will need to use a new descriptor word to hold
+        // the next results.
         if (!((j + 1) & 31)) {
           descriptors[position++] = descriptorWord;
           descriptorWord = 0;
@@ -105,8 +111,8 @@
       var minj = 0;
       for (var j = 0; j < len2; j++) {
         var dist = 0;
-        // Optimizing divide by four operation using binary shift
-        // (this.N >> 5) === this.N/4.
+        // Optimizing divide by 32 operation using binary shift
+        // (this.N >> 5) === this.N/32.
         for (var k = 0, n = this.N >> 5; k < n; k++) {
           dist += tracking.Math.hammingWeight(descriptors1[i * n + k] ^ descriptors2[j * n + k]);
         }
