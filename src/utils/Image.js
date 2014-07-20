@@ -7,6 +7,41 @@
   tracking.Image = {};
 
   /**
+   * Computes gaussian blur. Adpated from
+   * https://github.com/kig/canvasfilters.
+   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @param {number} diameter Gaussian blur diameter, must be greater than 1.
+   * @return {array} The edge pixels in a linear [r,g,b,a,...] array.
+   */
+  tracking.Image.blur = function(pixels, width, height, diameter) {
+    diameter = Math.abs(diameter);
+    if (diameter <= 1) {
+      throw new Error('Diameter should be greater than 1.');
+    }
+    var radius = diameter / 2;
+    var len = Math.ceil(diameter) + (1 - (Math.ceil(diameter) % 2));
+    var weights = new Float32Array(len);
+    var rho = (radius + 0.5) / 3;
+    var rhoSq = rho * rho;
+    var gaussianFactor = 1 / Math.sqrt(2 * Math.PI * rhoSq);
+    var rhoFactor = -1 / (2 * rho * rho);
+    var wsum = 0;
+    var middle = Math.floor(len / 2);
+    for (var i = 0; i < len; i++) {
+      var x = i - middle;
+      var gx = gaussianFactor * Math.exp(x * x * rhoFactor);
+      weights[i] = gx;
+      wsum += gx;
+    }
+    for (var j = 0; j < weights.length; j++) {
+      weights[j] /= wsum;
+    }
+    return this.separableConvolve(pixels, width, height, weights, weights, false);
+  };
+
+  /**
    * Computes the integral image for summed, squared, rotated and sobel pixels.
    * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
    *     through.
