@@ -14,6 +14,7 @@ module.exports = {
   // TODO: Update this test to generate randomWindowOffsets_ and randomImageOffsets_ instead.
   testGetDescriptors: function(test) {
     var descriptors;
+    var descriptorsPerKeypoint = tracking.Brief.N / 32;
     var grayScale = [
       0, 0, 1, 0, 0, 0,
       1, 9, 0, 9, 1, 0,
@@ -23,20 +24,20 @@ module.exports = {
     var width = 6;
 
     // Write the offsets manually, as we can't verify results that are obtained randomly.
-    tracking.Brief.randomOffsets_[width] = [];
+    tracking.Brief.randomImageOffsets_[width] = [];
     for (var i = 0; i < tracking.Brief.N; i++) {
       var position = i % 4;
-      tracking.Brief.randomOffsets_[width].push(repeat[position * 2], repeat[position * 2 + 1]);
+      tracking.Brief.randomImageOffsets_[width].push(repeat[position * 2], repeat[position * 2 + 1]);
     }
 
     descriptors = tracking.Brief.getDescriptors(grayScale, width, [1, 1, 3, 1]);
 
-    test.equal(8, descriptors.length, 'There should be 8 descriptor words');
+    test.equal(2 * descriptorsPerKeypoint, descriptors.length, 'There should be 8 descriptor words');
 
-    for (var j = 0; j < 4; j++) {
+    for (var j = 0; j < descriptorsPerKeypoint; j++) {
       test.equal(858993459, descriptors[j], 'Descriptor should be 858993459');
     }
-    for (var k = 5; k < 8; k++) {
+    for (var k = descriptorsPerKeypoint; k < 2 * descriptorsPerKeypoint; k++) {
       test.equal(-286331154, descriptors[k], 'Descriptor should be -286331154');
     }
 

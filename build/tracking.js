@@ -886,7 +886,7 @@
 }());
 
 (function() {
-  /*
+  /**
    * ViolaJones utility.
    * @static
    * @constructor
@@ -990,6 +990,7 @@
    * @return {boolean} True whether the block at position i,j can be skipped,
    *     false otherwise.
    * @static
+   * @protected
    */
   tracking.ViolaJones.isTriviallyExcluded = function(edgesDensity, integralImageSobel, i, j, width, blockWidth, blockHeight) {
     var wbA = i * width + j;
@@ -1211,6 +1212,7 @@
    * @return {Int32Array} Returns an array where for each four sequence int
    *     values represent the descriptor binary string (128 bits) necessary
    *     to describe the corner, e.g. [0,0,0,0, 0,0,0,0, ...].
+   * @static
    */
   tracking.Brief.getDescriptors = function(pixels, width, keypoints) {
     // Optimizing divide by 32 operation using binary shift
@@ -1267,6 +1269,7 @@
    *     corner2, e.g. keypoints1=[x0,y0,x1,y1,...] and
    *     keypoints2=[x'0,y'0,x'1,y'1,...], if x0 matches x'1 and x1 matches x'0,
    *     the return array would be [3,0].
+   * @static
    */
   tracking.Brief.match = function(keypoints1, descriptors1, keypoints2, descriptors2) {
     var len1 = keypoints1.length >> 1;
@@ -1311,6 +1314,7 @@
    *     corner2, e.g. keypoints1=[x0,y0,x1,y1,...] and
    *     keypoints2=[x'0,y'0,x'1,y'1,...], if x0 matches x'1 and x1 matches x'0,
    *     the return array would be [3,0].
+   * @static
    */
   tracking.Brief.reciprocalMatch = function(keypoints1, descriptors1, keypoints2, descriptors2) {
     var matches = [];
@@ -1332,6 +1336,7 @@
    * Gets the coordinates values of (x,y)-location pairs uniquely chosen
    * during the initialization.
    * @return {array} Array with the random offset values.
+   * @private
    */
   tracking.Brief.getRandomOffsets_ = function(width) {
     if (!this.randomWindowOffsets_) {
@@ -1361,7 +1366,7 @@
 }());
 
 (function() {
-  /*
+  /**
    * FAST intends for "Features from Accelerated Segment Test". This method
    * performs a point segment test corner detection. The segment test
    * criterion operates by considering a circle of sixteen pixels around the
@@ -1411,6 +1416,7 @@
    *     darker than the corner candidate p. Default value is 40.
    * @return {array} Array containing the coordinates of all found corners,
    *     e.g. [x0,y0,x1,y1,...], where P(x0,y0) represents a corner coordinate.
+   * @static
    */
   tracking.Fast.findCorners = function(pixels, width, height, opt_threshold) {
     var circleOffsets = this.getCircleOffsets_(width);
@@ -1456,11 +1462,21 @@
    * @param {number} p The value of the candidate pixel p.
    * @param {number} threshold
    * @return {Boolean}
+   * @static
    */
   tracking.Fast.isBrighter = function(circlePixel, p, threshold) {
     return circlePixel - p > threshold;
   };
 
+  /**
+   * Checks if the circle pixel is within the corner of the candidate pixel p
+   * by a threshold.
+   * @param {number} p The value of the candidate pixel p.
+   * @param {number} circlePixel The circle pixel value.
+   * @param {number} threshold
+   * @return {Boolean}
+   * @static
+   */
   tracking.Fast.isCorner = function(p, circlePixels, threshold) {
     if (this.isTriviallyExcluded(circlePixels, p, threshold)) {
       return false;
@@ -1503,6 +1519,7 @@
    * @param {number} p The value of the candidate pixel p.
    * @param {number} threshold
    * @return {Boolean}
+   * @static
    */
   tracking.Fast.isDarker = function(circlePixel, p, threshold) {
     return p - circlePixel > threshold;
@@ -1518,6 +1535,8 @@
    * @param {number} p The value of the candidate pixel p.
    * @param {number} threshold
    * @return {Boolean}
+   * @static
+   * @protected
    */
   tracking.Fast.isTriviallyExcluded = function(circlePixels, p, threshold) {
     var count = 0;
@@ -1566,6 +1585,7 @@
    * @param {number} width The image width.
    * @return {array} Array with the sixteen offset values of the circle
    *     surrounding pixel.
+   * @private
    */
   tracking.Fast.getCircleOffsets_ = function(width) {
     if (this.circles_[width]) {
@@ -1627,9 +1647,12 @@
    * of 1's in the string.
    *
    * Example:
+   *
+   * <pre>
    *  Binary string     Hamming weight
    *   11101                 4
    *   11101010              5
+   * </pre>
    *
    * @param {number} i Number that holds the binary string to extract the hamming weight.
    * @return {number} The hamming weight.
@@ -1654,9 +1677,11 @@
   /**
    * Tests if a rectangle intersects with another.
    *
+   *  <pre>
    *  x0y0 --------       x2y2 --------
    *      |       |           |       |
    *      -------- x1y1       -------- x3y3
+   * </pre>
    *
    * @param {number} x0 Horizontal coordinate of P0.
    * @param {number} y0 Vertical coordinate of P0.
@@ -2003,6 +2028,7 @@
    * @param {number} width The image width.
    * @return {array} Array with the eight offset values of the neighbours
    *     surrounding a pixel.
+   * @private
    */
   tracking.ColorTracker.prototype.getNeighboursForWidth_ = function(width) {
     if (tracking.ColorTracker.neighbours_[width]) {
@@ -2028,6 +2054,7 @@
   /**
    * Unites groups whose bounding box intersect with each other.
    * @param {Array.<Object>} rects
+   * @private
    */
   tracking.ColorTracker.prototype.mergeRectangles_ = function(rects) {
     var intersects;
@@ -2118,6 +2145,7 @@
    * @param {number} width The pixels canvas width.
    * @param {number} height The pixels canvas height.
    * @param {string} color The color to be found
+   * @private
    */
   tracking.ColorTracker.prototype.trackColor_ = function(pixels, width, height, color) {
     var colorFn = tracking.ColorTracker.knownColors_[color];
