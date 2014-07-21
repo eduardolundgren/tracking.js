@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+  <title>tracking.js - face tracking fish tank</title>
+  <link rel="stylesheet" href="assets/demo.css">
+
+  <script src="../build/tracking-min.js"></script>
+  <script src="../build/data/face-min.js"></script>
+  <script src="../../threejs/build/three.min.js"></script>
+  <script src="assets/fish_tank/FishTankRenderer.js"></script>
+
+  <style>
+  body {
+    background:#777;
+    padding:0;
+    margin:0;
+    font-weight: bold;
+    overflow:hidden;
+  }
+
+  #info {
+    position: absolute;
+    top: 0px; width: 100%;
+    color: #ffffff;
+    padding: 5px;
+    font-family:Monospace;
+    font-size:13px;
+    text-align:center;
+    z-index:1000;
+  }
+
+  #video {
+    position: absolute;
+  }
+
+  #viewport {
+    padding-top: 40px;
+  }
+
+  a {
+    color: #ffffff;
+  }
+
+  #oldie a { color:#da0 }
+  </style>
+</head>
+
+<body>
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com">tracking.js</a> － get user's webcam and detect faces to control virtual camera</p>
+  </div>
+
+  <div id="viewport">
+    <video id="video" width="320" height="240" preload autoplay loop muted></video>
+  </div>
+
+  <script>
+    var viewport = document.getElementById('viewport');
+    fishTankRenderer = new FishTankRenderer();
+    fishTankRenderer.init(viewport);
+
+    var faceX = 0;
+    var faceY = 0;
+
+    var tracker = new tracking.ObjectTracker('face');
+    tracker.setInitialScale(4);
+    tracker.setStepSize(2);
+
+    tracking.track('#video', tracker, { camera: true });
+
+    tracker.on('track', function(event) {
+      var maxRectArea = 0;
+      var maxRect;
+      
+      event.data.forEach(function(rect) {
+        if (rect.width * rect.height > maxRectArea){
+          maxRectArea = rect.width * rect.height;
+          maxRect = rect;
+        } 
+      });
+
+      if(maxRectArea > 0) {
+        var rectCenterX = maxRect.x + (maxRect.width/2);
+        var rectCenterY = maxRect.y + (maxRect.height/2);
+        faceX = (rectCenterX - 160) * (window.innerWidth/320) * 50;
+        faceY = (rectCenterY - 120) * (window.innerHeight/240) * 50;
+      }
+
+      fishTankRenderer.render(faceX, faceY);
+    });
+  </script>
+
+</body>
+</html>
