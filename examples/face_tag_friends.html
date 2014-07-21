@@ -1,0 +1,109 @@
+<!doctype html>
+<html>
+<head>
+
+  <title>tracking.js - tag friends</title>
+
+  <meta charset="utf-8">
+
+  <script src="../build/tracking.js"></script>
+  <script src="../build/data/face.js"></script>
+
+  <style>
+  #photo:hover .rect {
+    opacity: .75;
+    transition: opacity .75s ease-out;
+  }
+
+  .rect:hover * {
+    opacity: 1;
+  }
+
+  .rect {
+    border-radius: 2px;
+    border: 3px solid white;
+    box-shadow: 0 16px 28px 0 rgba(0, 0, 0, 0.3);
+    cursor: pointer;
+    left: -1000px;
+    opacity: 0;
+    position: absolute;
+    top: -1000px;
+  }
+
+  .arrow {
+    border-bottom: 10px solid white;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    height: 0;
+    width: 0;
+    position: absolute;
+    left: 50%;
+    margin-left: -5px;
+    bottom: -12px;
+    opacity: 0;
+  }
+
+  input {
+    border: 0px;
+    bottom: -42px;
+    color: #E91E63;
+    font-size: 15px;
+    height: 30px;
+    left: 50%;
+    margin-left: -90px;
+    opacity: 0;
+    outline: none;
+    position: absolute;
+    text-align: center;
+    width: 180px;
+    transition: opacity .35s ease-out;
+  }
+  </style>
+</head>
+<body>
+  <span id="photo"><img id="img" src="assets/faces.png" /></span>
+
+  <script>
+    window.onload = function() {
+      var img = document.getElementById('img');
+
+      var tracker = new tracking.ObjectTracker('face');
+
+      tracking.track(img, tracker);
+
+      tracker.on('track', function(event) {
+        event.data.forEach(function(rect) {
+          plotRectangle(rect.x, rect.y, rect.width, rect.height);
+        });
+      });
+
+      var friends = [ 'Thomas Middleditch', 'Martin Starr', 'Zach Woods' ];
+
+      var plotRectangle = function(x, y, w, h) {
+        var rect = document.createElement('div');
+        var arrow = document.createElement('div');
+        var input = document.createElement('input');
+
+        input.value = friends.pop();
+
+        rect.onclick = function name() {
+          input.select();
+        };
+
+        arrow.classList.add('arrow');
+        rect.classList.add('rect');
+
+        rect.appendChild(input);
+        rect.appendChild(arrow);
+        document.getElementById('photo').appendChild(rect);
+
+        rect.style.width = w + 'px';
+        rect.style.height = h + 'px';
+        rect.style.left = (img.offsetLeft + x) + 'px';
+        rect.style.top = (img.offsetTop + y) + 'px';
+      };
+    };
+  </script>
+
+</body>
+</html>
