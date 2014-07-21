@@ -103,6 +103,7 @@
    * @return {boolean} True whether the block at position i,j can be skipped,
    *     false otherwise.
    * @static
+   * @protected
    */
   tracking.ViolaJones.isTriviallyExcluded = function(edgesDensity, integralImageSobel, i, j, width, blockWidth, blockHeight) {
     var wbA = i * width + j;

@@ -29,9 +29,12 @@
    * of 1's in the string.
    *
    * Example:
+   *
+   * <pre>
    *  Binary string     Hamming weight
    *   11101                 4
    *   11101010              5
+   * </pre>
    *
    * @param {number} i Number that holds the binary string to extract the hamming weight.
    * @return {number} The hamming weight.
@@ -56,9 +59,11 @@
   /**
    * Tests if a rectangle intersects with another.
    *
+   *  <pre>
    *  x0y0 --------       x2y2 --------
    *      |       |           |       |
    *      -------- x1y1       -------- x3y3
+   * </pre>
    *
    * @param {number} x0 Horizontal coordinate of P0.
    * @param {number} y0 Vertical coordinate of P0.

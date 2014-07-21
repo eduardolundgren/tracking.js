@@ -13,16 +13,6 @@ var uglify = require('gulp-uglify');
 var esformatter = require('gulp-esformatter');
 var runSequence = require('run-sequence');
 
-gulp.task('api', function () {
-  var options = {
-    showPrivate: true,
-    private: true
-  };
-
-  return gulp.src(['src/**/*.js', 'README.md'])
-    .pipe(jsdoc('./docs', undefined, undefined, options));
-});
-
 gulp.task('all', ['clean'], function() {
   return runSequence(['build', 'build-data']);
 });
@@ -72,6 +62,11 @@ gulp.task('build-data', function() {
     .pipe(uglify())
     .pipe(banner())
     .pipe(gulp.dest('build/data'));
+});
+
+gulp.task('docs', function() {
+  return gulp.src(['src/**/*.js', 'README.md'])
+    .pipe(jsdoc('docs'));
 });
 
 gulp.task('format', function() {

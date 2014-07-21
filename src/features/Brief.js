@@ -44,6 +44,7 @@
    * @return {Int32Array} Returns an array where for each four sequence int
    *     values represent the descriptor binary string (128 bits) necessary
    *     to describe the corner, e.g. [0,0,0,0, 0,0,0,0, ...].
+   * @static
    */
   tracking.Brief.getDescriptors = function(pixels, width, keypoints) {
     // Optimizing divide by 32 operation using binary shift
@@ -100,6 +101,7 @@
    *     corner2, e.g. keypoints1=[x0,y0,x1,y1,...] and
    *     keypoints2=[x'0,y'0,x'1,y'1,...], if x0 matches x'1 and x1 matches x'0,
    *     the return array would be [3,0].
+   * @static
    */
   tracking.Brief.match = function(keypoints1, descriptors1, keypoints2, descriptors2) {
     var len1 = keypoints1.length >> 1;
@@ -144,6 +146,7 @@
    *     corner2, e.g. keypoints1=[x0,y0,x1,y1,...] and
    *     keypoints2=[x'0,y'0,x'1,y'1,...], if x0 matches x'1 and x1 matches x'0,
    *     the return array would be [3,0].
+   * @static
    */
   tracking.Brief.reciprocalMatch = function(keypoints1, descriptors1, keypoints2, descriptors2) {
     var matches = [];
@@ -165,6 +168,7 @@
    * Gets the coordinates values of (x,y)-location pairs uniquely chosen
    * during the initialization.
    * @return {array} Array with the random offset values.
+   * @private
    */
   tracking.Brief.getRandomOffsets_ = function(width) {
     if (!this.randomWindowOffsets_) {

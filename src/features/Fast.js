@@ -49,6 +49,7 @@
    *     darker than the corner candidate p. Default value is 40.
    * @return {array} Array containing the coordinates of all found corners,
    *     e.g. [x0,y0,x1,y1,...], where P(x0,y0) represents a corner coordinate.
+   * @static
    */
   tracking.Fast.findCorners = function(pixels, width, height, opt_threshold) {
     var circleOffsets = this.getCircleOffsets_(width);
@@ -94,6 +95,7 @@
    * @param {number} p The value of the candidate pixel p.
    * @param {number} threshold
    * @return {Boolean}
+   * @static
    */
   tracking.Fast.isBrighter = function(circlePixel, p, threshold) {
     return circlePixel - p > threshold;
@@ -105,7 +107,8 @@
    * @param {number} p The value of the candidate pixel p.
    * @param {number} circlePixel The circle pixel value.
    * @param {number} threshold
-   * @return {Boolean}              [description]
+   * @return {Boolean}
+   * @static
    */
   tracking.Fast.isCorner = function(p, circlePixels, threshold) {
     if (this.isTriviallyExcluded(circlePixels, p, threshold)) {
@@ -149,6 +152,7 @@
    * @param {number} p The value of the candidate pixel p.
    * @param {number} threshold
    * @return {Boolean}
+   * @static
    */
   tracking.Fast.isDarker = function(circlePixel, p, threshold) {
     return p - circlePixel > threshold;
@@ -164,6 +168,8 @@
    * @param {number} p The value of the candidate pixel p.
    * @param {number} threshold
    * @return {Boolean}
+   * @static
+   * @protected
    */
   tracking.Fast.isTriviallyExcluded = function(circlePixels, p, threshold) {
     var count = 0;
@@ -212,6 +218,7 @@
    * @param {number} width The image width.
    * @return {array} Array with the sixteen offset values of the circle
    *     surrounding pixel.
+   * @private
    */
   tracking.Fast.getCircleOffsets_ = function(width) {
     if (this.circles_[width]) {
