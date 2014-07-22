@@ -89,29 +89,6 @@
   };
 
   /**
-   * Extends an object with another object. This operates 'in-place'; it does
-   * not create a new Object.
-   *
-   * Example:
-   * var o = {};
-   * extend(o, {a: 0, b: 1});
-   * o; // {a: 0, b: 1}
-   * extend(o, {b: 2, c: 3});
-   * o; // {a: 0, b: 2, c: 3}
-   *
-   * @param {object} target The object to modify. Existing properties will be
-   *     overwritten if they are also present in one of the objects in `source`.
-   * @param {object} source The object from which values will be copied.
-   * @return {object} The extended target object.
-   */
-  tracking.merge = function(target, source) {
-    for (var key in source) {
-      target[key] = source[key];
-    }
-    return target;
-  };
-
-  /**
    * Selects a dom node from a CSS3 selector using `document.querySelector`.
    * @param {string} selector
    * @param {object} opt_element The root element for the query. When not
