@@ -81,8 +81,10 @@ gulp.task('lint', function() {
     .pipe(jshint.reporter(stylish));
 });
 
-gulp.task('test', function() {
-  return gulp.src('test/*.js').pipe(nodeunit());
+gulp.task('test', function(cb) {
+  gulp.src('test/*.js')
+    .pipe(nodeunit())
+    .on('end', cb);
 });
 
 gulp.task('test-watch', function() {
