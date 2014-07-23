@@ -17,7 +17,7 @@
     "node_modules",
     "bower_components"
   ],
-  "devDependencies": {
+  "dependencies": {
     "threejs": "r67"
   }
 }
