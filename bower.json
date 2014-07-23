@@ -14,8 +14,7 @@
   "license": "BSD",
   "ignore": [
     "**/.*",
-    "node_modules",
-    "bower_components"
+    "node_modules"
   ],
   "dependencies": {
     "threejs": "r67"

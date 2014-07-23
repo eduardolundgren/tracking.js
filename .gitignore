@@ -1,5 +1,3 @@
 .DS_Store
-bower_components
-docs
 node_modules
 test/assets/benchmark.json
