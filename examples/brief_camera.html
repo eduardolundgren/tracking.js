@@ -5,8 +5,9 @@
   <title>tracking.js - bounding box with camera</title>
 
   <meta charset="utf-8">
+  <link rel="stylesheet" href="assets/demo.css">
 
-  <script src="../build/tracking.js"></script>
+  <script src="../build/tracking-min.js"></script>
   <script src="assets/stats.min.js"></script>
 
   <style>
@@ -16,6 +17,7 @@
     background: white;
     border: 1px dashed;
     opacity: .5;
+    z-index: 1;
   }
   #video {
     position: absolute;
@@ -32,11 +34,19 @@
   </style>
 </head>
 <body>
-  Click and drag to select the area to be tracked.
-  <br>
+
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com">tracking.js</a> － Click and drag to select the area to be tracked</p>
+  </div>
+
   <div id="boundingBox"></div>
-  <video id="video" width="640" height="480" preload autoplay loop muted controls></video>
-  <canvas id="canvas" width="640" height="480"></canvas>
+
+  <div class="demo-frame">
+    <div class="demo-container">
+      <video id="video" width="393" height="295" preload autoplay loop muted controls></video>
+      <canvas id="canvas" width="800" height="530"></canvas>
+  </div>
+</div>
 
   <script>
     (function() {
@@ -68,11 +78,15 @@
 
       // Track ===================================================================
       var boundingBox = document.getElementById('boundingBox');
+      var boxLeft = 403;
       var video = document.getElementById('video');
       var canvas = document.getElementById('canvas');
+      var canvasRect = canvas.getBoundingClientRect();
       var context = canvas.getContext('2d');
       var templateImageData;
       var capturing = false;
+      var videoHeight = 295;
+      var videoWidth = 393;
 
       var tracker = new BoundingBoxTracker();
 
@@ -87,7 +101,7 @@
           return b.confidence - a.confidence;
         });
         // Re-draws template on canvas.
-        context.putImageData(templateImageData, 640, 0);
+        context.putImageData(templateImageData, boxLeft, 0);
 
         // Plots lines connecting matches.
         for (var i = 0; i < Math.min(10, event.data.length); i++) {
@@ -96,7 +110,7 @@
           context.beginPath();
           context.strokeStyle = 'magenta';
           context.moveTo(frame[0], frame[1]);
-          context.lineTo(640 + template[0], template[1]);
+          context.lineTo(boxLeft + template[0], template[1]);
           context.stroke();
         }
       });
@@ -111,7 +125,7 @@
           context.clearRect(0, 0, canvas.width, canvas.height);
           if (video.readyState === video.HAVE_ENOUGH_DATA) {
             try {
-              context.drawImage(video, 0, 0, 600, 480);
+              context.drawImage(video, 0, 0, videoWidth, videoHeight);
             } catch (err) {}
           }
           requestFrame();
@@ -148,9 +162,9 @@
         capturing = false;
       });
       function setTackerTemplate(left, top, width, height) {
-        templateImageData = context.getImageData(left - canvas.offsetLeft, top - canvas.offsetTop, width, height);
-        canvas.width = 640 + width;
-        context.putImageData(templateImageData, 640, 0);
+        templateImageData = context.getImageData(left - canvasRect.left, top - canvasRect.top, width, height);
+        canvas.width = boxLeft + width;
+        context.putImageData(templateImageData, boxLeft, 0);
         trackerTask.stop();
         tracker.setTemplate(templateImageData.data, width, height);
         trackerTask.run();
