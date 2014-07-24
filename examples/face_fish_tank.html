@@ -73,12 +73,12 @@
     tracker.on('track', function(event) {
       var maxRectArea = 0;
       var maxRect;
-      
+
       event.data.forEach(function(rect) {
         if (rect.width * rect.height > maxRectArea){
           maxRectArea = rect.width * rect.height;
           maxRect = rect;
-        } 
+        }
       });
 
       if(maxRectArea > 0) {
