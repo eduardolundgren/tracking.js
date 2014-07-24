@@ -1,15 +1,20 @@
 <!doctype html>
 <html>
 <head>
-
-  <title>tracking.js - face with camera</title>
-
   <meta charset="utf-8">
+  <title>tracking.js - face with camera</title>
+  <link rel="stylesheet" href="assets/demo.css">
 
-  <script src="../build/tracking.js"></script>
-  <script src="../build/data/face.js"></script>
+  <script src="../build/tracking-min.js"></script>
+  <script src="../build/data/face-min.js"></script>
 
   <style>
+  video, canvas {
+    padding-top: 5px;
+  }
+  video {
+    padding-left: 5px;
+  }
   #rect {
     border: 2px solid green;
     left: -1000px;
@@ -19,8 +24,16 @@
   </style>
 </head>
 <body>
-  <video id="video" width="320" height="240" preload autoplay loop muted controls></video>
-  <canvas id="canvas" width="320" height="240"></canvas>
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com">tracking.js</a> － get user's webcam and detect faces</p>
+  </div>
+
+  <div class="demo-frame">
+    <div class="demo-container">
+      <video id="video" width="393" height="295" preload autoplay loop muted controls></video>
+      <canvas id="canvas" width="393" height="295"></canvas>
+    </div>
+  </div>
 
   <script>
     window.onload = function() {
@@ -34,7 +47,7 @@
       tracking.track('#video', tracker, { camera: true });
 
       tracker.on('track', function(event) {
-        context.drawImage(video, 0, 0, 320, 240);
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
         event.data.forEach(function(rect) {
           context.strokeStyle = 'magenta';
           context.strokeRect(rect.x, rect.y, rect.width, rect.height);

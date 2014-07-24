@@ -1,14 +1,19 @@
 <!doctype html>
 <html>
 <head>
-
-  <title>tracking.js - color with camera</title>
-
   <meta charset="utf-8">
+  <title>tracking.js - color with camera</title>
+  <link rel="stylesheet" href="assets/demo.css">
 
-  <script src="../build/tracking.js"></script>
+  <script src="../build/tracking-min.js"></script>
 
   <style>
+  video, canvas {
+    padding-top: 5px;
+  }
+  video {
+    padding-left: 5px;
+  }
   .rect {
     height: 80px;
     left: -1000px;
@@ -19,8 +24,16 @@
   </style>
 </head>
 <body>
-  <video id="video" width="640" height="480" preload autoplay loop muted controls></video>
-  <canvas id="canvas" width="640" height="480"></canvas>
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com">tracking.js</a> － get user's webcam and detect colors</p>
+  </div>
+
+  <div class="demo-frame">
+    <div class="demo-container">
+      <video id="video" width="393" height="295" preload autoplay loop muted controls></video>
+      <canvas id="canvas" width="393" height="295"></canvas>
+    </div>
+  </div>
 
   <script>
     window.onload = function() {
@@ -33,7 +46,7 @@
       tracking.track('#video', tracker, { camera: true });
 
       tracker.on('track', function(event) {
-        context.drawImage(video, 0, 0, 640, 480);
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
         event.data.forEach(function(rect) {
           context.strokeStyle = rect.color;
           context.strokeRect(rect.x, rect.y, rect.width, rect.height);
