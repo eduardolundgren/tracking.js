@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="assets/demo.css">
 
   <script src="../build/tracking-min.js"></script>
+  <script src="../../dat-gui/build/dat.gui.min.js"></script>
   <script src="assets/stats.min.js"></script>
 
   <style>
@@ -58,6 +59,8 @@
 
       BoundingBoxTracker.prototype.templateDescriptors_ = null;
       BoundingBoxTracker.prototype.templateKeypoints_ = null;
+      BoundingBoxTracker.prototype.fastThreshold = 60;
+      BoundingBoxTracker.prototype.blur = 3;
 
       BoundingBoxTracker.prototype.setTemplate = function(pixels, width, height) {
         var blur = tracking.Image.blur(pixels, width, height, 3);
@@ -67,9 +70,9 @@
       };
 
       BoundingBoxTracker.prototype.track = function(pixels, width, height) {
-        var blur = tracking.Image.blur(pixels, width, height, 3);
+        var blur = tracking.Image.blur(pixels, width, height, this.blur);
         var grayscale = tracking.Image.grayscale(blur, width, height);
-        var keypoints = tracking.Fast.findCorners(grayscale, width, height, 60);
+        var keypoints = tracking.Fast.findCorners(grayscale, width, height, this.fastThreshold);
         var descriptors = tracking.Brief.getDescriptors(grayscale, width, keypoints);
         this.emit('track', {
           data: tracking.Brief.reciprocalMatch(this.templateKeypoints_, this.templateDescriptors_, keypoints, descriptors)
@@ -169,6 +172,11 @@
         tracker.setTemplate(templateImageData.data, width, height);
         trackerTask.run();
       }
+
+      // GUI Controllers
+      var gui = new dat.GUI();
+      gui.add(tracker, 'fastThreshold', 20, 100).step(5);
+      gui.add(tracker, 'blur', 1.1, 5.0).step(0.1);
     }());
   </script>
 
