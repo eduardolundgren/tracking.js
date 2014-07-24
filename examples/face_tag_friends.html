@@ -1,13 +1,12 @@
 <!doctype html>
 <html>
 <head>
-
-  <title>tracking.js - tag friends</title>
-
   <meta charset="utf-8">
+  <title>tracking.js - tag friends</title>
+  <link rel="stylesheet" href="assets/demo.css">
 
-  <script src="../build/tracking.js"></script>
-  <script src="../build/data/face.js"></script>
+  <script src="../build/tracking-min.js"></script>
+  <script src="../build/data/face-min.js"></script>
 
   <style>
   #photo:hover .rect {
@@ -61,7 +60,15 @@
   </style>
 </head>
 <body>
-  <span id="photo"><img id="img" src="assets/faces.png" /></span>
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com">tracking.js</a> － hover image to see all faces detected</p>
+  </div>
+
+  <div class="demo-frame">
+    <div class="demo-container">
+      <span id="photo"><img id="img" src="assets/faces.jpg" /></span>
+    </div>
+  </div>
 
   <script>
     window.onload = function() {

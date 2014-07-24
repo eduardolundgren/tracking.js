@@ -1,12 +1,11 @@
 <!doctype html>
 <html>
 <head>
-
-  <title>tracking.js - hello world</title>
-
   <meta charset="utf-8">
+  <title>tracking.js - color with video</title>
+  <link rel="stylesheet" href="assets/demo.css">
 
-  <script src="../build/tracking.js"></script>
+  <script src="../build/tracking-min.js"></script>
 
   <style>
   #rectangle {
@@ -19,11 +18,19 @@
   </style>
 </head>
 <body>
-  <div id="rectangle"></div>
-  <video id="video" width="640" height="360" preload autoplay loop muted controls>
-    <source src="assets/color.mp4"  type="video/mp4">
-    <source src="assets/color.webm" type="video/webm">
-  </video>
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com">tracking.js</a> － detect certain colors in a video</p>
+  </div>
+
+  <div class="demo-frame">
+    <div class="demo-container">
+      <div id="rectangle"></div>
+      <video id="video" width="800" height="530" preload autoplay loop muted controls>
+        <source src="assets/color.mp4"  type="video/mp4">
+        <source src="assets/color.webm" type="video/webm">
+      </video>
+    </div>
+  </div>
 
   <script>
     window.onload = function() {

@@ -1,181 +1,185 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <title>tracking.js + three.js - geometry hierarchy</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
-    <style>
-      body {
-        background: #000;
-        padding: 0;
-        margin: 0;
-        font-weight: bold;
-        overflow: hidden;
-      }
-      video {
-        background: #fff;
-        border: 3px solid #f2f2f2;
-        bottom: 0;
-        right: 0;
-        position: absolute;
-      }
-    </style>
-  </head>
-  <body>
-    <!-- <audio src="http://cl.ly/WPd7/m83-midnight-city.mp3" loop autoplay></audio> -->
-    <video id="video" width="320" height="240" preload autoplay loop muted>
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>tracking.js + three.js - geometry hierarchy</title>
+  <link rel="stylesheet" href="assets/demo.css">
 
-    <script src="../build/tracking-min.js"></script>
-    <script src="../build/data/face.js"></script>
-    <script src="../../threejs/build/three.min.js"></script>
-    <script>
-      var container;
-      var camera, scene, renderer;
-      var geometry, root;
-      var mouseX = 0, mouseY = 0;
-      var windowHalfX = window.innerWidth / 2;
-      var windowHalfY = window.innerHeight / 2;
+  <script src="../build/tracking-min.js"></script>
+  <script src="../build/data/face-min.js"></script>
+  <script src="../../threejs/build/three.min.js"></script>
 
-      init();
-      animate();
+  <style>
+    body {
+      background: #000;
+      padding: 0;
+      margin: 0;
+      overflow: hidden;
+    }
+    video {
+      background: #fff;
+      border: 3px solid #f2f2f2;
+      bottom: 0;
+      right: 0;
+      position: absolute;
+    }
+  </style>
+</head>
+<body>
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com">tracking.js</a> + three.js － move scene using your face</p>
+  </div>
 
-      window.onload = function() {
-        var tracker = new tracking.ObjectTracker('face');
-        tracking.track('#video', tracker, { camera: true });
-        tracker.on('track', onFaceMove);
-      };
+  <video id="video" width="320" height="240" preload autoplay loop muted>
 
-      function init() {
-        container = document.createElement('div');
-        document.body.appendChild(container);
+  <script>
+    var container;
+    var camera, scene, renderer;
+    var geometry, root;
+    var mouseX = 0, mouseY = 0;
+    var windowHalfX = window.innerWidth / 2;
+    var windowHalfY = window.innerHeight / 2;
 
-        camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 15000);
-        camera.position.z = 500;
+    init();
+    animate();
 
-        scene = new THREE.Scene();
+    window.onload = function() {
+      var tracker = new tracking.ObjectTracker('face');
+      tracking.track('#video', tracker, { camera: true });
+      tracker.on('track', onFaceMove);
+    };
 
-        var geometry = new THREE.BoxGeometry(100, 100, 100);
-        var material = new THREE.MeshNormalMaterial();
+    function init() {
+      container = document.createElement('div');
+      document.body.appendChild(container);
 
-        root = new THREE.Mesh(geometry, material);
-        root.position.x = 1000;
-        scene.add(root);
+      camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 1, 15000);
+      camera.position.z = 500;
 
-        var amount = 200, object, parent = root;
+      scene = new THREE.Scene();
 
-        for (var i = 0; i < amount; i ++) {
-          object = new THREE.Mesh(geometry, material);
-          object.position.x = 100;
+      var geometry = new THREE.BoxGeometry(100, 100, 100);
+      var material = new THREE.MeshNormalMaterial();
 
-          parent.add(object);
-          parent = object;
-        }
+      root = new THREE.Mesh(geometry, material);
+      root.position.x = 1000;
+      scene.add(root);
 
-        parent = root;
+      var amount = 200, object, parent = root;
 
-        for (var i = 0; i < amount; i ++) {
-          object = new THREE.Mesh(geometry, material);
-          object.position.x = - 100;
+      for (var i = 0; i < amount; i ++) {
+        object = new THREE.Mesh(geometry, material);
+        object.position.x = 100;
 
-          parent.add(object);
-          parent = object;
-        }
-
-        parent = root;
-
-        for (var i = 0; i < amount; i ++) {
-          object = new THREE.Mesh(geometry, material);
-          object.position.y = - 100;
-
-          parent.add(object);
-          parent = object;
-        }
-
-        parent = root;
-
-        for (var i = 0; i < amount; i ++) {
-          object = new THREE.Mesh(geometry, material);
-          object.position.y = 100;
-
-          parent.add(object);
-          parent = object;
-        }
-
-        parent = root;
-
-        for (var i = 0; i < amount; i ++) {
-          object = new THREE.Mesh(geometry, material);
-          object.position.z = - 100;
-
-          parent.add(object);
-          parent = object;
-        }
-
-        parent = root;
-
-        for (var i = 0; i < amount; i ++) {
-          object = new THREE.Mesh(geometry, material);
-          object.position.z = 100;
-
-          parent.add(object);
-          parent = object;
-        }
-
-        renderer = new THREE.WebGLRenderer();
-        renderer.setClearColor(0xffffff);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        renderer.sortObjects = false;
-        container.appendChild(renderer.domElement);
-
-        window.addEventListener('resize', onWindowResize, false);
+        parent.add(object);
+        parent = object;
       }
 
-      function onWindowResize() {
-        windowHalfX = window.innerWidth / 2;
-        windowHalfY = window.innerHeight / 2;
+      parent = root;
 
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
+      for (var i = 0; i < amount; i ++) {
+        object = new THREE.Mesh(geometry, material);
+        object.position.x = - 100;
 
-        renderer.setSize(window.innerWidth, window.innerHeight);
+        parent.add(object);
+        parent = object;
       }
 
-      function onFaceMove(event) {
-        if (event.data.length === 0) {
-          return;
-        }
-        mouseX = ((((320 - event.data[0].x) / 320) * window.innerWidth) - windowHalfX) * 10;
-        mouseY = ((((240 - event.data[0].y) / 240) * window.innerHeight) - windowHalfY) * 10;
+      parent = root;
+
+      for (var i = 0; i < amount; i ++) {
+        object = new THREE.Mesh(geometry, material);
+        object.position.y = - 100;
+
+        parent.add(object);
+        parent = object;
       }
 
-      function animate() {
-        requestAnimationFrame(animate);
+      parent = root;
 
-        render();
+      for (var i = 0; i < amount; i ++) {
+        object = new THREE.Mesh(geometry, material);
+        object.position.y = 100;
+
+        parent.add(object);
+        parent = object;
       }
 
-      function render() {
-        var time = Date.now() * 0.001;
+      parent = root;
 
-        var rx = Math.sin(time * 0.7) * 0.2;
-        var ry = Math.sin(time * 0.3) * 0.1;
-        var rz = Math.sin(time * 0.2) * 0.1;
+      for (var i = 0; i < amount; i ++) {
+        object = new THREE.Mesh(geometry, material);
+        object.position.z = - 100;
 
-        camera.position.x += (mouseX - camera.position.x) * .05;
-        camera.position.y += (- mouseY - camera.position.y) * .05;
-
-        camera.lookAt(scene.position);
-
-        root.traverse(function (object) {
-
-          object.rotation.x = rx;
-          object.rotation.y = ry;
-          object.rotation.z = rz;
-
-        });
-
-        renderer.render(scene, camera);
+        parent.add(object);
+        parent = object;
       }
-    </script>
-  </body>
+
+      parent = root;
+
+      for (var i = 0; i < amount; i ++) {
+        object = new THREE.Mesh(geometry, material);
+        object.position.z = 100;
+
+        parent.add(object);
+        parent = object;
+      }
+
+      renderer = new THREE.WebGLRenderer();
+      renderer.setClearColor(0xffffff);
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      renderer.sortObjects = false;
+      container.appendChild(renderer.domElement);
+
+      window.addEventListener('resize', onWindowResize, false);
+    }
+
+    function onWindowResize() {
+      windowHalfX = window.innerWidth / 2;
+      windowHalfY = window.innerHeight / 2;
+
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    }
+
+    function onFaceMove(event) {
+      if (event.data.length === 0) {
+        return;
+      }
+      mouseX = ((((320 - event.data[0].x) / 320) * window.innerWidth) - windowHalfX) * 10;
+      mouseY = ((((240 - event.data[0].y) / 240) * window.innerHeight) - windowHalfY) * 10;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      render();
+    }
+
+    function render() {
+      var time = Date.now() * 0.001;
+
+      var rx = Math.sin(time * 0.7) * 0.2;
+      var ry = Math.sin(time * 0.3) * 0.1;
+      var rz = Math.sin(time * 0.2) * 0.1;
+
+      camera.position.x += (mouseX - camera.position.x) * .05;
+      camera.position.y += (- mouseY - camera.position.y) * .05;
+
+      camera.lookAt(scene.position);
+
+      root.traverse(function (object) {
+
+        object.rotation.x = rx;
+        object.rotation.y = ry;
+        object.rotation.z = rz;
+
+      });
+
+      renderer.render(scene, camera);
+    }
+  </script>
+</body>
 </html>

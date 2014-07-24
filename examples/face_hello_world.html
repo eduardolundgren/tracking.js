@@ -1,15 +1,14 @@
 <!doctype html>
 <html>
 <head>
-
-  <title>tracking.js - hello world</title>
-
   <meta charset="utf-8">
+  <title>tracking.js - face hello world</title>
+  <link rel="stylesheet" href="assets/demo.css">
 
-  <script src="../build/tracking.js"></script>
-  <script src="../build/data/face.js"></script>
-  <script src="../build/data/eye.js"></script>
-  <script src="../build/data/mouth.js"></script>
+  <script src="../build/tracking-min.js"></script>
+  <script src="../build/data/face-min.js"></script>
+  <script src="../build/data/eye-min.js"></script>
+  <script src="../build/data/mouth-min.js"></script>
 
   <style>
   .rect {
@@ -21,7 +20,15 @@
   </style>
 </head>
 <body>
-  <img id="img" src="assets/faces.png" />
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com">tracking.js</a> － detect faces, eyes and mouths in a image</p>
+  </div>
+
+  <div class="demo-frame">
+    <div class="demo-container">
+      <img id="img" src="assets/faces.jpg" />
+    </div>
+  </div>
 
   <script>
     window.onload = function() {
@@ -40,7 +47,7 @@
 
       window.plot = function(x, y, w, h) {
         var rect = document.createElement('div');
-        document.body.appendChild(rect);
+        document.querySelector('.demo-container').appendChild(rect);
         rect.classList.add('rect');
         rect.style.width = w + 'px';
         rect.style.height = h + 'px';
