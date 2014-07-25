@@ -16,9 +16,10 @@
     overflow: hidden;
   }
 
-  video {
+  #video, #canvas {
     bottom: 0;
     position: absolute;
+    z-index: 100;
   }
 
   #viewport {
@@ -34,11 +35,15 @@
 
   <div id="viewport">
     <video id="video" width="320" height="240" preload autoplay loop muted></video>
+    <canvas id="canvas" width="320" height="240"></canvas>
   </div>
 
   <script>
     var viewport = document.getElementById('viewport');
-    fishTankRenderer = new FishTankRenderer();
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+
+    var fishTankRenderer = new FishTankRenderer();
     fishTankRenderer.init(viewport);
 
     var faceX = 0;
@@ -59,6 +64,14 @@
           maxRectArea = rect.width * rect.height;
           maxRect = rect;
         }
+
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.strokeStyle = 'magenta';
+        context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+        context.font = '11px Helvetica';
+        context.fillStyle = "#fff";
+        context.fillText('x: ' + rect.x + 'px', rect.x + rect.width + 5, rect.y + 11);
+        context.fillText('y: ' + rect.y + 'px', rect.x + rect.width + 5, rect.y + 22);
       });
 
       if(maxRectArea > 0) {

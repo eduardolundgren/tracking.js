@@ -13,18 +13,10 @@
     overflow: hidden;
   }
 
-  video {
+  #video, #canvas {
     bottom: 0;
     position: absolute;
-  }
-
-  #rectangle {
-    width: 120px;
-    height: 80px;
-    position: absolute;
-    left: -1000px;
-    top: -1000px;
-    z-index: 1;
+    z-index: 100;
   }
   </style>
 </head>
@@ -33,15 +25,16 @@
     <p><a href="http://trackingjs.com">tracking.js</a> － get user's webcam and detect colors to control the scene</p>
   </div>
 
-  <div id="rectangle"></div>
-  <video id="video" width="320" height="240" preload autoplay loop muted>
+  <video id="video" width="320" height="240" preload autoplay loop muted></video>
+  <canvas id="canvas" width="320" height="240"></canvas>
 
   <script>
     var container;
     var camera, scene, renderer, group, particle;
     var mouseX = 0, mouseY = 0;
-    var rectangle = document.getElementById('rectangle');
-    var video = document.querySelector('#video');
+    var video = document.getElementById('video');
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
 
     var windowHalfX = window.innerWidth / 2;
     var windowHalfY = window.innerHeight / 2;
@@ -112,12 +105,12 @@
 
     function onColorMove(event) {
       if (event.data.length === 0) {
-        rectangle.style.top = '-1000px';
         return;
       }
 
-      var maxRectArea = 0;
       var maxRect;
+      var maxRectArea = 0;
+
       event.data.forEach(function(rect) {
         if (rect.width * rect.height > maxRectArea){
           maxRectArea = rect.width * rect.height;
@@ -131,16 +124,18 @@
         mouseX = (rectCenterX - 160) * (window.innerWidth/320) * 10;
         mouseY = (rectCenterY - 120) * (window.innerHeight/240) * 10;
 
-        rectangle.style.border = '2px solid ' + maxRect.color;
-        rectangle.style.width = maxRect.width + 'px';
-        rectangle.style.height = maxRect.height + 'px';
-        rectangle.style.left = (video.offsetLeft + maxRect.x) + 'px';
-        rectangle.style.top = (video.offsetTop + maxRect.y) + 'px';
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.strokeStyle = maxRect.color;
+        context.strokeRect(maxRect.x, maxRect.y, maxRect.width, maxRect.height);
+        context.font = '11px Helvetica';
+        context.fillStyle = "#fff";
+        context.fillText('x: ' + maxRect.x + 'px', maxRect.x + maxRect.width + 5, maxRect.y + 11);
+        context.fillText('y: ' + maxRect.y + 'px', maxRect.x + maxRect.width + 5, maxRect.y + 22);
       }
     }
 
     function animate() {
-      requestAnimationFrame(animate);
+      window.requestAnimationFrame(animate);
       render();
     }
 
@@ -148,7 +143,6 @@
       camera.position.x += (mouseX - camera.position.x) * 0.05;
       camera.position.y += (- mouseY - camera.position.y) * 0.05;
       camera.lookAt(scene.position);
-
       renderer.render(scene, camera);
     }
   </script>
