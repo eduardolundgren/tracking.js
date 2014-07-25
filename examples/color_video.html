@@ -6,7 +6,9 @@
   <link rel="stylesheet" href="assets/demo.css">
 
   <script src="../build/tracking-min.js"></script>
+  <script src="../../dat-gui/build/dat.gui.min.js"></script>
   <script src="assets/stats.min.js"></script>
+  <script src="assets/color_camera_gui.js"></script>
 
   <style>
   .demo-container {
@@ -35,16 +37,13 @@
 
   <script>
     window.onload = function() {
-      var rectangle = document.getElementById('rectangle');
-      var video = document.getElementById('video');
       var canvas = document.getElementById('canvas');
       var context = canvas.getContext('2d');
 
       tracking.ColorTracker.registerColor('purple', function(r, g, b) {
-        var threshold = 50,
-          dx = r - 120,
-          dy = g - 60,
-          dz = b - 210;
+        var dx = r - 120;
+        var dy = g - 60;
+        var dz = b - 210;
 
         if ((b - g) >= 100 && (r - g) >= 60) {
           return true;
@@ -67,8 +66,14 @@
 
           context.strokeStyle = rect.color;
           context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+          context.font = '11px Helvetica';
+          context.fillStyle = "#fff";
+          context.fillText('x: ' + rect.x + 'px', rect.x + rect.width + 5, rect.y + 11);
+          context.fillText('y: ' + rect.y + 'px', rect.x + rect.width + 5, rect.y + 22);
         });
       });
+
+      initGUIControllers(tracker);
     };
   </script>
 
