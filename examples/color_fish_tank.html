@@ -2,38 +2,36 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>tracking.js + three.js - random particles</title>
+  <title>tracking.js - color tracking fish tank</title>
   <link rel="stylesheet" href="assets/demo.css">
 
   <script src="../build/tracking-min.js"></script>
   <script src="../../threejs/build/three.min.js"></script>
 
   <style>
-    body {
-      background-color: #000;
-      margin: 0px;
-      overflow: hidden;
-    }
-    video {
-      background: #fff;
-      border: 3px solid #f2f2f2;
-      bottom: 0;
-      right: 0;
-      position: absolute;
-    }
-    #rectangle {
-      height: 80px;
-      left: -1000px;
-      position: absolute;
-      top: -1000px;
-      width: 120px;
-      z-index: 1;
-    }
+  body {
+    overflow: hidden;
+  }
+
+  video {
+    border: 1px solid #f2f2f2;
+    bottom: 0;
+    position: absolute;
+  }
+
+  #rectangle {
+    width: 120px;
+    height: 80px;
+    position: absolute;
+    left: -1000px;
+    top: -1000px;
+    z-index: 1;
+  }
   </style>
 </head>
 <body>
   <div class="demo-title">
-    <p><a href="http://trackingjs.com">tracking.js</a> + three.js － move scene using magenta color</p>
+    <p><a href="http://trackingjs.com">tracking.js</a> － get user's webcam and detect colors to control the scene</p>
   </div>
 
   <div id="rectangle"></div>
