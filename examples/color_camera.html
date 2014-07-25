@@ -12,8 +12,8 @@
 
   <style>
   video, canvas {
-    padding-left: 100px;
-    padding-top: 35px;
+    margin-left: 100px;
+    margin-top: 35px;
     position: absolute;
   }
   </style>
@@ -50,6 +50,10 @@
 
           context.strokeStyle = rect.color;
           context.strokeRect(rect.x, rect.y, rect.width, rect.height);
+          context.font = '11px Helvetica';
+          context.fillStyle = "#fff";
+          context.fillText('x: ' + rect.x + 'px', rect.x + rect.width + 5, rect.y + 11);
+          context.fillText('y: ' + rect.y + 'px', rect.x + rect.width + 5, rect.y + 22);
         });
       });
 
