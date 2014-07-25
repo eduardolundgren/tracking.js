@@ -4,11 +4,12 @@ function initGUIControllers(tracker) {
   var gui = new dat.GUI();
 
   var trackedColors = {
-    cyan: true,
-    magenta: true,
-    yellow: true,
     custom: false
   };
+
+  Object.keys(tracking.ColorTracker.knownColors_).forEach(function(color) {
+    trackedColors[color] = true;
+  });
 
   tracker.customColor = '#000000';
 
@@ -67,9 +68,12 @@ function initGUIControllers(tracker) {
 
   var colorsFolder = gui.addFolder('Colors');
 
-  colorsFolder.add(trackedColors, 'cyan').onFinishChange(updateColors);
-  colorsFolder.add(trackedColors, 'magenta').onFinishChange(updateColors);
-  colorsFolder.add(trackedColors, 'yellow').onFinishChange(updateColors);
+  Object.keys(trackedColors).forEach(function(color) {
+    if (color !== 'custom') {
+      colorsFolder.add(trackedColors, color).onFinishChange(updateColors);
+    }
+  });
+
   colorsFolder.add(trackedColors, 'custom').onFinishChange(function(value) {
     if (value) {
       this.customColorElement = colorsFolder.addColor(tracker, 'customColor').onChange(createCustomColor);
