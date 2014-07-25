@@ -1,0 +1,86 @@
+<!doctype html>
+
+<html>
+<head>
+  <title>tracking.js -  feature detector with camera</title>
+
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="assets/demo.css">
+
+  <script src="../build/tracking-min.js"></script>
+  <script src="../../dat-gui/build/dat.gui.min.js"></script>
+  <script src="assets/stats.min.js"></script>
+
+  <style>
+  #video {
+    position: absolute;
+    top: -1000px;
+  }
+
+  #canvas {
+    left: 50%;
+    top: 50%;
+    margin-left: -200px;
+    margin-top: -150px;
+    position: absolute;
+  }
+  </style>
+</head>
+<body>
+
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com">tracking.js</a> － display detected features</p>
+  </div>
+
+  <div class="demo-frame">
+    <div class="demo-container">
+      <video id="video" width="400" height="300" preload autoplay loop muted></video>
+      <canvas id="canvas" width="400" height="300"></canvas>
+    </div>
+  </div>
+
+  <script>
+    var canvas = document.getElementById('canvas');
+    var context = canvas.getContext('2d');
+
+    var FastTracker = function() {
+      FastTracker.base(this, 'constructor');
+    };
+
+    FastTracker.THRESHOLD = 40;
+    tracking.inherits(FastTracker, tracking.Tracker);
+
+    FastTracker.prototype.track = function(pixels, width, height) {
+      stats.begin();
+      var gray = tracking.Image.grayscale(pixels, width, height);
+      var corners = tracking.Fast.findCorners(gray, width, height);
+
+      this.emit('track', {
+          data: corners
+        });
+      stats.end();
+    };
+
+    var tracker = new FastTracker();
+
+    tracker.on('track', function(event) {
+      var corners = event.data;
+      context.clearRect(0, 0, canvas.width, canvas.height);  
+
+      for (var i = 0; i < corners.length; i += 2) {
+        context.fillStyle = '#f00';
+        context.fillRect(corners[i], corners[i + 1], 2, 2);
+      }
+    });
+
+    tracking.track('#video', tracker, {camera: true});
+
+    // GUI Controllers
+      var gui = new dat.GUI();
+
+      gui.add(FastTracker, 'THRESHOLD', 1, 100).onChange(function (value) {
+        tracking.Fast.FAST_THRESHOLD = value;
+      });
+  </script>
+</body>
+</html>
