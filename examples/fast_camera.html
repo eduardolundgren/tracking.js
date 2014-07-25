@@ -27,7 +27,6 @@
   </style>
 </head>
 <body>
-
   <div class="demo-title">
     <p><a href="http://trackingjs.com">tracking.js</a> － display detected features</p>
   </div>
@@ -46,41 +45,41 @@
     var FastTracker = function() {
       FastTracker.base(this, 'constructor');
     };
-
-    FastTracker.THRESHOLD = 40;
     tracking.inherits(FastTracker, tracking.Tracker);
+
+    tracking.Fast.THRESHOLD = 2;
+    FastTracker.prototype.threshold = tracking.Fast.THRESHOLD;
 
     FastTracker.prototype.track = function(pixels, width, height) {
       stats.begin();
       var gray = tracking.Image.grayscale(pixels, width, height);
       var corners = tracking.Fast.findCorners(gray, width, height);
+      stats.end();
 
       this.emit('track', {
-          data: corners
-        });
-      stats.end();
+        data: corners
+      });
     };
 
     var tracker = new FastTracker();
 
     tracker.on('track', function(event) {
+      context.clearRect(0, 0, canvas.width, canvas.height);
       var corners = event.data;
-      context.clearRect(0, 0, canvas.width, canvas.height);  
-
       for (var i = 0; i < corners.length; i += 2) {
         context.fillStyle = '#f00';
         context.fillRect(corners[i], corners[i + 1], 2, 2);
       }
     });
 
-    tracking.track('#video', tracker, {camera: true});
+    tracking.track('#video', tracker, { camera: true });
 
     // GUI Controllers
-      var gui = new dat.GUI();
+    var gui = new dat.GUI();
 
-      gui.add(FastTracker, 'THRESHOLD', 1, 100).onChange(function (value) {
-        tracking.Fast.FAST_THRESHOLD = value;
-      });
+    gui.add(tracker, 'threshold', 1, 100).onChange(function(value) {
+      tracking.Fast.THRESHOLD = value;
+    });
   </script>
 </body>
 </html>
