@@ -52,6 +52,8 @@
 
     window.onload = function() {
       var tracker = new tracking.ColorTracker();
+      tracker.setMinDimension(5);
+      tracker.setMinGroupSize(10);
 
       tracking.track('#video', tracker, { camera: true });
 
@@ -115,19 +117,27 @@
         return;
       }
 
-      var rect = event.data[0];
+      var maxRectArea = 0;
+      var maxRect;
+      event.data.forEach(function(rect) {
+        if (rect.width * rect.height > maxRectArea){
+          maxRectArea = rect.width * rect.height;
+          maxRect = rect;
+        }
+      });
 
-      rectangle.style.border = '2px solid ' + rect.color;
-      rectangle.style.width = rect.width + 'px';
-      rectangle.style.height = rect.height + 'px';
-      rectangle.style.left = (video.offsetLeft + rect.x) + 'px';
-      rectangle.style.top = (video.offsetTop + rect.y) + 'px';
+      if (maxRectArea > 0) {
+        var rectCenterX = maxRect.x + (maxRect.width/2);
+        var rectCenterY = maxRect.y + (maxRect.height/2);
+        mouseX = (rectCenterX - 160) * (window.innerWidth/320) * 10;
+        mouseY = (rectCenterY - 120) * (window.innerHeight/240) * 10;
 
-      var x = rect.x + (rect.width >> 1);
-      var y = rect.y + (rect.height >> 1);
-
-      mouseX = (((320 - x) / 320) * window.innerWidth) - windowHalfX;
-      mouseY = (((240 - y) / 240) * window.innerHeight) - windowHalfY;
+        rectangle.style.border = '2px solid ' + maxRect.color;
+        rectangle.style.width = maxRect.width + 'px';
+        rectangle.style.height = maxRect.height + 'px';
+        rectangle.style.left = (video.offsetLeft + maxRect.x) + 'px';
+        rectangle.style.top = (video.offsetTop + maxRect.y) + 'px';
+      }
     }
 
     function animate() {
@@ -139,9 +149,6 @@
       camera.position.x += (mouseX - camera.position.x) * 0.05;
       camera.position.y += (- mouseY - camera.position.y) * 0.05;
       camera.lookAt(scene.position);
-
-      group.rotation.x += 0.01;
-      group.rotation.y += 0.02;
 
       renderer.render(scene, camera);
     }
