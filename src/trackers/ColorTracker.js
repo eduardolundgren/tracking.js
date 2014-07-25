@@ -223,7 +223,7 @@
   };
 
   /**
-   * Gets the minimum dimension to classify a rectangle.
+   * Sets the minimum dimension to classify a rectangle.
    * @return {number}
    */
   tracking.ColorTracker.prototype.setMinDimension = function(minDimension) {
