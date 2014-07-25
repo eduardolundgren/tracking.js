@@ -1,6 +1,6 @@
 Software License Agreement (BSD License)
 
-Copyright (c) 2007, Eduardo A. Lundgren Melo.
+Copyright (c) 2014, Eduardo A. Lundgren Melo.
 All rights reserved.
 
 Redistribution and use of this software in source and binary forms, with or without modification, are

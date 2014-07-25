@@ -3,7 +3,7 @@
 [![Build Status](http://img.shields.io/travis/eduardolundgren/tracking.js.svg?style=flat)](https://travis-ci.org/eduardolundgren/tracking.js)
 [![DevDependencies Status](http://img.shields.io/david/dev/eduardolundgren/tracking.js.svg?style=flat)](https://david-dm.org/eduardolundgren/tracking.js#info=devDependencies)
 
-The *tracking.js* library brings different computer vision algorithms and techniques into the browser environment. By using modern HTML5 specifications, we enable you to do real-time color tracking, face detection and much more with a simple and intuitive interface.
+The tracking.js library brings different computer vision algorithms and techniques into the browser environment. By using modern HTML5 specifications, we enable you to do real-time color tracking, face detection and much more — all that with a lightweight core (~7 KB) and intuitive interface.
 
 * [Official website](http://trackingjs.com)
 * [Documentation](http://trackingjs.com/docs.html)
@@ -19,9 +19,11 @@ bower install tracking.js
 
 ## Examples
 
-[![Demo 1](https://cloud.githubusercontent.com/assets/398893/3691378/d90f0d60-1351-11e4-9872-2d5abcef43ad.jpg)](#)
-[![Demo 2](https://cloud.githubusercontent.com/assets/398893/3691387/eca4cf22-1351-11e4-94d3-905740bd09dc.jpg)](#)
-[![Demo 3](https://cloud.githubusercontent.com/assets/398893/3691391/f86b0024-1351-11e4-82bf-3c44a4768d70.jpg)](#)
+[![Demo 1](https://cloud.githubusercontent.com/assets/398893/3709347/ec72876c-1453-11e4-8450-149d06d487f2.jpg)](http://trackingjs.com/examples/face_tag_friends.html)
+[![Demo 2](https://cloud.githubusercontent.com/assets/398893/3709357/1a1c2e16-1454-11e4-804d-e6ada6c65997.jpg)](http://trackingjs.com/examples/face_fish_tank.html)
+[![Demo 3](https://cloud.githubusercontent.com/assets/398893/3709361/38f86e8a-1454-11e4-811d-52bd21b37e85.jpg)](http://trackingjs.com/examples/color_hexgl.html)
+[![Demo 4](https://cloud.githubusercontent.com/assets/398893/3709366/4462a308-1454-11e4-8c6a-f1f7e41d9ded.jpg)](http://trackingjs.com/examples/color_draw_something.html)
+[![Demo 5](https://cloud.githubusercontent.com/assets/398893/3709370/545a39ec-1454-11e4-9bc8-4e45fd1c597c.jpg)](http://trackingjs.com/examples/color_fish_tank.html)
 
 ## Features
 
@@ -58,6 +60,18 @@ However, the browser support may vary if you request the user's camera (which re
 - [ ] Pose estimation
 - [ ] Faster keypoint descriptor (BRIEF)
 - [ ] More trainings (Hand, car plate, etc)
+
+## Contributing
+
+1. Fork it!
+2. Create your feature branch: `git checkout -b my-new-feature`
+3. Commit your changes: `git commit -m 'Add some feature'`
+4. Push to the branch: `git push origin my-new-feature`
+5. Submit a pull request :D
+
+## History
+
+For detailed changelog, check [Releases](https://github.com/eduardolundgren/tracking.js/releases).
 
 ## Team
 
