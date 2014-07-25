@@ -22,8 +22,8 @@ bower install tracking.js
 [![Demo 1](https://cloud.githubusercontent.com/assets/398893/3709347/ec72876c-1453-11e4-8450-149d06d487f2.jpg)](http://trackingjs.com/examples/face_tag_friends.html)
 [![Demo 2](https://cloud.githubusercontent.com/assets/398893/3709357/1a1c2e16-1454-11e4-804d-e6ada6c65997.jpg)](http://trackingjs.com/examples/face_fish_tank.html)
 [![Demo 3](https://cloud.githubusercontent.com/assets/398893/3709361/38f86e8a-1454-11e4-811d-52bd21b37e85.jpg)](http://trackingjs.com/examples/color_hexgl.html)
-[![Demo 4](https://cloud.githubusercontent.com/assets/398893/3709366/4462a308-1454-11e4-8c6a-f1f7e41d9ded.jpg)](http://trackingjs.com/examples/color_draw_something.html)
-[![Demo 5](https://cloud.githubusercontent.com/assets/398893/3709370/545a39ec-1454-11e4-9bc8-4e45fd1c597c.jpg)](http://trackingjs.com/examples/color_fish_tank.html)
+[![Demo 4](https://cloud.githubusercontent.com/assets/398893/3709464/5447a302-1456-11e4-96b2-d2fae28e2a01.jpg)](http://trackingjs.com/examples/color_draw_something.html)
+[![Demo 5](https://cloud.githubusercontent.com/assets/398893/3709469/6a3e859a-1456-11e4-982a-d46a55890e1e.jpg)](http://trackingjs.com/examples/color_fish_tank.html)
 
 ## Features
 
