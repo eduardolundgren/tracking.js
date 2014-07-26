@@ -2,30 +2,73 @@
 
 <html>
 <head>
-  <title>tracking.js - fast algorithm</title>
-
   <meta charset="utf-8">
+  <title>tracking.js - feature detection</title>
+  <link rel="stylesheet" href="assets/demo.css">
 
-  <script src="../build/tracking.js"></script>
+  <script src="../build/tracking-min.js"></script>
+  <script src="../../dat-gui/build/dat.gui.min.js"></script>
+
+  <style>
+  .demo-container {
+    background-color: black;
+  }
+  #image {
+    position: absolute;
+    left: -1000px;
+    top: -1000px;
+  }
+  #canvas {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    margin-left: -197px;
+    margin-top: -147px;
+  }
+  </style>
 </head>
 <body>
-  <canvas id="canvas"></canvas>
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com">tracking.js</a> － detect feature points on a image</p>
+  </div>
+
+  <div class="demo-frame">
+    <div class="demo-container">
+      <img id="image" src="assets/fast.png" />
+      <canvas id="canvas" width="393" height="295"></canvas>
+    </div>
+  </div>
+
   <script>
-    var width = 320;
-    var height = 240;
-    var canvas = document.getElementById('canvas');
-    var context = canvas.getContext('2d');
+    window.onload = function() {
+      var width = 393;
+      var height = 295;
+      var canvas = document.getElementById('canvas');
+      var context = canvas.getContext('2d');
 
-    tracking.Canvas.loadImage(canvas, 'assets/book1.png', 0, 0, width, height, function() {
-      var imageData = context.getImageData(0, 0, width, height);
-      var gray = tracking.Image.grayscale(imageData.data, width, height);
-      var corners = tracking.Fast.findCorners(gray, width, height);
+      var image = document.getElementById('image');
 
-      for (var i = 0; i < corners.length; i += 2) {
-        context.fillStyle = '#f00';
-        context.fillRect(corners[i], corners[i + 1], 1, 1);
-      }
-    });
+      window.fastThreshold = 40;
+
+      var doFindFeatures = function() {
+        tracking.Fast.FAST_THRESHOLD = window.fastThreshold;
+        context.drawImage(image, 0, 0, width, height);
+
+        var imageData = context.getImageData(0, 0, width, height);
+        var gray = tracking.Image.grayscale(imageData.data, width, height);
+        var corners = tracking.Fast.findCorners(gray, width, height);
+
+        for (var i = 0; i < corners.length; i += 2) {
+          context.fillStyle = '#f00';
+          context.fillRect(corners[i], corners[i + 1], 1, 1);
+        }
+      };
+
+      doFindFeatures();
+
+      var gui = new dat.GUI();
+      gui.add(window, 'fastThreshold', 0, 255).onChange(doFindFeatures);
+    }
   </script>
 </body>
 </html>
