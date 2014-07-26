@@ -11,7 +11,7 @@
 
   <style>
   .demo-container {
-    background-color: black;
+    background: #131112;
   }
   #image {
     position: absolute;
@@ -22,8 +22,7 @@
     position: absolute;
     left: 50%;
     top: 50%;
-    margin-left: -197px;
-    margin-top: -147px;
+    margin: -200px 0 0 -200px;
   }
   </style>
 </head>
@@ -35,14 +34,14 @@
   <div class="demo-frame">
     <div class="demo-container">
       <img id="image" src="assets/fast.png" />
-      <canvas id="canvas" width="393" height="295"></canvas>
+      <canvas id="canvas" width="400" height="400"></canvas>
     </div>
   </div>
 
   <script>
     window.onload = function() {
-      var width = 393;
-      var height = 295;
+      var width = 400;
+      var height = 400;
       var canvas = document.getElementById('canvas');
       var context = canvas.getContext('2d');
 
@@ -60,7 +59,7 @@
 
         for (var i = 0; i < corners.length; i += 2) {
           context.fillStyle = '#f00';
-          context.fillRect(corners[i], corners[i + 1], 1, 1);
+          context.fillRect(corners[i], corners[i + 1], 3, 3);
         }
       };
 
