@@ -51,7 +51,7 @@
       window.fastThreshold = 40;
 
       var doFindFeatures = function() {
-        tracking.Fast.FAST_THRESHOLD = window.fastThreshold;
+        tracking.Fast.THRESHOLD = window.fastThreshold;
         context.drawImage(image, 0, 0, width, height);
 
         var imageData = context.getImageData(0, 0, width, height);
@@ -67,7 +67,7 @@
       doFindFeatures();
 
       var gui = new dat.GUI();
-      gui.add(window, 'fastThreshold', 0, 255).onChange(doFindFeatures);
+      gui.add(window, 'fastThreshold', 0, 100).onChange(doFindFeatures);
     }
   </script>
 </body>
