@@ -17,6 +17,13 @@ Install via [Bower](http://bower.io/) or [download as a zip](https://github.com/
 bower install tracking.js
 ```
 
+If you want to run examples in your local machine, you need to unzip files and an HTTP server.
+For example: 
+
+```
+python -m SimpleHTTPServer
+```
+
 ## Examples
 
 [![Demo 1](https://cloud.githubusercontent.com/assets/398893/3709347/ec72876c-1453-11e4-8450-149d06d487f2.jpg)](http://trackingjs.com/examples/face_tag_friends.html)
