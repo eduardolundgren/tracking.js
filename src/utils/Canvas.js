@@ -21,7 +21,8 @@
   tracking.Canvas.loadImage = function(canvas, src, x, y, width, height, opt_callback) {
     var instance = this;
     var img = new window.Image();
-
+    //allow CORS images
+    img.crossOrigin = "*";
     img.onload = function() {
       var context = canvas.getContext('2d');
       canvas.width = width;
