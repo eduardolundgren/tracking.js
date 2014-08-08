@@ -78,6 +78,14 @@
   tracking.ColorTracker.prototype.minDimension = 20;
 
   /**
+   * Holds the maximum dimension to classify a rectangle.
+   * @default 100
+   * @type {number}
+   */
+  tracking.ColorTracker.prototype.maxDimension = 100;
+
+
+  /**
    * Holds the minimum group size to be classified as a rectangle.
    * @default 30
    * @type {number}
