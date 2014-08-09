@@ -12,14 +12,12 @@ module.exports = {
   },
 
   testConstructorEmpty: function(test) {
-    var colors; 
+    var colors;
     var tracker;
 
-    test.doesNotThrow(
-      function() {
-        tracker = new tracking.ColorTracker();
-      }
-    );
+    test.doesNotThrow(function() {
+      tracker = new tracking.ColorTracker();
+    });
 
     colors = tracker.getColors();
     test.equal(1, colors.length, 'Colors array should have a single value');
@@ -32,21 +30,17 @@ module.exports = {
     var colors;
     var tracker;
 
-    test.doesNotThrow(
-      function() {
-        tracker = new tracking.ColorTracker('yellow');
-      }
-    );
+    test.doesNotThrow(function() {
+      tracker = new tracking.ColorTracker('yellow');
+    });
 
     colors = tracker.getColors();
     test.equal(1, colors.length, 'Colors array should have a single value');
     test.equal('yellow', colors[0], 'The colors array should be set to value in the constructor');
 
-    test.throws(
-      function() {
-        tracker = new tracking.ColorTracker('notvalid');
-      }
-    );
+    test.throws(function() {
+      tracker = new tracking.ColorTracker('notvalid');
+    });
 
     test.done();
   },
@@ -55,20 +49,16 @@ module.exports = {
     var colors;
     var tracker;
 
-    test.doesNotThrow(
-      function() {
-        tracker = new tracking.ColorTracker([]);
-      }
-    );
+    test.doesNotThrow(function() {
+      tracker = new tracking.ColorTracker([]);
+    });
 
     colors = tracker.getColors();
     test.equal(0, colors.length, 'Colors array should be empty');
 
-    test.doesNotThrow(
-      function() {
-        tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
-      }
-    );
+    test.doesNotThrow(function() {
+      tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
+    });
 
     colors = tracker.getColors();
     test.equal(3, colors.length, 'Colors array have 3 values');
@@ -76,11 +66,9 @@ module.exports = {
     test.equal('cyan', colors[1], 'The colors array should be set to values in the constructor');
     test.equal('yellow', colors[2], 'The colors array should be set to values in the constructor');
 
-    test.throws(
-      function() {
-        tracker = new tracking.ColorTracker(['magenta', null, 'yellow']);
-      }
-    );
+    test.throws(function() {
+      tracker = new tracking.ColorTracker(['magenta', null, 'yellow']);
+    });
 
     test.done();
   },
@@ -159,6 +147,44 @@ module.exports = {
       test.equal(8, event.data[1].y, 'The second rectangle should be at y = 8');
       test.equal(1, event.data[1].width, 'The second rectangle\'s width should be 1');
       test.equal(2, event.data[1].height, 'The second rectangle\'s height should be 2');
+
+      test.done();
+    });
+
+    tracker.track(pixels, 6, 11);
+  },
+
+  testDimensionConstraints: function(test) {
+    var pixels;
+    var tracker;
+
+    tracking.ColorTracker.registerColor('black', function(r, g, b) {
+      return r === 0 && g === 0 && b === 0;
+    });
+
+    tracker = new tracking.ColorTracker('black');
+    tracker.setMinDimension(1);
+    tracker.setMaxDimension(2);
+    tracker.setMinGroupSize(6);
+
+    pixels = [
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0
+    ];
+
+    tracker.on('track', function(event) {
+      test.equal(1, event.data.length, 'There should be 1 result rectangle');
+      test.equal(1, event.data[0].width, 'The rectangle\'s width should be 1');
+      test.equal(2, event.data[0].height, 'The rectangle\'s height should be 2');
 
       test.done();
     });
