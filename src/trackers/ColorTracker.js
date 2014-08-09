@@ -79,10 +79,10 @@
 
   /**
    * Holds the maximum dimension to classify a rectangle.
-   * @default 100
+   * @default Infinity
    * @type {number}
    */
-  tracking.ColorTracker.prototype.maxDimension = 100;
+  tracking.ColorTracker.prototype.maxDimension = Infinity;
 
 
   /**
