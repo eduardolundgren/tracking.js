@@ -12,14 +12,12 @@ module.exports = {
   },
 
   testConstructorEmpty: function(test) {
-    var colors; 
+    var colors;
     var tracker;
 
-    test.doesNotThrow(
-      function() {
-        tracker = new tracking.ColorTracker();
-      }
-    );
+    test.doesNotThrow(function() {
+      tracker = new tracking.ColorTracker();
+    });
 
     colors = tracker.getColors();
     test.equal(1, colors.length, 'Colors array should have a single value');
@@ -32,21 +30,17 @@ module.exports = {
     var colors;
     var tracker;
 
-    test.doesNotThrow(
-      function() {
-        tracker = new tracking.ColorTracker('yellow');
-      }
-    );
+    test.doesNotThrow(function() {
+      tracker = new tracking.ColorTracker('yellow');
+    });
 
     colors = tracker.getColors();
     test.equal(1, colors.length, 'Colors array should have a single value');
     test.equal('yellow', colors[0], 'The colors array should be set to value in the constructor');
 
-    test.throws(
-      function() {
-        tracker = new tracking.ColorTracker('notvalid');
-      }
-    );
+    test.throws(function() {
+      tracker = new tracking.ColorTracker('notvalid');
+    });
 
     test.done();
   },
@@ -55,20 +49,16 @@ module.exports = {
     var colors;
     var tracker;
 
-    test.doesNotThrow(
-      function() {
-        tracker = new tracking.ColorTracker([]);
-      }
-    );
+    test.doesNotThrow(function() {
+      tracker = new tracking.ColorTracker([]);
+    });
 
     colors = tracker.getColors();
     test.equal(0, colors.length, 'Colors array should be empty');
 
-    test.doesNotThrow(
-      function() {
-        tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
-      }
-    );
+    test.doesNotThrow(function() {
+      tracker = new tracking.ColorTracker(['magenta', 'cyan', 'yellow']);
+    });
 
     colors = tracker.getColors();
     test.equal(3, colors.length, 'Colors array have 3 values');
@@ -76,11 +66,9 @@ module.exports = {
     test.equal('cyan', colors[1], 'The colors array should be set to values in the constructor');
     test.equal('yellow', colors[2], 'The colors array should be set to values in the constructor');
 
-    test.throws(
-      function() {
-        tracker = new tracking.ColorTracker(['magenta', null, 'yellow']);
-      }
-    );
+    test.throws(function() {
+      tracker = new tracking.ColorTracker(['magenta', null, 'yellow']);
+    });
 
     test.done();
   },
