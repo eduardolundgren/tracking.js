@@ -152,5 +152,43 @@ module.exports = {
     });
 
     tracker.track(pixels, 6, 11);
+  },
+
+  testDimensionConstraints: function(test) {
+    var pixels;
+    var tracker;
+
+    tracking.ColorTracker.registerColor('black', function(r, g, b) {
+      return r === 0 && g === 0 && b === 0;
+    });
+
+    tracker = new tracking.ColorTracker('black');
+    tracker.setMinDimension(1);
+    tracker.setMaxDimension(2);
+    tracker.setMinGroupSize(6);
+
+    pixels = [
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+      1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0,
+      0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0
+    ];
+
+    tracker.on('track', function(event) {
+      test.equal(1, event.data.length, 'There should be 1 result rectangle');
+      test.equal(1, event.data[0].width, 'The rectangle\'s width should be 1');
+      test.equal(2, event.data[0].height, 'The rectangle\'s height should be 2');
+
+      test.done();
+    });
+
+    tracker.track(pixels, 6, 11);
   }
 };
