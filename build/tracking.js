@@ -1929,10 +1929,10 @@
 
   /**
    * Holds the maximum dimension to classify a rectangle.
-   * @default 100
+   * @default Infinity
    * @type {number}
    */
-  tracking.ColorTracker.prototype.maxDimension = 100;
+  tracking.ColorTracker.prototype.maxDimension = Infinity;
 
 
   /**
@@ -1993,20 +1993,20 @@
   };
 
   /**
-   * Sets the minimum dimension to classify a rectangle.
-   * @param {number} minDimension
+   * Gets the minimum dimension to classify a rectangle.
+   * @return {number}
    */
   tracking.ColorTracker.prototype.getMinDimension = function() {
     return this.minDimension;
   };
 
   /**
-   * Sets the maximum dimension to classify a rectangle.
-   * @param {number} maxDimension
+   * Gets the maximum dimension to classify a rectangle.
+   * @return {number}
    */
   tracking.ColorTracker.prototype.getMaxDimension = function() {
     return this.maxDimension;
-  }
+  };
 
   /**
    * Gets the minimum group size to be classified as a rectangle.
@@ -2096,7 +2096,7 @@
 
   /**
    * Sets the minimum dimension to classify a rectangle.
-   * @return {number}
+   * @param {number} minDimension
    */
   tracking.ColorTracker.prototype.setMinDimension = function(minDimension) {
     this.minDimension = minDimension;
@@ -2104,11 +2104,11 @@
 
   /**
    * Sets the maximum dimension to classify a rectangle.
-   * @return {number}
+   * @param {number} maxDimension
    */
-   tracking.ColorTracker.prototype.setMaxDimension = function(maxDimension) {
-      this.maxDimension = maxDimension;
-   }
+  tracking.ColorTracker.prototype.setMaxDimension = function(maxDimension) {
+    this.maxDimension = maxDimension;
+  };
 
   /**
    * Sets the minimum group size to be classified as a rectangle.
