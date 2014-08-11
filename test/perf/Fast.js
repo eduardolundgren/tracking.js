@@ -1,5 +1,5 @@
 var PNG = require('png-js');
-var tracking = require('../utils/sandbox.js');
+var tracking = require('../../index');
 
 var image;
 var imageGray;
