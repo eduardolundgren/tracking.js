@@ -66,12 +66,12 @@ assets.forEach(function (name) {
     return gulp.src('assets/' + name)
       .pipe(convertertjs())
       .pipe(header('tracking.ViolaJones.classifiers.<%= name %> = new Float64Array(', {
-        name: name.replace('haarcascade_','').replace('.xml','')}))
+        name: name.replace('.xml','')}))
       .pipe(footer(');'))
       .pipe(uglify())
       .pipe(banner())
       .pipe(rename(function(filepath) {
-        filepath.extname = '.min.js';
+        filepath.extname = '-min.js';
       }))
       .pipe(gulp.dest('build/data'));
   });

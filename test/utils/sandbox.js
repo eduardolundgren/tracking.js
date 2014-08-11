@@ -4,9 +4,9 @@ var nodeunit = require('nodeunit');
 
 var context = nodeunit.utils.sandbox([
     'build/tracking.js',
-    'build/data/haarcascade_eye.min.js',
-    'build/data/haarcascade_face.min.js',
-    'build/data/haarcascade_mouth.min.js'], {
+    'build/data/eye-min.js',
+    'build/data/face-min.js',
+    'build/data/mouth-min.js'], {
   Float32Array: Float32Array,
   Float64Array: Float64Array,
   Int16Array: Int16Array,
