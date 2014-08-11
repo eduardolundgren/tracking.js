@@ -37,7 +37,6 @@
     "jshint-stylish": "^0.4.0",
     "nodeunit": "0.9.0",
     "png-js": "0.1.1",
-    "run-sequence": "^0.3.6",
-    "canvas": "^1.1.6"
+    "run-sequence": "^0.3.6"
   }
 }
