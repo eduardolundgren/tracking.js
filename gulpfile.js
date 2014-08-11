@@ -1,8 +1,11 @@
 'use strict';
 var gulp = require('gulp');
-var converterTjs = require('gulp-converter-tjs');
+var glob = require('glob');
+var path = require('path');
+var convertertjs = require('gulp-converter-tjs');
 var concat = require('gulp-concat');
 var header = require('gulp-header');
+var footer = require('gulp-footer');
 var jsdoc = require('gulp-jsdoc');
 var jshint = require('gulp-jshint');
 var nodeunit = require('gulp-nodeunit');
@@ -53,27 +56,30 @@ gulp.task('build', function() {
     .pipe(gulp.dest('build'));
 });
 
-gulp.task('build-classifiers', function() {
-  return gulp.src('assets/*.xml')
-    .pipe(converterTjs())
-    .pipe(rename(function(filepath) {
-      filepath.extname += '.json';
-    }))
-    .pipe(banner())
-    .pipe(gulp.dest('build/data'));
+
+var assets = glob.sync('assets/*').map(function (assetDir) {
+  return path.basename(assetDir);
 });
 
-gulp.task('build-data', function() {
-  return gulp.src('src/detection/training/haar/**.js')
-    .pipe(banner())
-    .pipe(gulp.dest('build/data'))
-    .pipe(rename(function(filepath) {
-      filepath.basename += '-min';
-    }))
-    .pipe(uglify())
-    .pipe(banner())
-    .pipe(gulp.dest('build/data'));
+assets.forEach(function (name) {
+  gulp.task('build-' + name, function () {
+    return gulp.src('assets/' + name)
+      .pipe(convertertjs())
+      .pipe(header('tracking.ViolaJones.classifiers.<%= name %> = new Float64Array(', {
+        name: name.replace('haarcascade_','').replace('.xml','')}))
+      .pipe(footer(');'))
+      .pipe(uglify())
+      .pipe(banner())
+      .pipe(rename(function(filepath) {
+        filepath.extname = '.min.js';
+      }))
+      .pipe(gulp.dest('build/data'));
+  });
 });
+
+gulp.task('build-data', assets.map(function (name) {
+  return 'build-' + name;
+}));
 
 gulp.task('docs', function() {
   return gulp.src(['src/**/*.js', 'README.md'])
