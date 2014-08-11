@@ -1,5 +1,6 @@
 'use strict';
 var gulp = require('gulp');
+var converterTjs = require('gulp-converter-tjs');
 var concat = require('gulp-concat');
 var header = require('gulp-header');
 var jsdoc = require('gulp-jsdoc');
@@ -50,6 +51,16 @@ gulp.task('build', function() {
     }))
     .pipe(banner())
     .pipe(gulp.dest('build'));
+});
+
+gulp.task('build-classifiers', function() {
+  return gulp.src('assets/*.xml')
+    .pipe(converterTjs())
+    .pipe(rename(function(filepath) {
+      filepath.extname += '.json';
+    }))
+    .pipe(banner())
+    .pipe(gulp.dest('build/data'));
 });
 
 gulp.task('build-data', function() {
