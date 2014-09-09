@@ -45,8 +45,8 @@ gulp.task('build', function() {
     .pipe(banner())
     .pipe(gulp.dest('build'))
     .pipe(uglify())
-    .pipe(rename(function(filepath) {
-      filepath.basename += '-min';
+    .pipe(rename({
+      suffix: '-min'
     }))
     .pipe(banner())
     .pipe(gulp.dest('build'));
@@ -56,8 +56,8 @@ gulp.task('build-data', function() {
   return gulp.src('src/detection/training/haar/**.js')
     .pipe(banner())
     .pipe(gulp.dest('build/data'))
-    .pipe(rename(function(filepath) {
-      filepath.basename += '-min';
+    .pipe(rename({
+      suffix: '-min'
     }))
     .pipe(uglify())
     .pipe(banner())
