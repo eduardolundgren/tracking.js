@@ -33,7 +33,7 @@
   tracking.Fast.THRESHOLD = 40;
 
   /**
-   * Caches coordinates values of the circle surounding the pixel candidate p.
+   * Caches coordinates values of the circle surrounding the pixel candidate p.
    * @type {Object.<number, Int32Array>}
    * @private
    * @static
@@ -89,7 +89,7 @@
   };
 
   /**
-   * Checks if the circle pixel is brigther than the candidate pixel p by
+   * Checks if the circle pixel is brighter than the candidate pixel p by
    * a threshold.
    * @param {number} circlePixel The circle pixel value.
    * @param {number} p The value of the candidate pixel p.
@@ -161,8 +161,8 @@
   /**
    * Fast check to test if the candidate pixel is a trivially excluded value.
    * In order to be a corner, the candidate pixel value should be darker or
-   * brigther than 9-12 surrouding pixels, when at least three of the top,
-   * bottom, left and right pixels are brither or darker it can be
+   * brighter than 9-12 surrounding pixels, when at least three of the top,
+   * bottom, left and right pixels are brighter or darker it can be
    * automatically excluded improving the performance.
    * @param {number} circlePixel The circle pixel value.
    * @param {number} p The value of the candidate pixel p.

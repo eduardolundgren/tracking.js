@@ -36,7 +36,7 @@
   tracking.Brief.randomWindowOffsets_ = null;
 
   /**
-   * Generates a brinary string for each found keypoints extracted using an
+   * Generates a binary string for each found keypoints extracted using an
    * extractor method.
    * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
    * @param {number} width The image width.

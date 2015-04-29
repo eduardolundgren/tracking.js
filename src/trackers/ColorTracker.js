@@ -1,6 +1,6 @@
 (function() {
   /**
-   * ColorTracker utility to track colored blobs in a frrame using color
+   * ColorTracker utility to track colored blobs in a frame using color
    * difference evaluation.
    * @constructor
    * @param {string|Array.<string>} opt_colors Optional colors to track.
@@ -98,7 +98,7 @@
    * @param {Array.<number>} cloud Major row order array containing all the
    *     points from the desired color, e.g. [x1, y1, c2, y2, ...].
    * @param {number} total Total numbers of pixels of the desired color.
-   * @return {object} Object contaning the x, y and estimated z coordinate of
+   * @return {object} Object containing the x, y and estimated z coordinate of
    *     the blog extracted from the cloud points.
    * @private
    */

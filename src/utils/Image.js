@@ -7,7 +7,7 @@
   tracking.Image = {};
 
   /**
-   * Computes gaussian blur. Adpated from
+   * Computes gaussian blur. Adapted from
    * https://github.com/kig/canvasfilters.
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
@@ -174,7 +174,7 @@
    * signals: a vertical and a horizontal projection. The convolution is
    * performed by sliding the kernel over the image, generally starting at the
    * top left corner, so as to move the kernel through all the positions where
-   * the kernel fits entirely within the boundaries of the image. Adpated from
+   * the kernel fits entirely within the boundaries of the image. Adapted from
    * https://github.com/kig/canvasfilters.
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
@@ -223,7 +223,7 @@
    * signals: a vertical and a horizontal projection. The convolution is
    * performed by sliding the kernel over the image, generally starting at the
    * top left corner, so as to move the kernel through all the positions where
-   * the kernel fits entirely within the boundaries of the image. Adpated from
+   * the kernel fits entirely within the boundaries of the image. Adapted from
    * https://github.com/kig/canvasfilters.
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
@@ -272,7 +272,7 @@
    * vertical and a horizontal projection. The convolution is performed by
    * sliding the kernel over the image, generally starting at the top left
    * corner, so as to move the kernel through all the positions where the
-   * kernel fits entirely within the boundaries of the image. Adpated from
+   * kernel fits entirely within the boundaries of the image. Adapted from
    * https://github.com/kig/canvasfilters.
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
@@ -293,7 +293,7 @@
    * find edges in the image. The way we implement the Sobel filter here is by
    * first grayscaling the image, then taking the horizontal and vertical
    * gradients and finally combining the gradient images to make up the final
-   * image. Adpated from https://github.com/kig/canvasfilters.
+   * image. Adapted from https://github.com/kig/canvasfilters.
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.

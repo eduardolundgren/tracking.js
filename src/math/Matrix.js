@@ -11,7 +11,7 @@
    * for each iteration. The `fn` callback receives the following parameters:
    * `(r,g,b,a,index,i,j)`, where `r,g,b,a` represents the pixel color with
    * alpha channel, `index` represents the position in the major-row order
-   * array and `i,j` the respective indexes positions in two dimentions.
+   * array and `i,j` the respective indexes positions in two dimensions.
    * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
    *     through.
    * @param {number} width The image width.
