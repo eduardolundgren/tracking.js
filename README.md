@@ -11,10 +11,14 @@ The tracking.js library brings different computer vision algorithms and techniqu
 
 ## Install
 
-Install via [Bower](http://bower.io/) or [download as a zip](https://github.com/eduardolundgren/tracking.js/archive/master.zip):
+Install via [Bower](http://bower.io/), [npm](https://www.npmjs.com/), or [download as a zip](https://github.com/eduardolundgren/tracking.js/archive/master.zip):
 
 ```
-bower install tracking.js
+bower install tracking
+```
+
+```
+npm install tracking
 ```
 
 ## Examples
