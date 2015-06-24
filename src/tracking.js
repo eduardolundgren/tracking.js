@@ -56,7 +56,7 @@
    */
   tracking.initUserMedia_ = function(element, opt_options) {
     window.navigator.getUserMedia({
-      video: true,
+      video: opt_options.video,
       audio: opt_options.audio
     }, function(stream) {
         try {
@@ -125,7 +125,8 @@
    *     video.
    * @param {tracking.Tracker} tracker The tracker instance used to track the
    *     element.
-   * @param {object} opt_options Optional configuration to the tracker.
+   * @param {object} opt_options Optional configuration to the tracker. 
+   *     Used only with 'video' tag for specifying constrains when initialising webcam source.
    */
   tracking.track = function(element, tracker, opt_options) {
     element = tracking.one(element);
@@ -144,6 +145,9 @@
       case 'video':
         if (opt_options) {
           if (opt_options.camera) {
+            if (!opt_options.video) {
+                opt_options.video = true;
+            }
             this.initUserMedia_(element, opt_options);
           }
         }
