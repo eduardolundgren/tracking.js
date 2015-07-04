@@ -78,7 +78,10 @@
     );
   };
 
-  tracking.removeUserMedia_ = function(){
+  /**
+   * Stop localStream, camera and audio
+   */
+  tracking.stopUserMedia = function(){
     if(tracking.localStream){
       tracking.localStream.stop();
     }
