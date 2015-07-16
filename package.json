@@ -18,11 +18,13 @@
     "type": "git",
     "url": "git@github.com:eduardolundgren/tracking.js.git"
   },
+  "main": "index.js",
   "scripts": {
     "test": "gulp test"
   },
   "license": "BSD",
   "devDependencies": {
+    "canvas": "^1.2.3",
     "gulp": "^3.8.1",
     "gulp-concat": "^2.2.0",
     "gulp-esformatter": "^0.5.0",
@@ -36,6 +38,7 @@
     "jshint-stylish": "^0.4.0",
     "nodeunit": "0.9.0",
     "png-js": "0.1.1",
-    "run-sequence": "^0.3.6"
+    "run-sequence": "^0.3.6",
+    "yargs": "^3.14.0"
   }
 }
