@@ -1,7 +1,7 @@
 /**
- * tracking.js - A modern approach for Computer Vision on the web.
+ * tracking - A modern approach for Computer Vision on the web.
  * @author Eduardo Lundgren <edu@rdo.io>
- * @version v1.0.0
+ * @version v1.1.1
  * @link http://trackingjs.com
  * @license BSD
  */
@@ -462,7 +462,7 @@
   tracking.Canvas.loadImage = function(canvas, src, x, y, width, height, opt_callback) {
     var instance = this;
     var img = new window.Image();
-
+    img.crossOrigin = '*';
     img.onload = function() {
       var context = canvas.getContext('2d');
       canvas.width = width;
@@ -547,7 +547,7 @@
   tracking.Image = {};
 
   /**
-   * Computes gaussian blur. Adpated from
+   * Computes gaussian blur. Adapted from
    * https://github.com/kig/canvasfilters.
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
@@ -714,7 +714,7 @@
    * signals: a vertical and a horizontal projection. The convolution is
    * performed by sliding the kernel over the image, generally starting at the
    * top left corner, so as to move the kernel through all the positions where
-   * the kernel fits entirely within the boundaries of the image. Adpated from
+   * the kernel fits entirely within the boundaries of the image. Adapted from
    * https://github.com/kig/canvasfilters.
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
@@ -763,7 +763,7 @@
    * signals: a vertical and a horizontal projection. The convolution is
    * performed by sliding the kernel over the image, generally starting at the
    * top left corner, so as to move the kernel through all the positions where
-   * the kernel fits entirely within the boundaries of the image. Adpated from
+   * the kernel fits entirely within the boundaries of the image. Adapted from
    * https://github.com/kig/canvasfilters.
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
@@ -812,7 +812,7 @@
    * vertical and a horizontal projection. The convolution is performed by
    * sliding the kernel over the image, generally starting at the top left
    * corner, so as to move the kernel through all the positions where the
-   * kernel fits entirely within the boundaries of the image. Adpated from
+   * kernel fits entirely within the boundaries of the image. Adapted from
    * https://github.com/kig/canvasfilters.
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
@@ -833,7 +833,7 @@
    * find edges in the image. The way we implement the Sobel filter here is by
    * first grayscaling the image, then taking the horizontal and vertical
    * gradients and finally combining the gradient images to make up the final
-   * image. Adpated from https://github.com/kig/canvasfilters.
+   * image. Adapted from https://github.com/kig/canvasfilters.
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
@@ -1181,7 +1181,7 @@
   tracking.Brief.randomWindowOffsets_ = null;
 
   /**
-   * Generates a brinary string for each found keypoints extracted using an
+   * Generates a binary string for each found keypoints extracted using an
    * extractor method.
    * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
    * @param {number} width The image width.
@@ -1377,7 +1377,7 @@
   tracking.Fast.THRESHOLD = 40;
 
   /**
-   * Caches coordinates values of the circle surounding the pixel candidate p.
+   * Caches coordinates values of the circle surrounding the pixel candidate p.
    * @type {Object.<number, Int32Array>}
    * @private
    * @static
@@ -1433,7 +1433,7 @@
   };
 
   /**
-   * Checks if the circle pixel is brigther than the candidate pixel p by
+   * Checks if the circle pixel is brighter than the candidate pixel p by
    * a threshold.
    * @param {number} circlePixel The circle pixel value.
    * @param {number} p The value of the candidate pixel p.
@@ -1505,8 +1505,8 @@
   /**
    * Fast check to test if the candidate pixel is a trivially excluded value.
    * In order to be a corner, the candidate pixel value should be darker or
-   * brigther than 9-12 surrouding pixels, when at least three of the top,
-   * bottom, left and right pixels are brither or darker it can be
+   * brighter than 9-12 surrounding pixels, when at least three of the top,
+   * bottom, left and right pixels are brighter or darker it can be
    * automatically excluded improving the performance.
    * @param {number} circlePixel The circle pixel value.
    * @param {number} p The value of the candidate pixel p.
@@ -1689,7 +1689,7 @@
    * for each iteration. The `fn` callback receives the following parameters:
    * `(r,g,b,a,index,i,j)`, where `r,g,b,a` represents the pixel color with
    * alpha channel, `index` represents the position in the major-row order
-   * array and `i,j` the respective indexes positions in two dimentions.
+   * array and `i,j` the respective indexes positions in two dimensions.
    * @param {array} pixels The pixels in a linear [r,g,b,a,...] array to loop
    *     through.
    * @param {number} width The image width.
@@ -1850,7 +1850,7 @@
 
 (function() {
   /**
-   * ColorTracker utility to track colored blobs in a frrame using color
+   * ColorTracker utility to track colored blobs in a frame using color
    * difference evaluation.
    * @constructor
    * @param {string|Array.<string>} opt_colors Optional colors to track.
@@ -1948,7 +1948,7 @@
    * @param {Array.<number>} cloud Major row order array containing all the
    *     points from the desired color, e.g. [x1, y1, c2, y2, ...].
    * @param {number} total Total numbers of pixels of the desired color.
-   * @return {object} Object contaning the x, y and estimated z coordinate of
+   * @return {object} Object containing the x, y and estimated z coordinate of
    *     the blog extracted from the cloud points.
    * @private
    */
