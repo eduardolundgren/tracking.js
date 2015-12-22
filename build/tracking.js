@@ -1,7 +1,7 @@
 /**
  * tracking - A modern approach for Computer Vision on the web.
  * @author Eduardo Lundgren <edu@rdo.io>
- * @version v1.1.1
+ * @version v1.1.2
  * @link http://trackingjs.com
  * @license BSD
  */
@@ -64,7 +64,7 @@
   tracking.initUserMedia_ = function(element, opt_options) {
     window.navigator.getUserMedia({
       video: true,
-      audio: opt_options.audio
+      audio: !!(opt_options && opt_options.audio)
     }, function(stream) {
         try {
           element.src = window.URL.createObjectURL(stream);
