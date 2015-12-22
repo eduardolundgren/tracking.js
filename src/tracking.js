@@ -57,7 +57,7 @@
   tracking.initUserMedia_ = function(element, opt_options) {
     window.navigator.getUserMedia({
       video: true,
-      audio: !!opt_options.audio
+      audio: !!(opt_options && opt_options.audio)
     }, function(stream) {
         try {
           element.src = window.URL.createObjectURL(stream);
