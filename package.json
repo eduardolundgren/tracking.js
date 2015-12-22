@@ -33,6 +33,7 @@
     "gulp-rename": "^1.2.2",
     "gulp-rimraf": "^0.2.0",
     "gulp-uglify": "^1.5.1",
+    "jshint": "^2.8.0",
     "jshint-stylish": "^2.1.0",
     "nodeunit": "^0.9.1",
     "png-js": "^0.1.1",
