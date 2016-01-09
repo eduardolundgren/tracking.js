@@ -87,6 +87,20 @@ gulp.task('test', function(cb) {
     .on('end', cb);
 });
 
+gulp.task('test', function(cb) {
+  gulp.src('test/*.js')
+    .pipe(nodeunit())
+    .on('end', cb);
+});
+
+//Excluding benchmark for quick cycling.
+gulp.task('test-unit', function(cb) {
+  gulp.src(['test/*.js', '!test/Benchmark.js'])
+    .pipe(nodeunit())
+    .on('end', cb);
+});
+
+
 gulp.task('test-watch', function() {
   return gulp.watch(['src/**/*.js', 'test/**/*.js'], ['test']);
 });
