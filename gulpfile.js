@@ -36,36 +36,18 @@ const dataFiles = ['src/detection/training/haar/**.js'];
 
 const allFiles = codeFiles.concat(dataFiles);
 
-
-gulp.task('all', ['clean'], function() {
-  return runSequence(['build', 'build-data']);
-});
+//Alias for build; keeping it in to preserve compatability
+gulp.task('all', ['build'], function() {});
 
 gulp.task('clean', function() {
   return gulp.src('build').pipe(rimraf());
 });
 
-gulp.task('build', function() {
-
-
-  return gulp.src(codeFiles)
-    .pipe(concat('tracking.js'))
-    .pipe(banner())
-    .pipe(gulp.dest('build'))
-    .pipe(uglify())
-    .pipe(rename({
-      suffix: '-min'
-    }))
-    .pipe(banner())
-    .pipe(gulp.dest('build'));
-});
-
-
 //This is a sort of low-budget browserify.  it puts all the independent files
 //  inside a single function which exports (or not) the module definition.
 //  This way, you can just require tracking as a module via browserify or
 //  webpack or whatever. (This approach also minimizes the changes)
-gulp.task('build-shim', ['clean'], function() {
+gulp.task('build', ['clean'], function() {
 
   var iOptions = {
     starttag:"'begin_injection';",
@@ -83,22 +65,6 @@ gulp.task('build-shim', ['clean'], function() {
              .pipe(rename({suffix: '-min'}))
              .pipe(banner())
              .pipe(gulp.dest('build'));
-});
-
-
-
-
-
-gulp.task('build-data', function() {
-  return gulp.src(dataFiles)
-    .pipe(banner())
-    .pipe(gulp.dest('build/data'))
-    .pipe(rename({
-      suffix: '-min'
-    }))
-    .pipe(uglify())
-    .pipe(banner())
-    .pipe(gulp.dest('build/data'));
 });
 
 gulp.task('docs', function() {

@@ -1,5 +1,5 @@
 var PNG = require('png-js');
-var tracking = require('../utils/sandbox.js');
+var tracking = require('../../build/tracking.js');
 
 var image;
 var imageHeight = 600;
