@@ -1,6 +1,6 @@
 'use strict';
 
-var tracking = require('./utils/sandbox.js');
+var tracking = require('../build/tracking.js');
 
 module.exports = {
   setUp: function(done) {

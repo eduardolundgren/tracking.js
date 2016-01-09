@@ -12,6 +12,30 @@ var stylish = require('jshint-stylish');
 var uglify = require('gulp-uglify');
 var esformatter = require('gulp-esformatter');
 var runSequence = require('run-sequence');
+var inject = require('gulp-inject');
+
+const codeFiles = [
+  'src/tracking.js',
+  'src/utils/EventEmitter.js',
+  'src/utils/Canvas.js',
+  'src/utils/DisjointSet.js',
+  'src/utils/Image.js',
+  'src/detection/ViolaJones.js',
+  'src/features/Brief.js',
+  'src/features/Fast.js',
+  'src/math/Math.js',
+  'src/math/Matrix.js',
+  'src/pose/EPnP.js',
+  'src/trackers/Tracker.js',
+  'src/trackers/TrackerTask.js',
+  'src/trackers/ColorTracker.js',
+  'src/trackers/ObjectTracker.js'
+];
+
+const dataFiles = ['src/detection/training/haar/**.js'];
+
+const allFiles = codeFiles.concat(dataFiles);
+
 
 gulp.task('all', ['clean'], function() {
   return runSequence(['build', 'build-data']);
@@ -22,25 +46,9 @@ gulp.task('clean', function() {
 });
 
 gulp.task('build', function() {
-  var files = [
-    'src/tracking.js',
-    'src/utils/EventEmitter.js',
-    'src/utils/Canvas.js',
-    'src/utils/DisjointSet.js',
-    'src/utils/Image.js',
-    'src/detection/ViolaJones.js',
-    'src/features/Brief.js',
-    'src/features/Fast.js',
-    'src/math/Math.js',
-    'src/math/Matrix.js',
-    'src/pose/EPnP.js',
-    'src/trackers/Tracker.js',
-    'src/trackers/TrackerTask.js',
-    'src/trackers/ColorTracker.js',
-    'src/trackers/ObjectTracker.js'
-  ];
 
-  return gulp.src(files)
+
+  return gulp.src(codeFiles)
     .pipe(concat('tracking.js'))
     .pipe(banner())
     .pipe(gulp.dest('build'))
@@ -52,8 +60,37 @@ gulp.task('build', function() {
     .pipe(gulp.dest('build'));
 });
 
+
+//This is a sort of low-budget browserify.  it puts all the independent files
+//  inside a single function which exports (or not) the module definition.
+//  This way, you can just require tracking as a module via browserify or
+//  webpack or whatever. (This approach also minimizes the changes)
+gulp.task('build-shim', ['clean'], function() {
+
+  var iOptions = {
+    starttag:"'begin_injection';",
+    endtag:"'end_injection';",
+    transform: function (filePath, file) {
+      return file.contents.toString('utf8');
+    }
+  };
+  return gulp.src('src/nodeShim.js')
+             .pipe(inject(gulp.src(allFiles),iOptions))
+             .pipe(banner())
+             .pipe(rename("tracking.js"))
+             .pipe(gulp.dest('build'))
+             .pipe(uglify())
+             .pipe(rename({suffix: '-min'}))
+             .pipe(banner())
+             .pipe(gulp.dest('build'));
+});
+
+
+
+
+
 gulp.task('build-data', function() {
-  return gulp.src('src/detection/training/haar/**.js')
+  return gulp.src(dataFiles)
     .pipe(banner())
     .pipe(gulp.dest('build/data'))
     .pipe(rename({
@@ -87,17 +124,10 @@ gulp.task('test', function(cb) {
     .on('end', cb);
 });
 
-gulp.task('test', function(cb) {
-  gulp.src('test/*.js')
-    .pipe(nodeunit())
-    .on('end', cb);
-});
-
 //Excluding benchmark for quick cycling.
-gulp.task('test-unit', function(cb) {
-  gulp.src(['test/*.js', '!test/Benchmark.js'])
-    .pipe(nodeunit())
-    .on('end', cb);
+gulp.task('test-unit', ['build-shim'], function() {
+  return gulp.src(['test/*.js','!test/Benchmark.js'])
+             .pipe(nodeunit());
 });
 
 
