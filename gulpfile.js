@@ -39,6 +39,10 @@ const allFiles = codeFiles.concat(dataFiles);
 //Alias for build; keeping it in to preserve compatability
 gulp.task('all', ['build'], function() {});
 
+//Alias for test-unit
+gulp.task('default', ['test-unit'], function() {});
+
+
 gulp.task('clean', function() {
   return gulp.src('build').pipe(rimraf());
 });
@@ -91,7 +95,7 @@ gulp.task('test', function(cb) {
 });
 
 //Excluding benchmark for quick cycling.
-gulp.task('test-unit', ['build-shim'], function() {
+gulp.task('test-unit', ['build'], function() {
   return gulp.src(['test/*.js','!test/Benchmark.js'])
              .pipe(nodeunit());
 });
