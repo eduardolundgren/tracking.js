@@ -1,5 +1,5 @@
 var PNG = require('png-js');
-var tracking = require('../utils/sandbox.js');
+var tracking = require('../../build/tracking.js');
 
 var corners1;
 var corners2;

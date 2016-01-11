@@ -1,4 +1,4 @@
-(function(window, undefined) {
+(function(window, navigator) {
   window.tracking = window.tracking || {};
 
   /**
@@ -280,4 +280,4 @@
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia ||
     navigator.mozGetUserMedia || navigator.msGetUserMedia;
   }
-}(window));
+}(typeof window !== 'undefined' ? window : {}, typeof navigator !== 'undefined' ? navigator : {}));

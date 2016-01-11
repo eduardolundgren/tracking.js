@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="assets/demo.css">
 
   <script src="../build/tracking-min.js"></script>
-  <script src="../../dat-gui/build/dat.gui.min.js"></script>
+  <script src="assets/dat.gui.min.js"></script>
 
   <style>
   .demo-container {
@@ -59,25 +59,25 @@
 
       context.drawImage(image1, 0, 0, width, height);
       context.drawImage(image2, width, 0, width, height);
-  
+
       var imageData1 = context.getImageData(0, 0, width, height);
       var imageData2 = context.getImageData(width, 0, width, height);
-  
+
       var gray1 = tracking.Image.grayscale(tracking.Image.blur(imageData1.data, width, height, blurRadius), width, height);
       var gray2 = tracking.Image.grayscale(tracking.Image.blur(imageData2.data, width, height, blurRadius), width, height);
-  
+
       var corners1 = tracking.Fast.findCorners(gray1, width, height);
       var corners2 = tracking.Fast.findCorners(gray2, width, height);
-  
+
       var descriptors1 = tracking.Brief.getDescriptors(gray1, width, corners1);
       var descriptors2 = tracking.Brief.getDescriptors(gray2, width, corners2);
-  
+
       var matches = tracking.Brief.reciprocalMatch(corners1, descriptors1, corners2, descriptors2);
 
       matches.sort(function(a, b) {
         return b.confidence - a.confidence;
       });
-  
+
       for (var i = 0; i < Math.min(window.matchesShown, matches.length); i++) {
         var color = '#' + Math.floor(Math.random()*16777215).toString(16);
         context.fillStyle = color;

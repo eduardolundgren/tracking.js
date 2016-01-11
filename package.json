@@ -1,6 +1,7 @@
 {
   "name": "tracking",
   "version": "1.1.2",
+  "main":"build/tracking.js",
   "description": "A modern approach for Computer Vision on the web.",
   "homepage": "http://trackingjs.com",
   "keywords": [
@@ -27,6 +28,7 @@
     "gulp-concat": "^2.6.0",
     "gulp-esformatter": "^5.0.0",
     "gulp-header": "^1.7.1",
+    "gulp-inject": "^3.0.0",
     "gulp-jsdoc": "^0.1.5",
     "gulp-jshint": "^2.0.0",
     "gulp-nodeunit": "0.0.5",
