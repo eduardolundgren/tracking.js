@@ -1,0 +1,57 @@
+<!doctype html>
+
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>tracking.js - magenta screen</title>
+  <link rel="stylesheet" href="assets/demo.css">
+
+  <script src="../build/tracking-min.js"></script>
+  <script src="../../dat-gui/build/dat.gui.min.js"></script>
+
+  <style>
+  .demo-frame-mobile {
+    background-color: magenta;
+    width: 100%;
+    height: 80vh;
+  }
+
+   .demo-toolbar {
+    height: 20vh;
+    text-align: center;
+  }
+
+  #pencil{ padding-right: 10%; }
+
+  #eraser{ padding-left: 10%; }
+  
+  </style>
+</head>
+<body>
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com" target="_parent">tracking.js</a> － tool for draw something demo - open on mobile</p>
+  </div>
+
+  <div class="demo-frame-mobile" id="screen">
+  </div>
+
+  <div class="demo-toolbar">
+      <img src="assets/pencil.png" id="pencil" onclick="background_magenta()">
+      <img src="assets/eraser.png" id="eraser" onclick="background_cyan()">
+  </div>
+
+</body>
+
+<script>
+// Icons from Flaticon.com CC 3.0
+
+function background_magenta(){
+  document.getElementById('screen').style.backgroundColor="magenta";
+}
+
+function background_cyan(){
+  document.getElementById('screen').style.backgroundColor="cyan";
+}
+
+</script>
+</html>
