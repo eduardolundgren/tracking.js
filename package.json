@@ -1,5 +1,5 @@
 {
-  "name": "tracking-webpack",
+  "name": "tracking",
   "version": "1.1.2",
   "main":"build/tracking.js",
   "description": "A modern approach for Computer Vision on the web.",
