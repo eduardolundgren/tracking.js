@@ -82,7 +82,7 @@ For detailed changelog, check [Releases](https://github.com/eduardolundgren/trac
 *tracking.js* is maintained by these people and a bunch of awesome [contributors](https://github.com/eduardolundgren/tracking.js/graphs/contributors).
 
 [![Eduardo Lundgren](https://2.gravatar.com/avatar/42327de520e674a6d1686845b30778d0)](https://github.com/eduardolundgren) | [![Thiago Rocha](https://2.gravatar.com/avatar/09c627c62a26a770200819a41a71a3eb)](https://github.com/thiago-rocha) | [![Zeno Rocha](https://2.gravatar.com/avatar/e190023b66e2b8aa73a842b106920c93)](https://github.com/zenorocha) | [![Pablo Carvalho](https://2.gravatar.com/avatar/ae10d2692a6adbf051c6d4255e222df8)](https://github.com/pablocp) | [![Maira Bello](https://2.gravatar.com/avatar/97e0e62c9c02badba4c321f7613e6acf)](https://github.com/mairatma) | [![Jerome Etienne](https://2.gravatar.com/avatar/b381880f9f81065247ba9a0b7ff68358)](https://github.com/jeromeetienne)
---- | --- | --- | --- | ---
+--- | --- | --- | --- | --- | ---
 [Eduardo Lundgren](https://github.com/eduardolundgren) | [Thiago Rocha](https://github.com/thiago-rocha) | [Zeno Rocha](https://github.com/zenorocha) | [Pablo Carvalho](https://github.com/pablocp) | [Maira Bello](https://github.com/mairatma) | [Jerome Etienne](https://github.com/jeromeetienne)
 
 ## License
