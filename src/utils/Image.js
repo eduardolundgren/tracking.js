@@ -320,4 +320,36 @@
     return output;
   };
 
+  /**
+   * Equalizes the histogram of a grayscale image, normalizing the
+   * brightness and increasing the contrast of the image.
+   * @param {pixels} pixels The grayscale pixels in a linear array.
+   * @param {number} width The image width.
+   * @param {number} height The image height.
+   * @return {array} The equalized grayscale pixels in a linear array.
+   */
+  tracking.Image.equalizeHist = function(pixels, width, height){
+    var equalized = new Uint8ClampedArray(pixels.length);
+
+    var histogram = new Array(256);
+    for(var i=0; i < 256; i++) histogram[i] = 0;
+
+    for(var i=0; i < pixels.length; i++){
+      equalized[i] = pixels[i];
+      histogram[pixels[i]]++;
+    }
+
+    var prev = histogram[0];
+    for(var i=0; i < 256; i++){
+      histogram[i] += prev;
+      prev = histogram[i];
+    }
+
+    var norm = 255 / pixels.length;
+    for(var i=0; i < pixels.length; i++)
+      equalized[i] = (histogram[pixels[i]] * norm + 0.5) | 0;
+
+    return equalized;
+  }
+
 }());
