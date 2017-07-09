@@ -1,0 +1,100 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>tracking.js - face alignment with images</title>
+  <link rel="stylesheet" href="assets/demo.css">
+
+  <script src="../build/tracking.js"></script>
+  <script src="../build/data/face-min.js"></script>
+  <script src="../src/alignment/training/Landmarks.js"></script>
+  <script src="../src/alignment/training/Regressor.js"></script>
+  
+  <script src="../node_modules/dat.gui/build/dat.gui.min.js"></script>
+  <script src="assets/stats.min.js"></script>
+
+  <style>
+  .rect, .circle {
+    left: -1000px;
+    position: absolute;
+    top: -1000px;
+  }
+  .rect{
+    border: 2px solid #a64ceb;
+  }
+  .circle {
+    border-radius: 50%;
+    box-shadow: 0px 0px 3px rgba(0,0,0,0.3);
+  }
+  #img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin: -200px 0 0 -200px;
+  }
+  </style>
+</head>
+<body>
+  <div class="demo-title">
+    <p><a href="http://trackingjs.com" target="_parent">tracking.js</a> － align face landmarks to images</p>
+  </div>
+
+  <div class="demo-frame">
+    <div class="demo-container">
+      <img id="img" src="assets/emilia.jpg" />
+    </div>
+  </div>
+
+  <script>
+    window.onload = function() {
+      var img = document.getElementById('img');
+
+      var tracker = new tracking.LandmarksTracker();
+      tracker.setInitialScale(4);
+      tracker.setStepSize(2);
+      tracker.setEdgesDensity(0.1);
+
+      tracking.track('#img', tracker);
+
+      tracker.on('track', function(event) {
+
+        if(!event.data) return;
+
+        event.data.faces.forEach(function(rect) {
+          window.plot(rect.x, rect.y, rect.width, rect.height);
+        });
+
+        event.data.landmarks.forEach(function(landmarks) {
+          for(var i=0; i < landmarks.length; i++){
+            window.plotLandmark(landmarks[i][0], landmarks[i][1], 2, '#44ABDA');
+          }
+        });
+
+      });
+
+      window.plot = function(x, y, w, h) {
+        var rect = document.createElement('div');
+        document.querySelector('.demo-container').appendChild(rect);
+        rect.classList.add('rect');
+        rect.style.width = w + 'px';
+        rect.style.height = h + 'px';
+        rect.style.left = (img.offsetLeft + x) + 'px';
+        rect.style.top = (img.offsetTop + y) + 'px';
+      };
+
+      window.plotLandmark = function(x,y, radius, color){
+        var circle = document.createElement('div');
+        document.querySelector('.demo-container').appendChild(circle);
+        circle.classList.add('circle');
+        circle.style.backgroundColor = color;
+        circle.style.width = (radius*2) + 'px';
+        circle.style.height = (radius*2) + 'px';
+        circle.style.left = (img.offsetLeft + x) + 'px';
+        circle.style.top = (img.offsetTop + y) + 'px';
+      }
+
+    };
+  </script>
+
+</body>
+</html>
