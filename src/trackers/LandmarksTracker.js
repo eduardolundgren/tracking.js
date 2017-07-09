@@ -1,13 +1,13 @@
 (function() {
 
 
-	tracking.LandmarksTracker = function() {
-	  tracking.LandmarksTracker.base(this, 'constructor');
-	}
+  tracking.LandmarksTracker = function() {
+    tracking.LandmarksTracker.base(this, 'constructor');
+  }
 
   tracking.inherits(tracking.LandmarksTracker, tracking.ObjectTracker);
 
-	tracking.LandmarksTracker.prototype.track = function(pixels, width, height) {
+  tracking.LandmarksTracker.prototype.track = function(pixels, width, height) {
 	 
     var image = {
       'data': pixels,
@@ -30,6 +30,6 @@
       }
     });
 
-	}
+  }
 
 }());
