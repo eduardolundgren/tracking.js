@@ -1,3 +1,10 @@
+- http://blog.dlib.net/2014/08/real-time-face-pose-estimation.html
+
+- PerspectiveCamera.setViewOffset
+  - todo the https://www.youtube.com/watch?v=LEPvUfC7wh8
+
+
+
 - Tracking.Image without destination buffer - force reallocation
   - allow to provide destination, if not present, 
 - three.js is r67 in the examples - current three.js is r86
