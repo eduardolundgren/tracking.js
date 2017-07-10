@@ -50,7 +50,7 @@
         tracking.LBF.maxNumStages
       );
     }
-
+// NOTE: is this thesholding suitable ? if it is on image, why no skin-color filter ? and a adaptative threshold
     pixels = tracking.Image.grayscale(pixels, width, height, false);
 
     pixels = tracking.Image.equalizeHist(pixels, width, height);

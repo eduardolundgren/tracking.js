@@ -1,9 +1,23 @@
+### Face tracking
+- display line with the face
+
 - http://blog.dlib.net/2014/08/real-time-face-pose-estimation.html
+  - dlib implementation
+- PerspectiveCamera.setViewOffset - todo the https://www.youtube.com/watch?v=LEPvUfC7wh8
+- support for webworker
+  - it consume a lot of cpu
+- do lerp on output 
+- try blur in source image
+- get a video on the internet to use as example
 
-- PerspectiveCamera.setViewOffset
-  - todo the https://www.youtube.com/watch?v=LEPvUfC7wh8
+---
 
-
+### Misc
+- fix image source
+- handle a proper versioning
+  - master is last stable
+  - stable is tagged in github repo
+  - dev is 'next-stable'
 
 - Tracking.Image without destination buffer - force reallocation
   - allow to provide destination, if not present, 
