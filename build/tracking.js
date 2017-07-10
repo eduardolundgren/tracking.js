@@ -62,19 +62,14 @@
    * @param {object} opt_options Optional configuration to the tracker.
    */
   tracking.initUserMedia_ = function(element, opt_options) {
-    window.navigator.getUserMedia({
+    window.navigator.mediaDevices.getUserMedia({
       video: true,
-      audio: !!(opt_options && opt_options.audio)
-    }, function(stream) {
-        try {
-          element.src = window.URL.createObjectURL(stream);
-        } catch (err) {
-          element.src = stream;
-        }
-      }, function() {
-        throw Error('Cannot capture user camera.');
-      }
-    );
+      audio: (opt_options && opt_options.audio) ? true : false,
+    }).then(function(stream) {
+      element.srcObject = stream;
+    }).catch(function(err) {
+      throw Error('Cannot capture user camera.');
+    });
   };
 
   /**
@@ -2629,13 +2624,13 @@
 (function() {
 
 
-	tracking.LandmarksTracker = function() {
-	  tracking.LandmarksTracker.base(this, 'constructor');
-	}
+  tracking.LandmarksTracker = function() {
+    tracking.LandmarksTracker.base(this, 'constructor');
+  }
 
   tracking.inherits(tracking.LandmarksTracker, tracking.ObjectTracker);
 
-	tracking.LandmarksTracker.prototype.track = function(pixels, width, height) {
+  tracking.LandmarksTracker.prototype.track = function(pixels, width, height) {
 	 
     var image = {
       'data': pixels,
@@ -2658,9 +2653,10 @@
       }
     });
 
-	}
+  }
 
 }());
+
 (function() {
 
   tracking.LBF = {};

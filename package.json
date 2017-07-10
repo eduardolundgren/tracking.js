@@ -21,7 +21,7 @@
   },
   "scripts": {
     "test": "gulp test",
-    "build": "gulp build",
+    "build": "gulp build"
   },
   "license": "BSD",
   "devDependencies": {
