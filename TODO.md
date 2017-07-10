@@ -1,14 +1,14 @@
 ### Face tracking
-- display line with the face
-
+- DONE display line with the face
+- impressive speed and accuracy from @clmtrackr - https://github.com/auduno/clmtrackr
 - http://blog.dlib.net/2014/08/real-time-face-pose-estimation.html
   - dlib implementation
 - PerspectiveCamera.setViewOffset - todo the https://www.youtube.com/watch?v=LEPvUfC7wh8
-- support for webworker
+- support for webworker ?
   - it consume a lot of cpu
-- do lerp on output 
 - try blur in source image
 - get a video on the internet to use as example
+- DONE do lerp on output 
 
 ---
 
