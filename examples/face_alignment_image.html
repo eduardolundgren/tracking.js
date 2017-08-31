@@ -9,15 +9,13 @@
   <script src="../build/data/face-min.js"></script>
   <script src="../src/alignment/training/Landmarks.js"></script>
   <script src="../src/alignment/training/Regressor.js"></script>
-  
+
   <script src="../node_modules/dat.gui/build/dat.gui.min.js"></script>
   <script src="assets/stats.min.js"></script>
 
   <style>
   .rect, .circle {
-    left: -1000px;
     position: absolute;
-    top: -1000px;
   }
   .rect{
     border: 2px solid #a64ceb;
@@ -30,7 +28,7 @@
     position: absolute;
     top: 50%;
     left: 50%;
-    margin: -200px 0 0 -200px;
+    transform: translate(-50%, -50%);
   }
   </style>
 </head>
@@ -57,7 +55,6 @@
       tracking.track('#img', tracker);
 
       tracker.on('track', function(event) {
-
         if(!event.data) return;
 
         event.data.faces.forEach(function(rect) {
@@ -78,8 +75,8 @@
         rect.classList.add('rect');
         rect.style.width = w + 'px';
         rect.style.height = h + 'px';
-        rect.style.left = (img.offsetLeft + x) + 'px';
-        rect.style.top = (img.offsetTop + y) + 'px';
+        rect.style.left = (img.offsetLeft - img.width / 2 + x) + 'px';
+        rect.style.top = (img.offsetTop - img.height / 2 + y) + 'px';
       };
 
       window.plotLandmark = function(x,y, radius, color){
@@ -89,8 +86,8 @@
         circle.style.backgroundColor = color;
         circle.style.width = (radius*2) + 'px';
         circle.style.height = (radius*2) + 'px';
-        circle.style.left = (img.offsetLeft + x) + 'px';
-        circle.style.top = (img.offsetTop + y) + 'px';
+        circle.style.left = (img.offsetLeft - img.width / 2 + x) + 'px';
+        circle.style.top = (img.offsetTop - img.height / 2 + y) + 'px';
       }
 
     };
