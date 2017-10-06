@@ -29,5 +29,11 @@ module.exports = {
     var tracker = new tracking.ObjectTracker(['mouth']);
     tracker.setStepSize(2);
     tracker.track(image, imageWidth, imageHeight);
+  },
+
+  testFindNoses: function() {
+    var tracker = new tracking.ObjectTracker(['nose']);
+    tracker.setStepSize(2);
+    tracker.track(image, imageWidth, imageHeight);
   }
 };

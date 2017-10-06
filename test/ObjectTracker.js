@@ -62,13 +62,13 @@ module.exports = {
 
     test.doesNotThrow(
       function() {
-        new tracking.ObjectTracker(['face', 'mouth', 'eye']);
+        new tracking.ObjectTracker(['face', 'mouth', 'eye', 'nose']);
       }
     );
 
     test.throws(
       function() {
-        new tracking.ObjectTracker(['face', null, 'eye']);
+        new tracking.ObjectTracker(['face', null, 'eye', 'nose']);
       }
     );
 
