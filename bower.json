@@ -13,7 +13,11 @@
   "license": "BSD",
   "ignore": [
     "**/.*",
-    "node_modules"
+    "node_modules",
+    "bower_components",
+    "../",
+    "test",
+    "tests"
   ],
   "dependencies": {
     "dat-gui": "0.5.0",

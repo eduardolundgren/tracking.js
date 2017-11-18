@@ -1,7 +1,7 @@
 # tracking.js
 
-[![Build Status](http://img.shields.io/travis/eduardolundgren/tracking.js.svg?style=flat)](https://travis-ci.org/eduardolundgren/tracking.js)
-[![DevDependencies Status](http://img.shields.io/david/dev/eduardolundgren/tracking.js.svg?style=flat)](https://david-dm.org/eduardolundgren/tracking.js#info=devDependencies)
+[![Build Status](http://img.shields.io/travis/murat-aka/tracking.js.svg?style=flat)](https://travis-ci.org/murat-aka/tracking.js)
+[![DevDependencies Status](http://img.shields.io/david/dev/murat-aka/tracking.js.svg?style=flat)](https://david-dm.org/murat-aka/tracking.js#info=devDependencies)
 
 The tracking.js library brings different computer vision algorithms and techniques into the browser environment. By using modern HTML5 specifications, we enable you to do real-time color tracking, face detection and much more — all that with a lightweight core (~7 KB) and intuitive interface.
 
@@ -11,7 +11,7 @@ The tracking.js library brings different computer vision algorithms and techniqu
 
 ## Install
 
-Install via [Bower](http://bower.io/), [npm](https://www.npmjs.com/), or [download as a zip](https://github.com/eduardolundgren/tracking.js/archive/master.zip):
+Install via [Bower](http://bower.io/), [npm](https://www.npmjs.com/), or [download as a zip](https://github.com/murat-aka/tracking.js/archive/master.zip):
 
 ```
 bower install tracking
@@ -20,6 +20,24 @@ bower install tracking
 ```
 npm install tracking
 ```
+
+## Examples
+
+[01 - Face Tracker](http://eduardolundgren.github.io/tracking.js/examples/face_hello_world.html)
+
+[02 - Color Tracker](http://eduardolundgren.github.io/tracking.js/examples/color_hello_world.html)
+
+[03 - Feature Matching](http://eduardolundgren.github.io/tracking.js/examples/brief.html)
+
+[04 - Draw Something](http://eduardolundgren.github.io/tracking.js/examples/color_draw_something.html)
+
+[05 - Face Camera](http://eduardolundgren.github.io/tracking.js/examples/face_camera.html)
+
+[06 - Fast](http://eduardolundgren.github.io/tracking.js/examples/fast.html)
+
+[07 - Face Fish Tank](http://eduardolundgren.github.io/tracking.js/examples/face_fish_tank.html)
+
+[08 - Color_Video](http://eduardolundgren.github.io/tracking.js/examples/color_video.html)
 
 ## Examples
 

@@ -1,4 +1,11 @@
 language: node_js
 node_js:
-  - "0.11"
-  - "0.10"
+- '8.15.0'
+branches:
+  only:
+  - master
+  - develop-murat
+script: npm run-script build
+deploy:
+  api_key:
+    secure: HIdLBx+VzwPbLU0a3sNKSLkp+s0oMHdDN9UN4BitM65QH02kcboMAYxqDpT6cWDg8mUyfWixQMC+wd/U7NN9UHV5zXBJC4cJ++/W/nQsTwqCYyyoQcWx47XT2upWoMcFQyQy5fyvFGhhU+yRDgGUDe1XInomzj5BuPjxoajh3FZ+PWuyQNFNTOCG45ab05VyR1jut59ma7cB2DTpjnbmQOy2IrlVKaIXlC603YRKJhHwE7J9M4VSG3gbXEw9fihh3q+chVqUfcUQPIH+hDFDO+fwd1vsUg55BA6OJn/9XQYyInsqQbOiDzQ6Vywn7nGIoz2hqT4bDpv9BCLzu/DerYEmAWZDitPcAbRFfxCAp6kHvqtpb4Erd5yQh/X3ekCuwmPyLJ4ImW4y79MKfuiGrmIOIt3EObEbJVv0T3hLbS/DVc+IP9ahviAkPFDO5iUJQIjIpUC9oHR2K/pPLgVnK79hpP9Dw2fikoXJFgfI39LSSP56/EBBhRrMwaW3RqamrPc21pjA+5f+WYJIqc74FA1JhPjosLQD695KAWVRDPd3Qhtrr4BxlJvX2mCND6xFEqq7sKEZPvP5HGBqlZ3Ept2MIVWDXjmpEmIKVm7QuTyLy87wsCbJ9UENBCjTHcihB2YqP/paO+RGkEe831/EJMaNpILrKa3SdBZOElM04rU=

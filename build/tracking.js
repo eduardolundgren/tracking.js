@@ -236,6 +236,8 @@
     var width;
     var height;
 
+
+// FIXME here the video display size of the analysed size
     var resizeCanvas_ = function() {
       width = element.offsetWidth;
       height = element.offsetHeight;
@@ -245,6 +247,11 @@
     resizeCanvas_();
     element.addEventListener('resize', resizeCanvas_);
 
+
+// FIXME: do a process function - it is up to the caller to handle the frequency of detection
+// it seems all handled in the tracking.TrackerTask..
+// so in short, remove the tracking.TrackerTask from here
+// if the user want to use it, it can create it himself
     var requestId;
     var requestAnimationFrame_ = function() {
       requestId = window.requestAnimationFrame(function() {
@@ -2939,7 +2946,7 @@
         tracking.LBF.maxNumStages
       );
     }
-
+// NOTE: is this thesholding suitable ? if it is on image, why no skin-color filter ? and a adaptative threshold
     pixels = tracking.Image.grayscale(pixels, width, height, false);
 
     pixels = tracking.Image.equalizeHist(pixels, width, height);
