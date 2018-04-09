@@ -237,8 +237,8 @@
     var height;
 
     var resizeCanvas_ = function() {
-      width = element.offsetWidth;
-      height = element.offsetHeight;
+      width = element.offsetWidth || element.width;
+      height = element.offsetHeight || element.height;
       canvas.width = width;
       canvas.height = height;
     };
