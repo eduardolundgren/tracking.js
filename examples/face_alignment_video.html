@@ -28,7 +28,7 @@
 
   <div class="demo-frame">
     <div class="demo-container">
-      <video id="video" width="320" height="240" preload autoplay loop muted></video>
+      <video id="video" width="320" height="240" src="assets/franck.mp4" preload autoplay loop muted></video>
       <canvas id="canvas" width="320" height="240"></canvas>
     </div>
   </div>
@@ -44,7 +44,7 @@
       tracker.setStepSize(2);
       tracker.setEdgesDensity(0.1);
 
-      tracking.track('#video', tracker, { camera: true });
+      tracking.track('#video', tracker);
 
       tracker.on('track', function(event) {
 
@@ -64,7 +64,7 @@
           event.data.landmarks.forEach(function(landmarks) {
             for(var l in landmarks){
               context.beginPath();
-              context.fillStyle = "#fff"
+              context.fillStyle = "#fff";
               context.arc(landmarks[l][0],landmarks[l][1],1,0,2*Math.PI);
               context.fill();
             }

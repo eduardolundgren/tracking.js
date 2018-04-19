@@ -133,39 +133,76 @@
   };
 
   /**
-   * Converts a color from a colorspace based on an RGB color model to a
+   * Converts a color from a color-space based on an RGB color model to a
    * grayscale representation of its luminance. The coefficients represent the
    * measured intensity perception of typical trichromat humans, in
    * particular, human vision is most sensitive to green and least sensitive
    * to blue.
-   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {Uint8Array|Uint8ClampedArray|Array} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
    * @param {boolean} fillRGBA If the result should fill all RGBA values with the gray scale
    *  values, instead of returning a single value per pixel.
-   * @param {Uint8ClampedArray} The grayscale pixels in a linear array ([p,p,p,a,...] if fillRGBA
+   * @return {Uint8Array} The grayscale pixels in a linear array ([p,p,p,a,...] if fillRGBA
    *  is true and [p1, p2, p3, ...] if fillRGBA is false).
    * @static
    */
   tracking.Image.grayscale = function(pixels, width, height, fillRGBA) {
-    var gray = new Uint8ClampedArray(fillRGBA ? pixels.length : pixels.length >> 2);
-    var p = 0;
-    var w = 0;
-    for (var i = 0; i < height; i++) {
-      for (var j = 0; j < width; j++) {
-        var value = pixels[w] * 0.299 + pixels[w + 1] * 0.587 + pixels[w + 2] * 0.114;
-        gray[p++] = value;
 
-        if (fillRGBA) {
-          gray[p++] = value;
-          gray[p++] = value;
-          gray[p++] = pixels[w + 3];
-        }
+    /*
+      Performance result (rough EST. - image size, CPU arch. will affect):
+      https://jsperf.com/tracking-new-image-to-grayscale
 
-        w += 4;
+      Firefox v.60b:
+            fillRGBA  Gray only
+      Old      11       551     OPs/sec
+      New    3548      6487     OPs/sec
+      ---------------------------------
+              322.5x     11.8x  faster
+
+      Chrome v.67b:
+            fillRGBA  Gray only
+      Old     291       489     OPs/sec
+      New    6975      6635     OPs/sec
+      ---------------------------------
+              24.0x      13.6x  faster
+
+      - Ken Nilsen / epistemex
+     */
+
+    var len = pixels.length>>2;
+    var gray = fillRGBA ? new Uint32Array(len) : new Uint8Array(len);
+    var data32 = new Uint32Array(pixels.buffer || new Uint8Array(pixels).buffer);
+    var i = 0;
+    var c = 0;
+    var luma = 0;
+
+    // unrolled loops to not have to check fillRGBA each iteration
+    if (fillRGBA) {
+      while(i < len) {
+        // Entire pixel in little-endian order (ABGR)
+        c = data32[i];
+
+        // Using the more up-to-date REC/BT.709 approx. weights for luma instead: [0.2126, 0.7152, 0.0722].
+        //   luma = ((c>>>16 & 0xff) * 0.2126 + (c>>>8 & 0xff) * 0.7152 + (c & 0xff) * 0.0722 + 0.5)|0;
+        // But I'm using scaled integers here for speed (x 0xffff). This can be improved more using 2^n
+        //   close to the factors allowing for shift-ops (i.e. 4732 -> 4096 => .. (c&0xff) << 12 .. etc.)
+        //   if "accuracy" is not important (luma is anyway an visual approx.):
+        luma = ((c>>>16&0xff) * 13933 + (c>>>8&0xff) * 46871 + (c&0xff) * 4732)>>>16;
+        gray[i++] = luma * 0x10101 | c & 0xff000000;
       }
     }
-    return gray;
+    else {
+      while(i < len) {
+        c = data32[i];
+        luma = ((c>>>16&0xff) * 13933 + (c>>>8&0xff) * 46871 + (c&0xff) * 4732)>>>16;
+        // ideally, alpha should affect value here: value * (alpha/255) or with shift-ops for the above version
+        gray[i++] = luma;
+      }
+    }
+
+    // Consolidate array view to byte component format independent of source view
+    return new Uint8Array(gray.buffer);
   };
 
   /**
