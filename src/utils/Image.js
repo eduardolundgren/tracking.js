@@ -133,17 +133,17 @@
   };
 
   /**
-   * Converts a color from a colorspace based on an RGB color model to a
+   * Converts a color from a color-space based on an RGB color model to a
    * grayscale representation of its luminance. The coefficients represent the
    * measured intensity perception of typical trichromat humans, in
    * particular, human vision is most sensitive to green and least sensitive
    * to blue.
-   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {Uint8Array|Uint8ClampedArray|Array} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
    * @param {boolean} fillRGBA If the result should fill all RGBA values with the gray scale
    *  values, instead of returning a single value per pixel.
-   * @param {Uint8Array} The grayscale pixels in a linear array ([p,p,p,a,...] if fillRGBA
+   * @return {Uint8Array} The grayscale pixels in a linear array ([p,p,p,a,...] if fillRGBA
    *  is true and [p1, p2, p3, ...] if fillRGBA is false).
    * @static
    */
@@ -183,7 +183,7 @@
         // Entire pixel in little-endian order (ABGR)
         c = data32[i];
 
-        // Using REC/BT.709 approx. weights for luma instead: [0.2126, 0.7152, 0.0722].
+        // Using the more up-to-date REC/BT.709 approx. weights for luma instead: [0.2126, 0.7152, 0.0722].
         //   luma = ((c>>>16 & 0xff) * 0.2126 + (c>>>8 & 0xff) * 0.7152 + (c & 0xff) * 0.0722 + 0.5)|0;
         // But I'm using scaled integers here for speed (x 0xffff). This can be improved more using 2^n
         //   close to the factors allowing for shift-ops (i.e. 4732 -> 4096 => .. (c&0xff) << 12 .. etc.)
@@ -201,7 +201,7 @@
       }
     }
 
-    // Consolidate array view to [r, g, b, a, ...] format independent of source view
+    // Consolidate array view to byte component format independent of source view
     return new Uint8Array(gray.buffer);
   };
 
