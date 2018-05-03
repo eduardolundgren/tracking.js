@@ -1,4 +1,4 @@
-(function(window, undefined) {
+(function (window, undefined) {
   window.tracking = window.tracking || {};
 
   /**
@@ -21,8 +21,8 @@
    * @param {Function} childCtor Child class.
    * @param {Function} parentCtor Parent class.
    */
-  tracking.inherits = function(childCtor, parentCtor) {
-    function TempCtor() {
+  tracking.inherits = function (childCtor, parentCtor) {
+    function TempCtor () {
     }
     TempCtor.prototype = parentCtor.prototype;
     childCtor.superClass_ = parentCtor.prototype;
@@ -42,7 +42,7 @@
      *     method/constructor.
      * @return {*} The return value of the superclass method/constructor.
      */
-    childCtor.base = function(me, methodName) {
+    childCtor.base = function (me, methodName) {
       var args = Array.prototype.slice.call(arguments, 2);
       return parentCtor.prototype[methodName].apply(me, args);
     };
@@ -54,13 +54,13 @@
    * @param {HTMLVideoElement} element Canvas element to track.
    * @param {object} opt_options Optional configuration to the tracker.
    */
-  tracking.initUserMedia_ = function(element, opt_options) {
+  tracking.initUserMedia_ = function (element, opt_options) {
     window.navigator.mediaDevices.getUserMedia({
       video: true,
       audio: (opt_options && opt_options.audio) ? true : false,
-    }).then(function(stream) {
+    }).then(function (stream) {
       element.srcObject = stream;
-    }).catch(function(err) {
+    }).catch(function (err) {
       throw Error('Cannot capture user camera.');
     });
   };
@@ -70,7 +70,7 @@
    * @param {object} o Object to be tested.
    * @return {boolean} True if the object is a dom node.
    */
-  tracking.isNode = function(o) {
+  tracking.isNode = function (o) {
     return o.nodeType || this.isWindow(o);
   };
 
@@ -79,7 +79,7 @@
    * @param {object} o Object to be tested.
    * @return {boolean} True if the object is the `window` object.
    */
-  tracking.isWindow = function(o) {
+  tracking.isWindow = function (o) {
     return !!(o && o.alert && o.document);
   };
 
@@ -91,7 +91,7 @@
    * @return {HTMLElement} The first dom element that matches to the selector.
    *     If not found, returns `null`.
    */
-  tracking.one = function(selector, opt_element) {
+  tracking.one = function (selector, opt_element) {
     if (this.isNode(selector)) {
       return selector;
     }
@@ -122,7 +122,7 @@
    *     element.
    * @param {object} opt_options Optional configuration to the tracker.
    */
-  tracking.track = function(element, tracker, opt_options) {
+  tracking.track = function (element, tracker, opt_options) {
     element = tracking.one(element);
     if (!element) {
       throw new Error('Element not found, try a different element or selector.');
@@ -158,10 +158,10 @@
    * @return {tracking.TrackerTask}
    * @private
    */
-  tracking.trackCanvas_ = function(element, tracker) {
+  tracking.trackCanvas_ = function (element, tracker) {
     var self = this;
     var task = new tracking.TrackerTask(tracker);
-    task.on('run', function() {
+    task.on('run', function () {
       self.trackCanvasInternal_(element, tracker);
     });
     return task.run();
@@ -177,7 +177,7 @@
    * @param {object} opt_options Optional configuration to the tracker.
    * @private
    */
-  tracking.trackCanvasInternal_ = function(element, tracker) {
+  tracking.trackCanvasInternal_ = function (element, tracker) {
     var width = element.width;
     var height = element.height;
     var context = element.getContext('2d');
@@ -195,7 +195,7 @@
    * @param {object} opt_options Optional configuration to the tracker.
    * @private
    */
-  tracking.trackImg_ = function(element, tracker) {
+  tracking.trackImg_ = function (element, tracker) {
     var width = element.width;
     var height = element.height;
     var canvas = document.createElement('canvas');
@@ -204,8 +204,8 @@
     canvas.height = height;
 
     var task = new tracking.TrackerTask(tracker);
-    task.on('run', function() {
-      tracking.Canvas.loadImage(canvas, element.src, 0, 0, width, height, function() {
+    task.on('run', function () {
+      tracking.Canvas.loadImage(canvas, element.src, 0, 0, width, height, function () {
         tracking.trackCanvasInternal_(canvas, tracker);
       });
     });
@@ -223,49 +223,81 @@
    * @param {object} opt_options Optional configuration to the tracker.
    * @private
    */
-  tracking.trackVideo_ = function(element, tracker) {
+  tracking.trackVideo_ = function (element, tracker, opt_options) {
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
     var width;
     var height;
 
+    //add some options to fix or add new featrue
+    //width/height fix (width/height in context.drawImage is the analysed video width/height,may need specify)
+    // **you may get width/height by bind("playing",function(){});
+    //scale (sometime video quality is too high may need scale to reduce,or it will use too much rescoures)
+    //limit (like scale,sometime we don't need two high fps,use this to reduce)
+    var scale = opt_options.scale || 1;
+    var limit = opt_options.limit;
+    var previousTimer;
+    var lazyFunc = function () {
+      if (limit) {
+        return function (timestamp) {
+          previousTimer = previousTimer || timestamp;
+          if (timestamp - previousTimer > limit) {
+            previousTimer = timestamp;
+            if (element.readyState === element.HAVE_ENOUGH_DATA) {
+              try {
+                // Firefox v~30.0 gets confused with the video readyState firing an
+                // erroneous HAVE_ENOUGH_DATA just before HAVE_CURRENT_DATA state,
+                // hence keep trying to read it until resolved.
+                context.drawImage(element, 0, 0, width, height, 0, 0, canvas.width, canvas.height);
+              } catch (err) { }
+              tracking.trackCanvasInternal_(canvas, tracker);
+            }
+          }
+          requestAnimationFrame_();
 
-// FIXME here the video display size of the analysed size
-    var resizeCanvas_ = function() {
-      width = element.offsetWidth;
-      height = element.offsetHeight;
-      canvas.width = width;
-      canvas.height = height;
+        }
+      } else {
+        return function () {
+          if (element.readyState === element.HAVE_ENOUGH_DATA) {
+            try {
+              // Firefox v~30.0 gets confused with the video readyState firing an
+              // erroneous HAVE_ENOUGH_DATA just before HAVE_CURRENT_DATA state,
+              // hence keep trying to read it until resolved.
+              context.drawImage(element, 0, 0, width, height, 0, 0, canvas.width, canvas.height);
+            } catch (err) { }
+            tracking.trackCanvasInternal_(canvas, tracker);
+          }
+          requestAnimationFrame_();
+        }
+      }
+    }
+
+    var execFunc = lazyFunc();
+    // FIXME here the video display size of the analysed size
+    var resizeCanvas_ = function () {
+      width = opt_options.width || element.offsetWidth;
+      height = opt_options.height || element.offsetHeight;
+      canvas.width = width / scale;
+      canvas.height = height / scale;
     };
     resizeCanvas_();
     element.addEventListener('resize', resizeCanvas_);
 
 
-// FIXME: do a process function - it is up to the caller to handle the frequency of detection
-// it seems all handled in the tracking.TrackerTask..
-// so in short, remove the tracking.TrackerTask from here
-// if the user want to use it, it can create it himself
+    // FIXME: do a process function - it is up to the caller to handle the frequency of detection
+    // it seems all handled in the tracking.TrackerTask..
+    // so in short, remove the tracking.TrackerTask from here
+    // if the user want to use it, it can create it himself
     var requestId;
-    var requestAnimationFrame_ = function() {
-      requestId = window.requestAnimationFrame(function() {
-        if (element.readyState === element.HAVE_ENOUGH_DATA) {
-          try {
-            // Firefox v~30.0 gets confused with the video readyState firing an
-            // erroneous HAVE_ENOUGH_DATA just before HAVE_CURRENT_DATA state,
-            // hence keep trying to read it until resolved.
-            context.drawImage(element, 0, 0, width, height);
-          } catch (err) {}
-          tracking.trackCanvasInternal_(canvas, tracker);
-        }
-        requestAnimationFrame_();
-      });
+    var requestAnimationFrame_ = function () {
+      requestId = window.requestAnimationFrame(execFunc);
     };
 
     var task = new tracking.TrackerTask(tracker);
-    task.on('stop', function() {
+    task.on('stop', function () {
       window.cancelAnimationFrame(requestId);
     });
-    task.on('run', function() {
+    task.on('run', function () {
       requestAnimationFrame_();
     });
     return task.run();
@@ -280,6 +312,6 @@
 
   if (!navigator.getUserMedia) {
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia ||
-    navigator.mozGetUserMedia || navigator.msGetUserMedia;
+      navigator.mozGetUserMedia || navigator.msGetUserMedia;
   }
 }(window));
