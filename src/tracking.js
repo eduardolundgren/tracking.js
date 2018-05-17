@@ -196,8 +196,8 @@
    * @private
    */
   tracking.trackImg_ = function(element, tracker) {
-    var width = element.width;
-    var height = element.height;
+    var width = element.naturalWidth;
+    var height = element.naturalHeight;
     var canvas = document.createElement('canvas');
 
     canvas.width = width;
