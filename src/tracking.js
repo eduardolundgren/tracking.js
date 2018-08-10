@@ -292,6 +292,7 @@
     navigator.getUserMedia = navigator.getUserMedia || navigator.webkitGetUserMedia ||
     navigator.mozGetUserMedia || navigator.msGetUserMedia;
   }
-}(window));
 
-module.exports = window.tracking
+  module.exports = window.tracking;
+  
+}(window));
