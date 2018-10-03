@@ -56,7 +56,7 @@
    */
   tracking.initUserMedia_ = function(element, opt_options) {
     window.navigator.mediaDevices.getUserMedia({
-      video: true,
+      video: (opt_options && opt_options.hasOwnProperty('video')) ? opt_options.video : false,
       audio: (opt_options && opt_options.audio) ? true : false,
     }).then(function(stream) {
       element.srcObject = stream;
