@@ -283,3 +283,5 @@
     navigator.mozGetUserMedia || navigator.msGetUserMedia;
   }
 }(window));
+
+module.exports = window.tracking;
