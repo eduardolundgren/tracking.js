@@ -231,9 +231,21 @@
 
 
 // FIXME here the video display size of the analysed size
+    // when the video stream size dont match the element size, use this offsetWidth & Height will stretch current img, it make incorrect Face Recognition
     var resizeCanvas_ = function() {
       width = element.offsetWidth;
       height = element.offsetHeight;
+      var streamWidth = element.videoWidth;
+      var streamHeight = element.videoHeight;
+      if (streamHeight && streamWidth) {
+        var scaleHeight = height / streamHeight;
+        var scaleWidth = width / streamWidth;
+        if (scaleHeight < scaleWidth) {
+          width = scaleHeight * streamWidth;
+        } else {
+          height = scaleWidth * streamHeight;
+        }
+      }
       canvas.width = width;
       canvas.height = height;
     };
