@@ -106,7 +106,7 @@ gulp.task('serve', function() {
   browserSync.init({
     watch: true,
     server: {
-      baseDir: "../",
+      baseDir: "./",
       routes: {
           "/": "examples"
       }
