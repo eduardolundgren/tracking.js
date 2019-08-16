@@ -11,7 +11,8 @@ jobs:
     - script: npm test
     - stage: deploy
       deploy:
-        provider: &heroku
+        script: skip
+        provider: heroku
         api_key:
           secure: G1VyTkoWdczm5T0E5gVqOTg6VD5oe1LRtFXmHHsZOI4Acj8VeeCtiMtzXc0GDioBB3pYFmLMNDlZeTds2RAvQqS9J9DxMVpdrWjQasyo22ZCQWoVsp2SMNF8eKq2OLs6x5IJwFq4T/Xo4UBF8s1jb/Pwqj614MD17EYMGodkTnnG2CU3MNuoIIzWgrMS9GlF4RCs7nBQRE1Wz3bnSQRHEmn2bY6T4H7VoA1nZ8ebzmiAgVfUg7pHsLiGpYSe8q6nqfzvFdIsy6cnL1s/BGKonZPf8ihQQCjhmijZLei6FbxOx1iwbN6AOoa64gDMfRYJ81MIX/zBLJF7YtQ8iCPxlzarj3KKVpmzsm0QHo8Tiw+X74P8IRxCkflHQ7ma9wcS0TcZVaAd77pKsxxgWvABd5Y4EoByyZFiM35r2+eGIF+eyQYTakjdlu+xyTxs93JEL+fTpOp275qnKnGHg3jilLQdESwJ7HKogyx3cxyD0eUts4popVV0PLgMNTrAxJ4TyYZHRjlIijXqHpoozMGtki1A24SmNLaAdDB+zhHV4+WgZDkc021ghfHrAJnSHWT+V/ETpDKgehbOJuJLZxl3yTZbCzZv8Z+8TcvRlaN3pi254QiTtrrWfiIABfH42NS8W1snTQ/ssQ31Or0In5M0ImBBL7Tb6kNpsP2/X6eValc=
         app:
