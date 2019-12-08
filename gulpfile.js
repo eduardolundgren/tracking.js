@@ -116,6 +116,9 @@ gulp.task('serve', function() {
     port: process.env.PORT || 5000
 
   });
+
+  gulp.watch('src/**/*.js', ['build']);
+
 });
 
 // Private helpers
