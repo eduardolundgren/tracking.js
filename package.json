@@ -39,18 +39,18 @@
     "gulp-jsdoc3": "^2.0.0",
     "gulp-jshint": "^2.1.0",
     "gulp-nodeunit": "0.1.0",
-    "gulp-rename": "^2.0.0",
+    "gulp-rename": "^1.4.0",
     "gulp-rimraf": "^1.0.0",
     "gulp-uglify": "^3.0.2",
     "jshint": "^2.10.2",
     "jshint-stylish": "^2.2.1",
     "nodeunit": "^0.11.3",
-    "png-js": "^1.0.0",
+    "png-js": "^0.1.1",
     "run-sequence": "^2.2.1"
   },
   "dependencies": {
     "browser-sync": "^2.26.7",
-    "gulp": "^4.0.2",
+    "gulp": "^3.9.1",
     "@bower_components/dat-gui": "dataarts/dat.gui#0.5.0",
     "@bower_components/threejs": "mrdoob/three.js#r67"
   }
