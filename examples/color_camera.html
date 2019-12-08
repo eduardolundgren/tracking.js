@@ -32,7 +32,9 @@
 
   <script>
     window.onload = function() {
-      var video = document.getElementById('video');
+      navigator.mediaDevices.getUserMedia({video: {facingMode: 'user'}}).then(function (stream) {
+        document.getElementById('video').srcObject = stream;
+      });
       var canvas = document.getElementById('canvas');
       var context = canvas.getContext('2d');
 
