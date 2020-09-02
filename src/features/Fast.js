@@ -41,7 +41,7 @@
   tracking.Fast.circles_ = {};
 
   /**
-   * Finds corners coordinates on the graysacaled image.
+   * Finds corners coordinates on the grayscale image.
    * @param {array} The grayscale pixels in a linear [p1,p2,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
