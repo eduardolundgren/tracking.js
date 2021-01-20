@@ -9,6 +9,11 @@
     "trackingjs",
     "webrtc"
   ],
+  "engines": {
+    "node": "8.15.0",
+    "npm": "6.10.3",
+    "yarn": ">= 1.0.0"
+  },
   "author": {
     "name": "Eduardo Lundgren",
     "email": "edu@rdo.io",
@@ -21,25 +26,32 @@
   },
   "scripts": {
     "test": "gulp test",
-    "build": "gulp build"
+    "build": "gulp build",
+    "start": "gulp serve",
+    "postinstall": "node -e \"try { require('fs').symlinkSync(require('path').resolve('node_modules/@bower_components/dat-gui'), '../dat-gui', 'junction'); require('fs').symlinkSync(require('path').resolve('node_modules/@bower_components/threejs'), '../threejs', 'junction') } catch (e) { }\""
   },
   "license": "BSD",
   "devDependencies": {
-    "gulp": "^3.9.0",
-    "gulp-concat": "^2.6.0",
-    "gulp-esformatter": "^5.0.0",
-    "gulp-header": "^1.7.1",
-    "gulp-jsdoc": "^0.1.5",
-    "gulp-jshint": "^2.0.0",
-    "gulp-nodeunit": "0.0.5",
-    "gulp-rename": "^1.2.2",
-    "gulp-rimraf": "^0.2.0",
-    "gulp-uglify": "^1.5.1",
-    "jshint": "^2.8.0",
-    "jshint-stylish": "^2.1.0",
-    "nodeunit": "^0.9.1",
+    "dat.gui": "^0.7.6",
+    "gulp-concat": "^2.6.1",
+    "gulp-esformatter": "^8.0.0",
+    "gulp-header": "^2.0.9",
+    "gulp-jsdoc3": "^2.0.0",
+    "gulp-jshint": "^2.1.0",
+    "gulp-nodeunit": "0.1.0",
+    "gulp-rename": "^1.4.0",
+    "gulp-rimraf": "^1.0.0",
+    "gulp-uglify": "^3.0.2",
+    "jshint": "^2.10.2",
+    "jshint-stylish": "^2.2.1",
+    "nodeunit": "^0.11.3",
     "png-js": "^0.1.1",
-    "run-sequence": "^1.1.5",
-    "dat.gui": "^0.6.1"
+    "run-sequence": "^2.2.1"
+  },
+  "dependencies": {
+    "browser-sync": "^2.26.7",
+    "gulp": "^3.9.1",
+    "@bower_components/dat-gui": "dataarts/dat.gui#0.5.0",
+    "@bower_components/threejs": "mrdoob/three.js#r67"
   }
 }

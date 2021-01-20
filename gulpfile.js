@@ -2,7 +2,7 @@
 var gulp = require('gulp');
 var concat = require('gulp-concat');
 var header = require('gulp-header');
-var jsdoc = require('gulp-jsdoc');
+var jsdoc = require('gulp-jsdoc3');
 var jshint = require('gulp-jshint');
 var nodeunit = require('gulp-nodeunit');
 var pkg = require('./package.json');
@@ -12,6 +12,7 @@ var stylish = require('jshint-stylish');
 var uglify = require('gulp-uglify');
 var esformatter = require('gulp-esformatter');
 var runSequence = require('run-sequence');
+var browserSync = require('browser-sync').create();
 
 gulp.task('all', ['clean'], function() {
   return runSequence(['build', 'build-data']);
@@ -97,6 +98,27 @@ gulp.task('test-watch', function() {
 gulp.task('watch', function() {
   gulp.watch('src/**/*.js', ['build']);
   gulp.watch('src/data/*.js', ['build-data']);
+});
+
+// Static Server
+gulp.task('serve', function() {
+
+  browserSync.init({
+    watch: true,
+    server: {
+      baseDir: "./",
+      routes: {
+          "/": "examples"
+      }
+    },
+    directory: true,
+    open: false,
+    port: process.env.PORT || 5000
+
+  });
+
+  gulp.watch('src/**/*.js', ['build']);
+
 });
 
 // Private helpers

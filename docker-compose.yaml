@@ -1,0 +1,18 @@
+version: '3.1'
+
+services:
+
+  nodejs:
+    image: node:8.15.0
+    #restart: always
+    ports:
+      - 8088:80
+      - 3001:3001
+      - 3000:3000
+      - 5000:5000
+    tty: true
+
+    volumes:
+      - ./:/var/www/html
+    working_dir: /var/www/html
+    command: npm start
