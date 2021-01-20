@@ -1,3 +1,11 @@
+![Banner](banner.svg)
+
+<div align=center>
+
+:point_right: **https://github.com/eduardolundgren/tracking.js/issues/395** :point_left:
+
+---
+
 # tracking.js
 
 [![Build Status](http://img.shields.io/travis/eduardolundgren/tracking.js.svg?style=flat)](https://travis-ci.org/eduardolundgren/tracking.js)
