@@ -4,6 +4,8 @@
 
 :point_right: **https://github.com/eduardolundgren/tracking.js/issues/395** :point_left:
 
+</div>
+
 ---
 
 # tracking.js
