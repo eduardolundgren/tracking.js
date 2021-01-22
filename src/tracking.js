@@ -55,10 +55,17 @@
    * @param {object} opt_options Optional configuration to the tracker.
    */
   tracking.initUserMedia_ = function(element, opt_options) {
-    window.navigator.mediaDevices.getUserMedia({
+    
+    var constraints = {
       video: true,
       audio: (opt_options && opt_options.audio) ? true : false,
-    }).then(function(stream) {
+    };
+
+    if (opt_options && opt_options.mediaConstraints) {
+      constraints = opt_options.mediaConstraints;
+    }
+
+    window.navigator.mediaDevices.getUserMedia(constraints).then(function(stream) {
       element.srcObject = stream;
     }).catch(function(err) {
       throw Error('Cannot capture user camera.');
