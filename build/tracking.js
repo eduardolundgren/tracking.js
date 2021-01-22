@@ -236,9 +236,21 @@
     var width;
     var height;
 
+    // when the video stream size dont match the element size, use this offsetWidth & Height will stretch current img, it make incorrect Face Recognition
     var resizeCanvas_ = function() {
       width = element.offsetWidth;
       height = element.offsetHeight;
+      var streamWidth = element.videoWidth;
+      var streamHeight = element.videoHeight;
+      if (streamHeight && streamWidth) {
+        var scaleHeight = height / streamHeight;
+        var scaleWidth = width / streamWidth;
+        if (scaleHeight < scaleWidth) {
+          width = scaleHeight * streamWidth;
+        } else {
+          height = scaleWidth * streamHeight;
+        }
+      }
       canvas.width = width;
       canvas.height = height;
     };
@@ -1737,7 +1749,7 @@
   };
 
   /**
-   * Calculates the per-element subtraction of two NxM matrices and returns a 
+   * Calculates the per-element subtraction of two NxM matrices and returns a
    * new NxM matrix as the result.
    * @param {matrix} a The first matrix.
    * @param {matrix} a The second matrix.
@@ -1747,7 +1759,7 @@
     var res = tracking.Matrix.clone(a);
     for(var i=0; i < res.length; i++){
       for(var j=0; j < res[i].length; j++){
-        res[i][j] -= b[i][j]; 
+        res[i][j] -= b[i][j];
       }
     }
     return res;
@@ -1764,7 +1776,7 @@
     var res = tracking.Matrix.clone(a);
     for(var i=0; i < res.length; i++){
       for(var j=0; j < res[i].length; j++){
-        res[i][j] += b[i][j]; 
+        res[i][j] += b[i][j];
       }
     }
     return res;
@@ -1785,7 +1797,7 @@
       temp[i] = new Array(width);
       var j = width;
       while(j--) temp[i][j] = src[i][j];
-    } 
+    }
     return temp;
   }
 
@@ -1833,7 +1845,7 @@
     for (var i = 0; i < a.length; i++) {
       res[i] = new Array(b[0].length);
       for (var j = 0; j < b[0].length; j++) {
-        res[i][j] = 0;            
+        res[i][j] = 0;
         for (var k = 0; k < a[0].length; k++) {
           res[i][j] += a[i][k] * b[k][j];
         }
@@ -1882,7 +1894,7 @@
 
     var a = tracking.Matrix.sub(src, deltaFull);
     var b = tracking.Matrix.transpose(a);
-    var covar = tracking.Matrix.mul(b,a); 
+    var covar = tracking.Matrix.mul(b,a);
     return [covar, mean];
 
   }
@@ -2631,7 +2643,7 @@
   tracking.inherits(tracking.LandmarksTracker, tracking.ObjectTracker);
 
   tracking.LandmarksTracker.prototype.track = function(pixels, width, height) {
-	 
+
     var image = {
       'data': pixels,
       'width': width,
@@ -2640,8 +2652,8 @@
 
     var classifier = tracking.ViolaJones.classifiers['face'];
 
-    var faces = tracking.ViolaJones.detect(pixels, width, height, 
-      this.getInitialScale(), this.getScaleFactor(), this.getStepSize(), 
+    var faces = tracking.ViolaJones.detect(pixels, width, height,
+      this.getInitialScale(), this.getScaleFactor(), this.getStepSize(),
       this.getEdgesDensity(), classifier);
 
     var landmarks = tracking.LBF.align(pixels, width, height, faces);
@@ -2720,7 +2732,7 @@
    * @param {matrix} currentShapes The landmarks shapes.
    * @param {array} boudingBoxes The bounding boxes of the faces.
    */
-  tracking.LBF.Regressor.prototype.applyGlobalPrediction = function(binaryFeatures, models, currentShapes, 
+  tracking.LBF.Regressor.prototype.applyGlobalPrediction = function(binaryFeatures, models, currentShapes,
     boundingBoxes){
 
     var residual = currentShapes[0].length * 2;
@@ -2758,7 +2770,7 @@
   };
 
   /**
-   * Derives the binary features from the image for each landmark. 
+   * Derives the binary features from the image for each landmark.
    * @param {object} forest The random forest to search for the best binary feature match.
    * @param {array} images The images with pixels in a grayscale linear array.
    * @param {array} currentShapes The current landmarks shape.
@@ -2785,11 +2797,11 @@
 
       var projectedShape = tracking.LBF.unprojectShapeToBoundingBox_(currentShapes[i], boundingBoxes[i]);
       var transform = tracking.LBF.similarityTransform_(projectedShape, meanShape);
-      
+
       for(var j=0; j < forest.landmarkNum; j++){
         for(var k=0; k < forest.maxNumTrees; k++){
 
-          var binaryCode = tracking.LBF.Regressor.getCodeFromTree(forest.rfs[j][k], images[i], 
+          var binaryCode = tracking.LBF.Regressor.getCodeFromTree(forest.rfs[j][k], images[i],
                               currentShapes[i], boundingBoxes[i], transform[0], transform[1]);
 
           var index = j*forest.maxNumTrees + k;
@@ -2808,11 +2820,11 @@
   /**
    * Gets the binary code for a specific tree in a random forest. For each landmark,
    * the position from two pre-defined points are recovered from the training data
-   * and then the intensity of the pixels corresponding to these points is extracted 
+   * and then the intensity of the pixels corresponding to these points is extracted
    * from the image and used to traverse the trees in the random forest. At the end,
    * the ending nodes will be represented by 1, and the remaining nodes by 0.
-   * 
-   * +--------------------------- Random Forest -----------------------------+ 
+   *
+   * +--------------------------- Random Forest -----------------------------+
    * | Ø = Ending leaf                                                       |
    * |                                                                       |
    * |       O             O             O             O             O       |
@@ -2840,7 +2852,7 @@
     var bincode = 0;
 
     while(true){
-      
+
       var x1 = Math.cos(tree.nodes[current].feats[0]) * tree.nodes[current].feats[2] * tree.maxRadioRadius * boundingBox.width;
       var y1 = Math.sin(tree.nodes[current].feats[0]) * tree.nodes[current].feats[2] * tree.maxRadioRadius * boundingBox.height;
       var x2 = Math.cos(tree.nodes[current].feats[1]) * tree.nodes[current].feats[3] * tree.maxRadioRadius * boundingBox.width;
@@ -2861,7 +2873,7 @@
       var real_y2 = Math.floor(project_y2 + shape[tree.landmarkID][1]);
       real_x2 = Math.max(0.0, Math.min(real_x2, image.height - 1.0));
       real_y2 = Math.max(0.0, Math.min(real_y2, image.width - 1.0));
-      var pdf = Math.floor(image.data[real_y1*image.width + real_x1]) - 
+      var pdf = Math.floor(image.data[real_y1*image.width + real_x1]) -
           Math.floor(image.data[real_y2 * image.width +real_x2]);
 
       if(pdf < tree.nodes[current].thresh){
@@ -2896,14 +2908,14 @@
    * discriminative local binary features for each landmark independently.
    * The obtained local binary features are used to learn a linear regression
    * that later will be used to guide the landmarks in the alignment phase.
-   * 
+   *
    * @authors: VoxarLabs Team (http://cin.ufpe.br/~voxarlabs)
    *           Lucas Figueiredo <lsf@cin.ufpe.br>, Thiago Menezes <tmc2@cin.ufpe.br>,
    *           Thiago Domingues <tald@cin.ufpe.br>, Rafael Roberto <rar3@cin.ufpe.br>,
    *           Thulio Araujo <tlsa@cin.ufpe.br>, Joao Victor <jvfl@cin.ufpe.br>,
    *           Tomer Simis <tls@cin.ufpe.br>)
    */
-  
+
   /**
    * Holds the maximum number of stages that will be used in the alignment algorithm.
    * Each stage contains a different set of random forests and retrieves the binary
@@ -2914,14 +2926,14 @@
   tracking.LBF.maxNumStages = 4;
 
   /**
-   * Holds the regressor that will be responsible for extracting the local features from 
+   * Holds the regressor that will be responsible for extracting the local features from
    * the image and guide the landmarks using the training data.
    * @type {object}
    * @protected
    * @static
    */
-  tracking.LBF.regressor_ = null; 
-  
+  tracking.LBF.regressor_ = null;
+
   /**
    * Generates a set of landmarks for a set of faces
    * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
@@ -3079,7 +3091,7 @@
     this.maxNumTrees = tracking.LBF.RegressorData[forestIndex].max_numtrees;
     this.landmarkNum = tracking.LBF.RegressorData[forestIndex].num_landmark;
     this.maxDepth = tracking.LBF.RegressorData[forestIndex].max_depth;
-    this.stages = tracking.LBF.RegressorData[forestIndex].stages; 
+    this.stages = tracking.LBF.RegressorData[forestIndex].stages;
 
     this.rfs = new Array(this.landmarkNum);
     for(var i=0; i < this.landmarkNum; i++){
