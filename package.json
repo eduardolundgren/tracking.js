@@ -1,7 +1,7 @@
 {
   "name": "tracking",
   "version": "1.1.3",
-  "main": "build/tracking.js",
+  "main": "index.js",
   "description": "A modern approach for Computer Vision on the web.",
   "homepage": "http://trackingjs.com",
   "keywords": [

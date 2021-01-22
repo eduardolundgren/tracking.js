@@ -10,6 +10,7 @@ var context = nodeunit.utils.sandbox(['build/tracking.js', 'build/data/eye.js', 
   Int8Array: Int8Array,
   Uint8ClampedArray: Uint8ClampedArray,
   Uint32Array: Uint32Array,
+  module: module,
   navigator: {},
   tracking: {},
   window: {}

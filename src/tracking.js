@@ -283,3 +283,7 @@
     navigator.mozGetUserMedia || navigator.msGetUserMedia;
   }
 }(window));
+
+if (typeof module !== 'undefined') {
+  module.exports = window.tracking;
+}
