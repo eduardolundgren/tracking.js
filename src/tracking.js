@@ -223,11 +223,13 @@
    * @param {object} opt_options Optional configuration to the tracker.
    * @private
    */
-  tracking.trackVideo_ = function(element, tracker) {
+  tracking.trackVideo_ = function(element, tracker, opt_options) {
     var canvas = document.createElement('canvas');
     var context = canvas.getContext('2d');
     var width;
     var height;
+    var fps = opt_options.fps || 60;
+    var interval = 1000 / fps;
 
 
 // FIXME here the video display size of the analysed size
@@ -246,16 +248,26 @@
 // so in short, remove the tracking.TrackerTask from here
 // if the user want to use it, it can create it himself
     var requestId;
+    var prevTime;
+    var currTime;
+    var trackAnimationFrame_ = function() {
+      if (element.readyState === element.HAVE_ENOUGH_DATA) {
+        try {
+          // Firefox v~30.0 gets confused with the video readyState firing an
+          // erroneous HAVE_ENOUGH_DATA just before HAVE_CURRENT_DATA state,
+          // hence keep trying to read it until resolved.
+          context.drawImage(element, 0, 0, width, height);
+        } catch (err) {}
+        tracking.trackCanvasInternal_(canvas, tracker);
+      }
+    };
     var requestAnimationFrame_ = function() {
       requestId = window.requestAnimationFrame(function() {
-        if (element.readyState === element.HAVE_ENOUGH_DATA) {
-          try {
-            // Firefox v~30.0 gets confused with the video readyState firing an
-            // erroneous HAVE_ENOUGH_DATA just before HAVE_CURRENT_DATA state,
-            // hence keep trying to read it until resolved.
-            context.drawImage(element, 0, 0, width, height);
-          } catch (err) {}
-          tracking.trackCanvasInternal_(canvas, tracker);
+        currTime = Date.now();
+        var elapsedTime = currTime - prevTime;
+        if (elapsedTime > interval) {
+          prevTime = currTime - (elapsedTime % interval);
+          trackAnimationFrame_();
         }
         requestAnimationFrame_();
       });
@@ -266,6 +278,7 @@
       window.cancelAnimationFrame(requestId);
     });
     task.on('run', function() {
+      prevTime = Date.now();
       requestAnimationFrame_();
     });
     return task.run();
