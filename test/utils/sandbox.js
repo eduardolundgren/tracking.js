@@ -2,7 +2,7 @@
 
 var nodeunit = require('nodeunit');
 
-var context = nodeunit.utils.sandbox(['build/tracking.js', 'build/data/eye.js', 'build/data/face.js', 'build/data/mouth.js'], {
+var context = nodeunit.utils.sandbox(['build/tracking.js', 'build/data/eye.js', 'build/data/face.js', 'build/data/mouth.js', 'build/data/nose.js'], {
   Float32Array: Float32Array,
   Float64Array: Float64Array,
   Int16Array: Int16Array,

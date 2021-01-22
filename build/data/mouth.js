@@ -1,7 +1,7 @@
 /**
- * tracking.js - A modern approach for Computer Vision on the web.
+ * tracking - A modern approach for Computer Vision on the web.
  * @author Eduardo Lundgren <edu@rdo.io>
- * @version v1.0.0
+ * @version v1.1.3
  * @link http://trackingjs.com
  * @license BSD
  */
