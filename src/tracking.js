@@ -245,9 +245,10 @@
 // it seems all handled in the tracking.TrackerTask..
 // so in short, remove the tracking.TrackerTask from here
 // if the user want to use it, it can create it himself
-    var requestId;
+    var stopRequestAnimationFrame = false;
     var requestAnimationFrame_ = function() {
-      requestId = window.requestAnimationFrame(function() {
+      window.requestAnimationFrame(function() {
+      	if (stopRequestAnimationFrame) return;
         if (element.readyState === element.HAVE_ENOUGH_DATA) {
           try {
             // Firefox v~30.0 gets confused with the video readyState firing an
@@ -263,7 +264,7 @@
 
     var task = new tracking.TrackerTask(tracker);
     task.on('stop', function() {
-      window.cancelAnimationFrame(requestId);
+      stopRequestAnimationFrame = true;
     });
     task.on('run', function() {
       requestAnimationFrame_();
