@@ -180,7 +180,7 @@
   tracking.trackCanvasInternal_ = function(element, tracker) {
     var width = element.width;
     var height = element.height;
-    var context = element.getContext('2d');
+    var context = element.getContext('2d', { willReadFrequently: true });
     var imageData = context.getImageData(0, 0, width, height);
     tracker.track(imageData.data, width, height);
   };
@@ -225,7 +225,7 @@
    */
   tracking.trackVideo_ = function(element, tracker) {
     var canvas = document.createElement('canvas');
-    var context = canvas.getContext('2d');
+    var context = canvas.getContext('2d', { willReadFrequently: true });
     var width;
     var height;
 
