@@ -71,7 +71,7 @@
     }
 
     return shapes;
-  }
+  };
 
   /**
    * Unprojects the landmarks shape from the bounding box.
@@ -90,7 +90,7 @@
       ];
     }
     return temp;
-  }
+  };
 
   /**
    * Projects the landmarks shape into the bounding box. The landmarks shape has
@@ -111,7 +111,7 @@
       ];
     }
     return temp;
-  }
+  };
 
   /**
    * Calculates the rotation and scale necessary to transform shape1 into shape2.
@@ -139,7 +139,7 @@
 
     var temp1 = tracking.Matrix.clone(shape1);
     var temp2 = tracking.Matrix.clone(shape2);
-    for(var i=0; i < shape1.length; i++){
+    for(i=0; i < shape1.length; i++){
       temp1[i][0] -= center1[0];
       temp1[i][1] -= center1[1];
       temp2[i][0] -= center2[0];
@@ -165,7 +165,7 @@
     temp2 = tracking.Matrix.mulScalar(1.0/s2, temp2);
 
     var num = 0, den = 0;
-    for (var i = 0; i < shape1.length; i++) {
+    for (i = 0; i < shape1.length; i++) {
       num = num + temp1[i][1] * temp2[i][0] - temp1[i][0] * temp2[i][1];
       den = den + temp1[i][0] * temp2[i][0] + temp1[i][1] * temp2[i][1];
     }
@@ -179,7 +179,7 @@
     ];
 
     return [rotation, scale];
-  }
+  };
 
   /**
    * LBF Random Forest data structure.
@@ -199,7 +199,7 @@
         this.rfs[i][j] = new tracking.LBF.Tree(forestIndex, i, j);
       }
     }
-  }
+  };
 
   /**
    * LBF Tree data structure.
@@ -217,6 +217,6 @@
     this.maxNumFeats = data.max_numfeats;
     this.maxRadioRadius = data.max_radio_radius;
     this.leafnodes = data.id_leafnodes;
-  }
+  };
 
 }());

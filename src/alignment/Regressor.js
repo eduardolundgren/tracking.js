@@ -17,7 +17,7 @@
     }
 
     this.meanShape = tracking.LBF.LandmarksData;
-  }
+  };
 
   /**
    * Predicts the position of the landmarks based on the bounding box of the face.
@@ -66,16 +66,15 @@
 
     var residual = currentShapes[0].length * 2;
 
-    var rotation = [];
     var deltashape = new Array(residual/2);
     for(var i=0; i < residual/2; i++){
       deltashape[i] = [0.0, 0.0];
     }
 
-    for(var i=0; i < currentShapes.length; i++){
+    for(i=0; i < currentShapes.length; i++){
       for(var j=0; j < residual; j++){
         var tmp = 0;
-        for(var lx=0, idx=0; (idx = binaryFeatures[i][lx].index) != -1; lx++){
+        for(var lx=0, idx=0; (idx = binaryFeatures[i][lx].index) !== -1; lx++){
           if(idx <= models[j].nr_feature){
             tmp += models[j].data[(idx - 1)] * binaryFeatures[i][lx].value;
           }
@@ -86,9 +85,6 @@
           deltashape[j - residual/2][1] = tmp;
         }
       }
-
-      var res = tracking.LBF.similarityTransform_(tracking.LBF.unprojectShapeToBoundingBox_(currentShapes[i], boundingBoxes[i]), this.meanShape);
-      var rotation = tracking.Matrix.transpose(res[0]);
 
       var s = tracking.LBF.unprojectShapeToBoundingBox_(currentShapes[i], boundingBoxes[i]);
       s = tracking.Matrix.add(s, deltashape);
@@ -111,23 +107,26 @@
    */
   tracking.LBF.Regressor.deriveBinaryFeat = function(forest, images, currentShapes, boundingBoxes, meanShape){
 
+    var i;
+    var j;
+
     var binaryFeatures = new Array(images.length);
-    for(var i=0; i < images.length; i++){
+    for(i=0; i < images.length; i++){
       var t = forest.maxNumTrees * forest.landmarkNum + 1;
       binaryFeatures[i] = new Array(t);
-      for(var j=0; j < t; j++){
+      for(j=0; j < t; j++){
         binaryFeatures[i][j] = {};
       }
     }
 
     var leafnodesPerTree = 1 << (forest.maxDepth - 1);
 
-    for(var i=0; i < images.length; i++){
+    for(i=0; i < images.length; i++){
 
       var projectedShape = tracking.LBF.unprojectShapeToBoundingBox_(currentShapes[i], boundingBoxes[i]);
       var transform = tracking.LBF.similarityTransform_(projectedShape, meanShape);
       
-      for(var j=0; j < forest.landmarkNum; j++){
+      for(j=0; j < forest.landmarkNum; j++){
         for(var k=0; k < forest.maxNumTrees; k++){
 
           var binaryCode = tracking.LBF.Regressor.getCodeFromTree(forest.rfs[j][k], images[i], 
@@ -144,7 +143,7 @@
     }
     return binaryFeatures;
 
-  }
+  };
 
   /**
    * Gets the binary code for a specific tree in a random forest. For each landmark,
@@ -211,10 +210,10 @@
         current = tree.nodes[current].cnodes[1];
       }
 
-      if (tree.nodes[current].is_leafnode == 1) {
+      if (tree.nodes[current].is_leafnode === 1) {
         bincode = 1;
         for (var i=0; i < tree.leafnodes.length; i++) {
-          if (tree.leafnodes[i] == current) {
+          if (tree.leafnodes[i] === current) {
             return bincode;
           }
           bincode++;
@@ -225,6 +224,6 @@
     }
 
     return bincode;
-  }
+  };
 
 }());

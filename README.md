@@ -10,8 +10,7 @@
 
 # tracking.js
 
-[![Build Status](http://img.shields.io/travis/eduardolundgren/tracking.js.svg?style=flat)](https://travis-ci.org/eduardolundgren/tracking.js)
-[![DevDependencies Status](http://img.shields.io/david/dev/eduardolundgren/tracking.js.svg?style=flat)](https://david-dm.org/eduardolundgren/tracking.js#info=devDependencies)
+[![Build Status](https://github.com/eduardolundgren/tracking.js/actions/workflows/ci.yml/badge.svg)](https://github.com/eduardolundgren/tracking.js/actions/workflows/ci.yml)
 
 The tracking.js library brings different computer vision algorithms and techniques into the browser environment. By using modern HTML5 specifications, we enable you to do real-time color tracking, face detection and much more — all that with a lightweight core (~7 KB) and intuitive interface.
 
@@ -21,14 +20,23 @@ The tracking.js library brings different computer vision algorithms and techniqu
 
 ## Install
 
-Install via [Bower](http://bower.io/), [npm](https://www.npmjs.com/), or [download as a zip](https://github.com/eduardolundgren/tracking.js/archive/master.zip):
-
-```
-bower install tracking
-```
+Install via [npm](https://www.npmjs.com/) or [download as a zip](https://github.com/eduardolundgren/tracking.js/archive/master.zip):
 
 ```
 npm install tracking
+```
+
+## Development
+
+Requires [Node.js](https://nodejs.org) 18 or newer.
+
+```
+npm install
+npm run build     # builds build/tracking.js, build/tracking-min.js and build/data
+npm test          # builds and runs the unit tests
+npm run lint      # lints the source with jshint
+npm run benchmark # runs the performance suite
+npm start         # serves the repo at http://localhost:8080 (open /examples)
 ```
 
 ## Examples

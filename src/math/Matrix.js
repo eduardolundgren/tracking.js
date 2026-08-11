@@ -46,7 +46,7 @@
       }
     }
     return res;
-  }
+  };
 
   /**
    * Calculates the per-element sum of two NxM matrices and returns a new NxM
@@ -63,7 +63,7 @@
       }
     }
     return res;
-  }
+  };
 
   /**
    * Clones a matrix (or part of it) and returns a new matrix as the result.
@@ -79,10 +79,12 @@
     while(i--){
       temp[i] = new Array(width);
       var j = width;
-      while(j--) temp[i][j] = src[i][j];
+      while(j--){
+        temp[i][j] = src[i][j];
+      }
     } 
     return temp;
-  }
+  };
 
   /**
    * Multiply a matrix by a scalar and returns a new matrix as the result.
@@ -98,7 +100,7 @@
       }
     }
     return res;
-  }
+  };
 
   /**
    * Transpose a matrix and returns a new matrix as the result.
@@ -114,7 +116,7 @@
       }
     }
     return transpose;
-  }
+  };
 
   /**
    * Multiply an MxN matrix with an NxP matrix and returns a new MxP matrix
@@ -135,7 +137,7 @@
       }
     }
     return res;
-  }
+  };
 
   /**
    * Calculates the absolute norm of a matrix.
@@ -150,7 +152,7 @@
       }
     }
     return Math.sqrt(res);
-  }
+  };
 
   /**
    * Calculates and returns the covariance matrix of a set of vectors as well
@@ -160,17 +162,20 @@
    */
   tracking.Matrix.calcCovarMatrix = function(src){
 
+    var i;
+    var j;
+
     var mean = new Array(src.length);
-    for(var i=0; i < src.length; i++){
+    for(i=0; i < src.length; i++){
       mean[i] = [0.0];
-      for(var j=0; j < src[i].length; j++){
+      for(j=0; j < src[i].length; j++){
         mean[i][0] += src[i][j]/src[i].length;
       }
     }
 
     var deltaFull = tracking.Matrix.clone(mean);
-    for(var i=0; i < deltaFull.length; i++){
-      for(var j=0; j < src[0].length - 1; j++){
+    for(i=0; i < deltaFull.length; i++){
+      for(j=0; j < src[0].length - 1; j++){
         deltaFull[i].push(deltaFull[i][0]);
       }
     }
@@ -180,6 +185,6 @@
     var covar = tracking.Matrix.mul(b,a); 
     return [covar, mean];
 
-  }
+  };
 
 }());

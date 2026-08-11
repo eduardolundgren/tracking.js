@@ -26,7 +26,7 @@
       path + 'pz' + format, path + 'nz' + format
     ];
 
-    var textureCube = THREE.ImageUtils.loadTextureCube(urls);
+    var textureCube = new THREE.CubeTextureLoader().load(urls);
     var material = new THREE.MeshBasicMaterial({
       color: 0xffffff,
       envMap: textureCube
@@ -50,33 +50,21 @@
 
     // Skybox
 
-    var shader = THREE.ShaderLib["cube"];
-    shader.uniforms["tCube"].value = textureCube;
+    this.scene.background = textureCube;
 
-    var material = new THREE.ShaderMaterial({
-
-        fragmentShader: shader.fragmentShader,
-        vertexShader: shader.vertexShader,
-        uniforms: shader.uniforms,
-        side: THREE.BackSide
-
-      }),
-
-      mesh = new THREE.Mesh(new THREE.BoxGeometry(100000, 100000, 100000), material);
-    this.scene.add(mesh);
-
-    var _params = {
-      minFilter: THREE.LinearFilter,
-      magFilter: THREE.NearestFilter,
-      format: THREE.RGBAFormat
-    };
-
-    var width = window.innerWidth || 2;
-    var height = window.innerHeight || 2;
-
-    this.renderer = new THREE.WebGLRenderer(width, height, _params);
+    this.renderer = new THREE.WebGLRenderer();
     container.appendChild(this.renderer.domElement);
-    this.renderer.setSize(width, height);
+
+    var self = this;
+    var resize = function() {
+      var width = window.innerWidth || 2;
+      var height = window.innerHeight || 2;
+      self.camera.aspect = width / height;
+      self.camera.updateProjectionMatrix();
+      self.renderer.setSize(width, height);
+    };
+    window.addEventListener('resize', resize);
+    resize();
   };
 
   FishTankRenderer.prototype.render = function(controlX, controlY) {

@@ -1,9 +1,9 @@
 /**
  * tracking - A modern approach for Computer Vision on the web.
  * @author Eduardo Lundgren <edu@rdo.io>
- * @version v1.1.3
+ * @version v1.2.0
  * @link http://trackingjs.com
- * @license BSD
+ * @license BSD-3-Clause
  */
 (function(window, undefined) {
   window.tracking = window.tracking || {};
@@ -203,8 +203,8 @@
    * @private
    */
   tracking.trackImg_ = function(element, tracker) {
-    var width = element.width;
-    var height = element.height;
+    var width = element.naturalWidth;
+    var height = element.naturalHeight;
     var canvas = document.createElement('canvas');
 
     canvas.width = width;
@@ -236,6 +236,8 @@
     var width;
     var height;
 
+
+// FIXME here the video display size of the analysed size
     var resizeCanvas_ = function() {
       width = element.offsetWidth;
       height = element.offsetHeight;
@@ -245,6 +247,11 @@
     resizeCanvas_();
     element.addEventListener('resize', resizeCanvas_);
 
+
+// FIXME: do a process function - it is up to the caller to handle the frequency of detection
+// it seems all handled in the tracking.TrackerTask..
+// so in short, remove the tracking.TrackerTask from here
+// if the user want to use it, it can create it himself
     var requestId;
     var requestAnimationFrame_ = function() {
       requestId = window.requestAnimationFrame(function() {
@@ -573,7 +580,9 @@
     for (var j = 0; j < weights.length; j++) {
       weights[j] /= wsum;
     }
-    return this.separableConvolve(pixels, width, height, weights, weights, false);
+    // grayscale() reads its input as 8-bit RGBA through the underlying buffer,
+    // so the float output of the convolution must be converted back to bytes.
+    return new Uint8ClampedArray(this.separableConvolve(pixels, width, height, weights, weights, false));
   };
 
   /**
@@ -668,39 +677,76 @@
   };
 
   /**
-   * Converts a color from a colorspace based on an RGB color model to a
+   * Converts a color from a color-space based on an RGB color model to a
    * grayscale representation of its luminance. The coefficients represent the
    * measured intensity perception of typical trichromat humans, in
    * particular, human vision is most sensitive to green and least sensitive
    * to blue.
-   * @param {pixels} pixels The pixels in a linear [r,g,b,a,...] array.
+   * @param {Uint8Array|Uint8ClampedArray|Array} pixels The pixels in a linear [r,g,b,a,...] array.
    * @param {number} width The image width.
    * @param {number} height The image height.
    * @param {boolean} fillRGBA If the result should fill all RGBA values with the gray scale
    *  values, instead of returning a single value per pixel.
-   * @param {Uint8ClampedArray} The grayscale pixels in a linear array ([p,p,p,a,...] if fillRGBA
+   * @return {Uint8Array} The grayscale pixels in a linear array ([p,p,p,a,...] if fillRGBA
    *  is true and [p1, p2, p3, ...] if fillRGBA is false).
    * @static
    */
   tracking.Image.grayscale = function(pixels, width, height, fillRGBA) {
-    var gray = new Uint8ClampedArray(fillRGBA ? pixels.length : pixels.length >> 2);
-    var p = 0;
-    var w = 0;
-    for (var i = 0; i < height; i++) {
-      for (var j = 0; j < width; j++) {
-        var value = pixels[w] * 0.299 + pixels[w + 1] * 0.587 + pixels[w + 2] * 0.114;
-        gray[p++] = value;
 
-        if (fillRGBA) {
-          gray[p++] = value;
-          gray[p++] = value;
-          gray[p++] = pixels[w + 3];
-        }
+    /*
+      Performance result (rough EST. - image size, CPU arch. will affect):
+      https://jsperf.com/tracking-new-image-to-grayscale
 
-        w += 4;
+      Firefox v.60b:
+            fillRGBA  Gray only
+      Old      11       551     OPs/sec
+      New    3548      6487     OPs/sec
+      ---------------------------------
+              322.5x     11.8x  faster
+
+      Chrome v.67b:
+            fillRGBA  Gray only
+      Old     291       489     OPs/sec
+      New    6975      6635     OPs/sec
+      ---------------------------------
+              24.0x      13.6x  faster
+
+      - Ken Nilsen / epistemex
+     */
+
+    var len = pixels.length>>2;
+    var gray = fillRGBA ? new Uint32Array(len) : new Uint8Array(len);
+    var data32 = new Uint32Array(pixels.buffer || new Uint8Array(pixels).buffer);
+    var i = 0;
+    var c = 0;
+    var luma = 0;
+
+    // unrolled loops to not have to check fillRGBA each iteration
+    if (fillRGBA) {
+      while(i < len) {
+        // Entire pixel in little-endian order (ABGR)
+        c = data32[i];
+
+        // Using the more up-to-date REC/BT.709 approx. weights for luma instead: [0.2126, 0.7152, 0.0722].
+        //   luma = ((c>>>16 & 0xff) * 0.2126 + (c>>>8 & 0xff) * 0.7152 + (c & 0xff) * 0.0722 + 0.5)|0;
+        // But I'm using scaled integers here for speed (x 0xffff). This can be improved more using 2^n
+        //   close to the factors allowing for shift-ops (i.e. 4732 -> 4096 => .. (c&0xff) << 12 .. etc.)
+        //   if "accuracy" is not important (luma is anyway an visual approx.):
+        luma = ((c>>>16&0xff) * 13933 + (c>>>8&0xff) * 46871 + (c&0xff) * 4732)>>>16;
+        gray[i++] = luma * 0x10101 | c & 0xff000000;
       }
     }
-    return gray;
+    else {
+      while(i < len) {
+        c = data32[i];
+        luma = ((c>>>16&0xff) * 13933 + (c>>>8&0xff) * 46871 + (c&0xff) * 4732)>>>16;
+        // ideally, alpha should affect value here: value * (alpha/255) or with shift-ops for the above version
+        gray[i++] = luma;
+      }
+    }
+
+    // Consolidate array view to byte component format independent of source view
+    return new Uint8Array(gray.buffer);
   };
 
   /**
@@ -865,27 +911,31 @@
    */
   tracking.Image.equalizeHist = function(pixels, width, height){
     var equalized = new Uint8ClampedArray(pixels.length);
+    var i;
 
     var histogram = new Array(256);
-    for(var i=0; i < 256; i++) histogram[i] = 0;
+    for(i=0; i < 256; i++){
+      histogram[i] = 0;
+    }
 
-    for(var i=0; i < pixels.length; i++){
+    for(i=0; i < pixels.length; i++){
       equalized[i] = pixels[i];
       histogram[pixels[i]]++;
     }
 
     var prev = histogram[0];
-    for(var i=0; i < 256; i++){
+    for(i=0; i < 256; i++){
       histogram[i] += prev;
       prev = histogram[i];
     }
 
     var norm = 255 / pixels.length;
-    for(var i=0; i < pixels.length; i++)
+    for(i=0; i < pixels.length; i++){
       equalized[i] = (histogram[pixels[i]] * norm + 0.5) | 0;
+    }
 
     return equalized;
-  }
+  };
 
 }());
 
@@ -1751,7 +1801,7 @@
       }
     }
     return res;
-  }
+  };
 
   /**
    * Calculates the per-element sum of two NxM matrices and returns a new NxM
@@ -1768,7 +1818,7 @@
       }
     }
     return res;
-  }
+  };
 
   /**
    * Clones a matrix (or part of it) and returns a new matrix as the result.
@@ -1784,10 +1834,12 @@
     while(i--){
       temp[i] = new Array(width);
       var j = width;
-      while(j--) temp[i][j] = src[i][j];
+      while(j--){
+        temp[i][j] = src[i][j];
+      }
     } 
     return temp;
-  }
+  };
 
   /**
    * Multiply a matrix by a scalar and returns a new matrix as the result.
@@ -1803,7 +1855,7 @@
       }
     }
     return res;
-  }
+  };
 
   /**
    * Transpose a matrix and returns a new matrix as the result.
@@ -1819,7 +1871,7 @@
       }
     }
     return transpose;
-  }
+  };
 
   /**
    * Multiply an MxN matrix with an NxP matrix and returns a new MxP matrix
@@ -1840,7 +1892,7 @@
       }
     }
     return res;
-  }
+  };
 
   /**
    * Calculates the absolute norm of a matrix.
@@ -1855,7 +1907,7 @@
       }
     }
     return Math.sqrt(res);
-  }
+  };
 
   /**
    * Calculates and returns the covariance matrix of a set of vectors as well
@@ -1865,17 +1917,20 @@
    */
   tracking.Matrix.calcCovarMatrix = function(src){
 
+    var i;
+    var j;
+
     var mean = new Array(src.length);
-    for(var i=0; i < src.length; i++){
+    for(i=0; i < src.length; i++){
       mean[i] = [0.0];
-      for(var j=0; j < src[i].length; j++){
+      for(j=0; j < src[i].length; j++){
         mean[i][0] += src[i][j]/src[i].length;
       }
     }
 
     var deltaFull = tracking.Matrix.clone(mean);
-    for(var i=0; i < deltaFull.length; i++){
-      for(var j=0; j < src[0].length - 1; j++){
+    for(i=0; i < deltaFull.length; i++){
+      for(j=0; j < src[0].length - 1; j++){
         deltaFull[i].push(deltaFull[i][0]);
       }
     }
@@ -1885,7 +1940,7 @@
     var covar = tracking.Matrix.mul(b,a); 
     return [covar, mean];
 
-  }
+  };
 
 }());
 (function() {
@@ -2626,22 +2681,16 @@
 
   tracking.LandmarksTracker = function() {
     tracking.LandmarksTracker.base(this, 'constructor');
-  }
+  };
 
   tracking.inherits(tracking.LandmarksTracker, tracking.ObjectTracker);
 
   tracking.LandmarksTracker.prototype.track = function(pixels, width, height) {
-	 
-    var image = {
-      'data': pixels,
-      'width': width,
-      'height': height
-    };
 
-    var classifier = tracking.ViolaJones.classifiers['face'];
+    var classifier = tracking.ViolaJones.classifiers.face;
 
-    var faces = tracking.ViolaJones.detect(pixels, width, height, 
-      this.getInitialScale(), this.getScaleFactor(), this.getStepSize(), 
+    var faces = tracking.ViolaJones.detect(pixels, width, height,
+      this.getInitialScale(), this.getScaleFactor(), this.getStepSize(),
       this.getEdgesDensity(), classifier);
 
     var landmarks = tracking.LBF.align(pixels, width, height, faces);
@@ -2653,7 +2702,7 @@
       }
     });
 
-  }
+  };
 
 }());
 
@@ -2676,7 +2725,7 @@
     }
 
     this.meanShape = tracking.LBF.LandmarksData;
-  }
+  };
 
   /**
    * Predicts the position of the landmarks based on the bounding box of the face.
@@ -2725,16 +2774,15 @@
 
     var residual = currentShapes[0].length * 2;
 
-    var rotation = [];
     var deltashape = new Array(residual/2);
     for(var i=0; i < residual/2; i++){
       deltashape[i] = [0.0, 0.0];
     }
 
-    for(var i=0; i < currentShapes.length; i++){
+    for(i=0; i < currentShapes.length; i++){
       for(var j=0; j < residual; j++){
         var tmp = 0;
-        for(var lx=0, idx=0; (idx = binaryFeatures[i][lx].index) != -1; lx++){
+        for(var lx=0, idx=0; (idx = binaryFeatures[i][lx].index) !== -1; lx++){
           if(idx <= models[j].nr_feature){
             tmp += models[j].data[(idx - 1)] * binaryFeatures[i][lx].value;
           }
@@ -2745,9 +2793,6 @@
           deltashape[j - residual/2][1] = tmp;
         }
       }
-
-      var res = tracking.LBF.similarityTransform_(tracking.LBF.unprojectShapeToBoundingBox_(currentShapes[i], boundingBoxes[i]), this.meanShape);
-      var rotation = tracking.Matrix.transpose(res[0]);
 
       var s = tracking.LBF.unprojectShapeToBoundingBox_(currentShapes[i], boundingBoxes[i]);
       s = tracking.Matrix.add(s, deltashape);
@@ -2770,23 +2815,26 @@
    */
   tracking.LBF.Regressor.deriveBinaryFeat = function(forest, images, currentShapes, boundingBoxes, meanShape){
 
+    var i;
+    var j;
+
     var binaryFeatures = new Array(images.length);
-    for(var i=0; i < images.length; i++){
+    for(i=0; i < images.length; i++){
       var t = forest.maxNumTrees * forest.landmarkNum + 1;
       binaryFeatures[i] = new Array(t);
-      for(var j=0; j < t; j++){
+      for(j=0; j < t; j++){
         binaryFeatures[i][j] = {};
       }
     }
 
     var leafnodesPerTree = 1 << (forest.maxDepth - 1);
 
-    for(var i=0; i < images.length; i++){
+    for(i=0; i < images.length; i++){
 
       var projectedShape = tracking.LBF.unprojectShapeToBoundingBox_(currentShapes[i], boundingBoxes[i]);
       var transform = tracking.LBF.similarityTransform_(projectedShape, meanShape);
       
-      for(var j=0; j < forest.landmarkNum; j++){
+      for(j=0; j < forest.landmarkNum; j++){
         for(var k=0; k < forest.maxNumTrees; k++){
 
           var binaryCode = tracking.LBF.Regressor.getCodeFromTree(forest.rfs[j][k], images[i], 
@@ -2803,7 +2851,7 @@
     }
     return binaryFeatures;
 
-  }
+  };
 
   /**
    * Gets the binary code for a specific tree in a random forest. For each landmark,
@@ -2870,10 +2918,10 @@
         current = tree.nodes[current].cnodes[1];
       }
 
-      if (tree.nodes[current].is_leafnode == 1) {
+      if (tree.nodes[current].is_leafnode === 1) {
         bincode = 1;
         for (var i=0; i < tree.leafnodes.length; i++) {
-          if (tree.leafnodes[i] == current) {
+          if (tree.leafnodes[i] === current) {
             return bincode;
           }
           bincode++;
@@ -2884,7 +2932,7 @@
     }
 
     return bincode;
-  }
+  };
 
 }());
 (function() {
@@ -2939,7 +2987,7 @@
         tracking.LBF.maxNumStages
       );
     }
-
+// NOTE: is this thesholding suitable ? if it is on image, why no skin-color filter ? and a adaptative threshold
     pixels = tracking.Image.grayscale(pixels, width, height, false);
 
     pixels = tracking.Image.equalizeHist(pixels, width, height);
@@ -2960,7 +3008,7 @@
     }
 
     return shapes;
-  }
+  };
 
   /**
    * Unprojects the landmarks shape from the bounding box.
@@ -2979,7 +3027,7 @@
       ];
     }
     return temp;
-  }
+  };
 
   /**
    * Projects the landmarks shape into the bounding box. The landmarks shape has
@@ -3000,7 +3048,7 @@
       ];
     }
     return temp;
-  }
+  };
 
   /**
    * Calculates the rotation and scale necessary to transform shape1 into shape2.
@@ -3028,7 +3076,7 @@
 
     var temp1 = tracking.Matrix.clone(shape1);
     var temp2 = tracking.Matrix.clone(shape2);
-    for(var i=0; i < shape1.length; i++){
+    for(i=0; i < shape1.length; i++){
       temp1[i][0] -= center1[0];
       temp1[i][1] -= center1[1];
       temp2[i][0] -= center2[0];
@@ -3054,7 +3102,7 @@
     temp2 = tracking.Matrix.mulScalar(1.0/s2, temp2);
 
     var num = 0, den = 0;
-    for (var i = 0; i < shape1.length; i++) {
+    for (i = 0; i < shape1.length; i++) {
       num = num + temp1[i][1] * temp2[i][0] - temp1[i][0] * temp2[i][1];
       den = den + temp1[i][0] * temp2[i][0] + temp1[i][1] * temp2[i][1];
     }
@@ -3068,7 +3116,7 @@
     ];
 
     return [rotation, scale];
-  }
+  };
 
   /**
    * LBF Random Forest data structure.
@@ -3088,7 +3136,7 @@
         this.rfs[i][j] = new tracking.LBF.Tree(forestIndex, i, j);
       }
     }
-  }
+  };
 
   /**
    * LBF Tree data structure.
@@ -3106,6 +3154,6 @@
     this.maxNumFeats = data.max_numfeats;
     this.maxRadioRadius = data.max_radio_radius;
     this.leafnodes = data.id_leafnodes;
-  }
+  };
 
 }());

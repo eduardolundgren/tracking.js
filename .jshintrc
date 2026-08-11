@@ -3,6 +3,7 @@
   "bitwise": false,
   "curly": true,
   "eqeqeq": true,
+  "eqnull": true,
   "esnext": true,
   "evil": false,
   "forin": false,
@@ -26,5 +27,5 @@
   "smarttabs": true,
   "trailing": true,
   "undef": true,
-  "unused": true
+  "unused": "vars"
 }
