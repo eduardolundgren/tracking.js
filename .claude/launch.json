@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "examples",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["http-server", "-c-1", "-p", "8080", "."],
+      "port": 8080
+    }
+  ]
+}
