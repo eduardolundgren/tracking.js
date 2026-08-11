@@ -17,29 +17,26 @@
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:eduardolundgren/tracking.js.git"
+    "url": "git+https://github.com/eduardolundgren/tracking.js.git"
+  },
+  "engines": {
+    "node": ">=18"
   },
   "scripts": {
-    "test": "gulp test",
-    "build": "gulp build"
+    "build": "node scripts/build.js",
+    "lint": "jshint --exclude src/detection/training,src/alignment/training src",
+    "pretest": "npm run build",
+    "test": "node test/runner.js",
+    "benchmark": "node test/runner.js Benchmark.js",
+    "start": "http-server -c-1 -p 8080 ."
   },
-  "license": "BSD",
+  "license": "BSD-3-Clause",
   "devDependencies": {
-    "gulp": "^3.9.0",
-    "gulp-concat": "^2.6.0",
-    "gulp-esformatter": "^5.0.0",
-    "gulp-header": "^1.7.1",
-    "gulp-jsdoc": "^0.1.5",
-    "gulp-jshint": "^2.0.0",
-    "gulp-nodeunit": "0.0.5",
-    "gulp-rename": "^1.2.2",
-    "gulp-rimraf": "^0.2.0",
-    "gulp-uglify": "^1.5.1",
-    "jshint": "^2.8.0",
-    "jshint-stylish": "^2.1.0",
-    "nodeunit": "^0.9.1",
-    "png-js": "^0.1.1",
-    "run-sequence": "^1.1.5",
-    "dat.gui": "^0.6.1"
+    "dat.gui": "^0.7.9",
+    "http-server": "^14.1.1",
+    "jshint": "^2.13.6",
+    "png-js": "^1.0.0",
+    "terser": "^5.31.0",
+    "three": "0.147.0"
   }
 }
