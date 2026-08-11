@@ -19,6 +19,7 @@ var DEFAULT_FILES = [
   'Brief.js',
   'ColorTracker.js',
   'Fast.js',
+  'Image.js',
   'ObjectTracker.js'
 ];
 

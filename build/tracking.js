@@ -580,7 +580,9 @@
     for (var j = 0; j < weights.length; j++) {
       weights[j] /= wsum;
     }
-    return this.separableConvolve(pixels, width, height, weights, weights, false);
+    // grayscale() reads its input as 8-bit RGBA through the underlying buffer,
+    // so the float output of the convolution must be converted back to bytes.
+    return new Uint8ClampedArray(this.separableConvolve(pixels, width, height, weights, weights, false));
   };
 
   /**
