@@ -6,7 +6,7 @@
   <link rel="stylesheet" href="assets/demo.css">
 
   <script src="../build/tracking-min.js"></script>
-  <script src="../../threejs/build/three.min.js"></script>
+  <script src="../node_modules/three/build/three.min.js"></script>
 
   <style>
   body {
@@ -61,20 +61,23 @@
 
       scene = new THREE.Scene();
 
-      var PI2 = Math.PI * 2;
-      var program = function (context) {
-        context.beginPath();
-        context.arc(0, 0, 0.5, 0, PI2, true);
-        context.fill();
-      }
+      var circleCanvas = document.createElement('canvas');
+      circleCanvas.width = 64;
+      circleCanvas.height = 64;
+      var circleContext = circleCanvas.getContext('2d');
+      circleContext.fillStyle = '#ffffff';
+      circleContext.beginPath();
+      circleContext.arc(32, 32, 32, 0, Math.PI * 2, true);
+      circleContext.fill();
+      var circleTexture = new THREE.CanvasTexture(circleCanvas);
 
       group = new THREE.Object3D();
       scene.add(group);
 
       for (var i = 0; i < 1000; i++) {
-        var material = new THREE.SpriteCanvasMaterial({
+        var material = new THREE.SpriteMaterial({
           color: Math.random() * 0x808008 + 0x808080,
-          program: program
+          map: circleTexture
         });
 
         particle = new THREE.Sprite(material);
@@ -86,7 +89,7 @@
         group.add(particle);
       }
 
-      renderer = new THREE.CanvasRenderer();
+      renderer = new THREE.WebGLRenderer();
       renderer.setSize(window.innerWidth, window.innerHeight);
       container.appendChild(renderer.domElement);
 
